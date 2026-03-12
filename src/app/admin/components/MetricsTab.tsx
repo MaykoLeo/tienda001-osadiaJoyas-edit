@@ -254,8 +254,18 @@ export function MetricsTab({
                                         >
                                             <defs>
                                                 <linearGradient id="gradientColor" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor={chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))'} stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor={chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))'} stopOpacity={0} />
+                                                    <stop 
+                                                        offset="5%" 
+                                                        stopColor={chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))'} 
+                                                        stopOpacity={0.3} 
+                                                        style={{ transition: 'stop-color 0.5s ease-in-out' }}
+                                                    />
+                                                    <stop 
+                                                        offset="95%" 
+                                                        stopColor={chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))'} 
+                                                        stopOpacity={0} 
+                                                        style={{ transition: 'stop-color 0.5s ease-in-out' }}
+                                                    />
                                                 </linearGradient>
                                             </defs>
                                             <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -315,8 +325,11 @@ export function MetricsTab({
                                                 strokeWidth={2}
                                                 fill="url(#gradientColor)"
                                                 isAnimationActive={true}
-                                                animationDuration={1000}
+                                                animationDuration={500}
                                                 animationEasing="ease-in-out"
+                                                style={{
+                                                    transition: 'stroke 0.5s ease-in-out, fill 0.5s ease-in-out'
+                                                }}
                                                 dot={{
                                                     r: 4,
                                                     fill: 'hsl(var(--background))',
