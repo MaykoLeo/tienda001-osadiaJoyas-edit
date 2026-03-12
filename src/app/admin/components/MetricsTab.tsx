@@ -11,7 +11,9 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+import { getProductMetricsAction } from '@/app/admin/actions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type PeriodKey = '7d' | '30d' | '90d' | 'year' | 'all';
 
@@ -95,6 +97,11 @@ export function MetricsTab({
     const [activePeriod, setActivePeriod] = useState<PeriodKey>('all');
     const [chartType, setChartType] = useState<'revenue' | 'orders'>('revenue');
 
+    // --- ESTADOS: BUSCADOR DE PRODUCTOS ---
+    const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+    const [productMetrics, setProductMetrics] = useState<any[]>([]);
+    const [isProductMetricsLoading, setIsProductMetricsLoading] = useState(false);
+
     const totalProducts = products.length;
     const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
     const inventoryValue = products.reduce((acc, p) => acc + p.price * p.stock, 0);
@@ -108,6 +115,30 @@ export function MetricsTab({
         const { startDate, endDate } = option.getDates();
         onPeriodChange(startDate, endDate);
     }, [onPeriodChange]);
+
+    // --- EFECTO: OBTENER DATOS DEL PRODUCTO SELECCIONADO ---
+    useEffect(() => {
+        if (!selectedProductId) {
+            setProductMetrics([]);
+            return;
+        }
+
+        async function fetchMetrics() {
+            setIsProductMetricsLoading(true);
+            const option = PERIOD_OPTIONS.find(p => p.key === activePeriod)!;
+            const { startDate, endDate } = option.getDates();
+            
+            const result = await getProductMetricsAction(Number(selectedProductId), startDate, endDate);
+            if (result.success && result.data) {
+                setProductMetrics(result.data);
+            } else {
+                setProductMetrics([]);
+            }
+            setIsProductMetricsLoading(false);
+        }
+
+        fetchMetrics();
+    }, [selectedProductId, activePeriod]);
 
     const categoryData = useMemo(() => {
         const parentCategories = categories.filter(c => !c.parentId);
@@ -489,6 +520,131 @@ export function MetricsTab({
 
                 {/* --- PESTAÑA: PRODUCTOS E INVENTARIO --- */}
                 <TabsContent value="products" className="space-y-6">
+                    
+                    {/* Buscador y Comparador Individual */}
+                    <Card className="shadow-md border-primary/20">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="flex items-center gap-2 text-lg">
+                                <BarChart className="h-5 w-5 text-primary" />
+                                Buscador y Rendimiento Individual
+                            </CardTitle>
+                            <CardDescription>Selecciona un producto para ver sus ventas detalladas en {activePeriodOption.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex flex-col md:flex-row gap-6">
+                                {/* Selector */}
+                                <div className="w-full md:w-1/3 space-y-4">
+                                    <Select 
+                                        value={selectedProductId || undefined} 
+                                        onValueChange={(val) => setSelectedProductId(val)}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Seleccionar un producto..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {products.map(p => (
+                                                <SelectItem key={p.id} value={p.id.toString()}>
+                                                    {p.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+
+                                    {selectedProductId && (
+                                        <div className="bg-muted/50 rounded-lg p-4 space-y-3 mt-4">
+                                            {products.find(p => p.id.toString() === selectedProductId)?.images?.[0] && (
+                                                <img 
+                                                    src={products.find(p => p.id.toString() === selectedProductId)?.images[0]} 
+                                                    alt="Producto" 
+                                                    className="w-full h-32 object-contain bg-white rounded-md border"
+                                                />
+                                            )}
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-medium text-muted-foreground">Ventas Totales (Período)</p>
+                                                <p className="text-2xl font-bold text-primary">
+                                                    {isProductMetricsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 
+                                                    productMetrics.reduce((acc, curr) => acc + curr.unitsSold, 0)} <span className="text-base font-normal text-foreground">unidades</span>
+                                                </p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-medium text-muted-foreground">Ingresos Generados (Período)</p>
+                                                <p className="text-2xl font-bold text-green-600">
+                                                    {isProductMetricsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 
+                                                    `$${productMetrics.reduce((acc, curr) => acc + curr.revenue, 0).toLocaleString('es-AR')}`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Gráfico Individual */}
+                                <div className="w-full md:w-2/3 min-h-[300px] border rounded-lg p-4 bg-background/50 flex flex-col items-center justify-center">
+                                    {!selectedProductId ? (
+                                        <div className="text-center text-muted-foreground">
+                                            <Package className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                                            <p>Selecciona un producto para visualizar su rendimiento.</p>
+                                        </div>
+                                    ) : isProductMetricsLoading ? (
+                                        <div className="flex flex-col items-center text-muted-foreground">
+                                            <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                                            <p>Cargando historial...</p>
+                                        </div>
+                                    ) : productMetrics.length === 0 ? (
+                                        <div className="text-center text-muted-foreground">
+                                            <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                            <p>Sin ventas registradas para este producto en {activePeriodOption.description}.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="w-full h-full min-h-[250px]">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <RechartsBarChart data={productMetrics} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                                                    <XAxis 
+                                                        dataKey="date" 
+                                                        tickFormatter={(val) => {
+                                                            try { return format(parseISO(val), 'd MMM', { locale: es }); } catch { return val; }
+                                                        }}
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                                                        dy={10}
+                                                    />
+                                                    <YAxis 
+                                                        yAxisId="left"
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                                                    />
+                                                    <Tooltip 
+                                                        content={({ active, payload, label }) => {
+                                                            if (!active || !payload?.length) return null;
+                                                            return (
+                                                                <div className="rounded-lg border bg-background p-3 shadow-md text-sm">
+                                                                    <p className="font-semibold mb-1 capitalize">{
+                                                                        (() => { try { return format(parseISO(label), 'EEEE d MMM'); } catch { return label; } })()
+                                                                    }</p>
+                                                                    <p className="text-primary font-medium">Unidades: {payload[0]?.value}</p>
+                                                                    <p className="text-green-600 font-medium">Ingresos: ${Number(payload[0]?.payload?.revenue).toLocaleString('es-AR')}</p>
+                                                                </div>
+                                                            );
+                                                        }}
+                                                    />
+                                                    <RechartsBar 
+                                                        yAxisId="left"
+                                                        dataKey="unitsSold" 
+                                                        fill="hsl(var(--primary))" 
+                                                        radius={[4, 4, 0, 0]}
+                                                        maxBarSize={50}
+                                                    />
+                                                </RechartsBarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* Products KPI Cards */}
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         {/* Total de Productos — estático */}

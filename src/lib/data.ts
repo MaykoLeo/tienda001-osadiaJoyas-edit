@@ -370,3 +370,49 @@ export async function getOrders(): Promise<Order[]> {
         throw new Error('Failed to fetch orders.');
     }
 }
+
+export async function fetchProductMetrics(productId: number, startDate?: Date, endDate?: Date) {
+    noStore();
+    try {
+        const db = getDb();
+        let queryResult;
+
+        if (startDate && endDate) {
+            queryResult = await db`
+                SELECT
+                    DATE(created_at AT TIME ZONE 'America/Argentina/Buenos_Aires') as date,
+                    SUM((item->>'quantity')::int) as units_sold,
+                    SUM((item->>'quantity')::int * (item->>'priceAtPurchase')::numeric) as revenue
+                FROM orders, jsonb_array_elements(items) as item
+                WHERE status IN ('paid', 'delivered', 'shipped')
+                AND (item->>'productId')::int = ${productId}
+                AND created_at >= ${startDate.toISOString()}
+                AND created_at <= ${endDate.toISOString()}
+                GROUP BY 1
+                ORDER BY 1 ASC;
+            `;
+        } else {
+             queryResult = await db`
+                SELECT
+                    DATE(created_at AT TIME ZONE 'America/Argentina/Buenos_Aires') as date,
+                    SUM((item->>'quantity')::int) as units_sold,
+                    SUM((item->>'quantity')::int * (item->>'priceAtPurchase')::numeric) as revenue
+                FROM orders, jsonb_array_elements(items) as item
+                WHERE status IN ('paid', 'delivered', 'shipped')
+                AND (item->>'productId')::int = ${productId}
+                GROUP BY 1
+                ORDER BY 1 ASC;
+            `;
+        }
+
+        return queryResult.map((r: any) => ({
+            date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date).split('T')[0],
+            unitsSold: parseInt(r.units_sold) || 0,
+            revenue: parseFloat(r.revenue) || 0
+        }));
+
+    } catch (error) {
+        console.error('Database Error in fetchProductMetrics:', error);
+        throw new Error('Failed to fetch individual product metrics.');
+    }
+}

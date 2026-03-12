@@ -88,3 +88,14 @@ export async function authenticateAdmin(prevState: any, formData: FormData) {
         }
     }
 }
+
+import { fetchProductMetrics } from '@/lib/data';
+
+export async function getProductMetricsAction(productId: number, startDate?: Date, endDate?: Date) {
+    try {
+        const metrics = await fetchProductMetrics(productId, startDate, endDate);
+        return { success: true, data: metrics };
+    } catch (error) {
+        return { success: false, error: 'No se pudo obtener el historial del producto.' };
+    }
+}
