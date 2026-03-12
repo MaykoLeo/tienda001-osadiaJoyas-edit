@@ -123,20 +123,24 @@ export function MetricsTab({
         if (!salesMetrics?.revenueByDate) return [];
         
         if (activePeriod === 'year' || activePeriod === 'all') {
-            const grouped = new Map<string, { revenue: number, orders: number }>();
+            const grouped = new Map<string, { revenue: number, estimatedRevenue: number, orders: number, allOrders: number }>();
             salesMetrics.revenueByDate.forEach(item => {
                 const date = parseISO(item.date);
                 const monthKey = format(date, 'yyyy-MM');
-                const current = grouped.get(monthKey) || { revenue: 0, orders: 0 };
+                const current = grouped.get(monthKey) || { revenue: 0, estimatedRevenue: 0, orders: 0, allOrders: 0 };
                 current.revenue += item.revenue;
+                current.estimatedRevenue += item.estimatedRevenue;
                 current.orders += item.orders;
+                current.allOrders += item.allOrders;
                 grouped.set(monthKey, current);
             });
             
             return Array.from(grouped.entries()).map(([month, data]) => ({
                 date: month + '-01',
                 revenue: data.revenue,
+                estimatedRevenue: data.estimatedRevenue,
                 orders: data.orders,
+                allOrders: data.allOrders,
                 isMonth: true
             })).sort((a, b) => a.date.localeCompare(b.date));
         }
@@ -204,7 +208,7 @@ export function MetricsTab({
                             )}
                         </CardTitle>
                         <CardDescription>
-                            Evolución de {chartType === 'revenue' ? 'ingresos' : 'órdenes completadas'} — <span className="font-medium">{activePeriodOption.description}</span>
+                            Evolución de {chartType === 'revenue' ? 'ingresos' : 'total de órdenes (todos los estados)'} — <span className="font-medium">{activePeriodOption.description}</span>
                         </CardDescription>
                     </div>
                     
@@ -280,7 +284,9 @@ export function MetricsTab({
                                                 content={({ active, payload, label }) => {
                                                     if (!active || !payload?.length) return null;
                                                     const revenue = payload[0]?.payload?.revenue as number ?? 0;
-                                                    const orders = payload[0]?.payload?.orders as number ?? 0;
+                                                    const estimatedRevenue = payload[0]?.payload?.estimatedRevenue as number ?? 0;
+                                                    const completedOrders = payload[0]?.payload?.orders as number ?? 0;
+                                                    const allOrders = payload[0]?.payload?.allOrders as number ?? 0;
                                                     
                                                     return (
                                                         <div className="rounded-lg border bg-background p-3 shadow-md text-sm space-y-1 z-50 relative">
@@ -288,12 +294,14 @@ export function MetricsTab({
                                                             {chartType === 'revenue' ? (
                                                                 <>
                                                                     <p className="text-primary font-bold">Ingresos: ${Number(revenue).toLocaleString('es-AR')}</p>
-                                                                    <p className="text-muted-foreground">{orders} {orders === 1 ? 'orden completada' : 'órdenes completadas'}</p>
+                                                                    <p className="text-muted-foreground">{completedOrders} {completedOrders === 1 ? 'orden completada' : 'órdenes completadas'}</p>
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <p className="font-bold text-[hsl(var(--chart-2,210_100%_50%))]">{orders} {orders === 1 ? 'orden completada' : 'órdenes completadas'}</p>
-                                                                    <p className="text-muted-foreground">Ingresos: ${Number(revenue).toLocaleString('es-AR')}</p>
+                                                                    <p className="font-bold text-[hsl(var(--chart-2,210_100%_50%))]">{allOrders} {allOrders === 1 ? 'orden en total' : 'órdenes en total'}</p>
+                                                                    <p className="text-muted-foreground">{completedOrders} {completedOrders === 1 ? 'orden completada' : 'órdenes completadas'}</p>
+                                                                    <p className="text-muted-foreground mt-2">Ingresos Completados: ${Number(revenue).toLocaleString('es-AR')}</p>
+                                                                    <p className="text-muted-foreground">Ingresos Estimados: ${Number(estimatedRevenue).toLocaleString('es-AR')}</p>
                                                                 </>
                                                             )}
                                                         </div>
@@ -302,7 +310,7 @@ export function MetricsTab({
                                             />
                                             <Area
                                                 type="monotone"
-                                                dataKey={chartType}
+                                                dataKey={chartType === 'revenue' ? 'revenue' : 'allOrders'}
                                                 stroke={chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))'}
                                                 strokeWidth={2}
                                                 fill="url(#gradientColor)"

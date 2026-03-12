@@ -98,7 +98,9 @@ export interface SalesMetrics {
   revenueByDate: {
     date: string; // 'YYYY-MM-DD'
     revenue: number;
+    estimatedRevenue: number;
     orders: number;
+    allOrders: number;
   }[];
 }
 

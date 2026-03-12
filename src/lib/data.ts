@@ -297,11 +297,12 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
             revenueByDateResult = await db`
                 SELECT
                     DATE(created_at AT TIME ZONE 'America/Argentina/Buenos_Aires') as date,
-                    SUM(total) as revenue,
-                    COUNT(*) as orders
+                    SUM(CASE WHEN status IN ('paid', 'delivered', 'shipped') THEN total ELSE 0 END) as revenue,
+                    SUM(total) as estimated_revenue,
+                    COUNT(CASE WHEN status IN ('paid', 'delivered', 'shipped') THEN 1 END) as orders,
+                    COUNT(*) as all_orders
                 FROM orders
-                WHERE status IN ('paid', 'delivered', 'shipped')
-                AND created_at >= ${startDate.toISOString()}
+                WHERE created_at >= ${startDate.toISOString()}
                 AND created_at <= ${endDate.toISOString()}
                 GROUP BY 1
                 ORDER BY 1 ASC;
@@ -321,10 +322,11 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
             revenueByDateResult = await db`
                 SELECT
                     DATE(created_at AT TIME ZONE 'America/Argentina/Buenos_Aires') as date,
-                    SUM(total) as revenue,
-                    COUNT(*) as orders
+                    SUM(CASE WHEN status IN ('paid', 'delivered', 'shipped') THEN total ELSE 0 END) as revenue,
+                    SUM(total) as estimated_revenue,
+                    COUNT(CASE WHEN status IN ('paid', 'delivered', 'shipped') THEN 1 END) as orders,
+                    COUNT(*) as all_orders
                 FROM orders
-                WHERE status IN ('paid', 'delivered', 'shipped')
                 GROUP BY 1
                 ORDER BY 1 ASC;
             `;
@@ -338,7 +340,9 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
             revenueByDate: revenueByDateResult.map((r: any) => ({
                 date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date).split('T')[0],
                 revenue: parseFloat(r.revenue) || 0,
+                estimatedRevenue: parseFloat(r.estimated_revenue) || 0,
                 orders: parseInt(r.orders) || 0,
+                allOrders: parseInt(r.all_orders) || 0,
             })),
         };
     } catch (error) {

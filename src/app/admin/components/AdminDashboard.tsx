@@ -48,6 +48,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
     const [categories, setCategories] = useState<Category[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [salesMetrics, setSalesMetrics] = useState<SalesMetrics | null>(null);
+    const [metricsDateRange, setMetricsDateRange] = useState<{start?: Date, end?: Date}>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isMetricsLoading, setIsMetricsLoading] = useState(false);
     const [dialogType, setDialogType] = useState<'product' | 'coupon' | 'import' | 'manual_sale' | null>(null);
@@ -62,6 +63,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
 
     const fetchMetrics = async (startDate?: Date, endDate?: Date) => {
         setIsMetricsLoading(true);
+        setMetricsDateRange({ start: startDate, end: endDate });
         try {
             const fetchedMetrics = await getSalesMetrics(startDate, endDate);
             setSalesMetrics(fetchedMetrics);
@@ -80,7 +82,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
             const [fetchedProducts, fetchedCoupons, fetchedMetrics, fetchedCategories, fetchedOrders] = await Promise.all([
                 getFilteredProducts({ limit: -1, _ts: timestamp }),
                 getCoupons(),
-                getSalesMetrics(),
+                getSalesMetrics(metricsDateRange.start, metricsDateRange.end),
                 getCategories(),
                 getOrders(),
             ]);
