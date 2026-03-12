@@ -118,6 +118,31 @@ export function MetricsTab({
         return data;
     }, [categories, products]);
 
+    const processedRevenueData = useMemo(() => {
+        if (!salesMetrics?.revenueByDate) return [];
+        
+        if (activePeriod === 'year' || activePeriod === 'all') {
+            const grouped = new Map<string, { revenue: number, orders: number }>();
+            salesMetrics.revenueByDate.forEach(item => {
+                const date = parseISO(item.date);
+                const monthKey = format(date, 'yyyy-MM');
+                const current = grouped.get(monthKey) || { revenue: 0, orders: 0 };
+                current.revenue += item.revenue;
+                current.orders += item.orders;
+                grouped.set(monthKey, current);
+            });
+            
+            return Array.from(grouped.entries()).map(([month, data]) => ({
+                date: month + '-01',
+                revenue: data.revenue,
+                orders: data.orders,
+                isMonth: true
+            })).sort((a, b) => a.date.localeCompare(b.date));
+        }
+        
+        return salesMetrics.revenueByDate;
+    }, [salesMetrics, activePeriod]);
+
     const isMetricsSpinning = isLoading || isMetricsLoading;
 
     // Format dates on the X axis depending on the period length
@@ -125,14 +150,20 @@ export function MetricsTab({
         try {
             const d = parseISO(dateStr);
             if (activePeriod === 'year' || activePeriod === 'all') {
-                return format(d, 'MMM', { locale: es });
+                return format(d, 'MMM yyyy', { locale: es });
             }
             return format(d, 'd MMM', { locale: es });
         } catch { return dateStr; }
     };
 
     const formatTooltipDate = (dateStr: string) => {
-        try { return format(parseISO(dateStr), 'EEEE d \u2018MMM\u2019 yyyy', { locale: es }); }
+        try { 
+            const d = parseISO(dateStr);
+            if (activePeriod === 'year' || activePeriod === 'all') {
+                return format(d, 'MMMM yyyy', { locale: es });
+            }
+            return format(d, 'EEEE d \u2018MMM\u2019 yyyy', { locale: es }); 
+        }
         catch { return dateStr; }
     };
 
@@ -177,79 +208,81 @@ export function MetricsTab({
                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                         </div>
                     ) : salesMetrics.revenueByDate.length > 0 ? (
-                        <div className="h-56">
+                        <div className="h-64 overflow-x-auto overflow-y-hidden pb-4">
                             <ChartContainer
                                 config={{
                                     revenue: { label: 'Ingresos', color: 'hsl(var(--primary))' },
                                     orders: { label: 'Órdenes', color: 'hsl(var(--muted-foreground))' },
                                 }}
-                                className="h-full w-full"
+                                className="h-full w-full min-w-full"
                             >
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <RechartsAreaChart
-                                        data={salesMetrics.revenueByDate}
-                                        margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
-                                    >
-                                        <defs>
-                                            <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                                        <XAxis
-                                            dataKey="date"
-                                            tickLine={false}
-                                            axisLine={false}
-                                            tickMargin={8}
-                                            tickFormatter={formatXAxisDate}
-                                            tick={{ fontSize: 11 }}
-                                            interval="preserveStartEnd"
-                                        />
-                                        <YAxis
-                                            tickLine={false}
-                                            axisLine={false}
-                                            tickMargin={8}
-                                            tick={{ fontSize: 11 }}
-                                            tickFormatter={(v) => `$${Number(v).toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
-                                            width={72}
-                                        />
-                                        <Tooltip
-                                            cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                            content={({ active, payload, label }) => {
-                                                if (!active || !payload?.length) return null;
-                                                const revenue = payload.find(p => p.dataKey === 'revenue')?.value as number;
-                                                const orders = (payload[0]?.payload?.orders ?? 0) as number;
-                                                return (
-                                                    <div className="rounded-lg border bg-background p-3 shadow-md text-sm space-y-1">
-                                                        <p className="font-semibold capitalize">{formatTooltipDate(label)}</p>
-                                                        <p className="text-primary font-bold">${Number(revenue).toLocaleString('es-AR')}</p>
-                                                        <p className="text-muted-foreground">{orders} {orders === 1 ? 'orden' : 'órdenes'}</p>
-                                                    </div>
-                                                );
-                                            }}
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="revenue"
-                                            stroke="hsl(var(--primary))"
-                                            strokeWidth={2}
-                                            fill="url(#revenueGradient)"
-                                            dot={{
-                                                r: 3,
-                                                fill: 'transparent',
-                                                stroke: 'hsl(var(--primary))',
-                                                strokeWidth: 2,
-                                            }}
-                                            activeDot={{
-                                                r: 6,
-                                                fill: 'hsl(var(--primary))',
-                                                stroke: 'hsl(var(--background))',
-                                                strokeWidth: 2,
-                                            }}
-                                        />
-                                    </RechartsAreaChart>
-                                </ResponsiveContainer>
+                                <div style={{ minWidth: activePeriod === 'all' && processedRevenueData.length > 10 ? `${processedRevenueData.length * 64}px` : '100%', height: '100%' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <RechartsAreaChart
+                                            data={processedRevenueData}
+                                            margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
+                                        >
+                                            <defs>
+                                                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                                            <XAxis
+                                                dataKey="date"
+                                                tickLine={false}
+                                                axisLine={false}
+                                                tickMargin={8}
+                                                tickFormatter={formatXAxisDate}
+                                                tick={{ fontSize: 11 }}
+                                                interval={activePeriod === 'all' || activePeriod === 'year' ? 0 : 'preserveStartEnd'}
+                                            />
+                                            <YAxis
+                                                tickLine={false}
+                                                axisLine={false}
+                                                tickMargin={8}
+                                                tick={{ fontSize: 11 }}
+                                                tickFormatter={(v) => `$${Number(v).toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
+                                                width={72}
+                                            />
+                                            <Tooltip
+                                                cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                                content={({ active, payload, label }) => {
+                                                    if (!active || !payload?.length) return null;
+                                                    const revenue = payload.find(p => p.dataKey === 'revenue')?.value as number;
+                                                    const orders = (payload[0]?.payload?.orders ?? 0) as number;
+                                                    return (
+                                                        <div className="rounded-lg border bg-background p-3 shadow-md text-sm space-y-1 z-50 relative">
+                                                            <p className="font-semibold capitalize">{formatTooltipDate(label)}</p>
+                                                            <p className="text-primary font-bold">${Number(revenue).toLocaleString('es-AR')}</p>
+                                                            <p className="text-muted-foreground">{orders} {orders === 1 ? 'orden' : 'órdenes'}</p>
+                                                        </div>
+                                                    );
+                                                }}
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="revenue"
+                                                stroke="hsl(var(--primary))"
+                                                strokeWidth={2}
+                                                fill="url(#revenueGradient)"
+                                                dot={{
+                                                    r: 4,
+                                                    fill: 'hsl(var(--background))',
+                                                    stroke: 'hsl(var(--primary))',
+                                                    strokeWidth: 2,
+                                                }}
+                                                activeDot={{
+                                                    r: 6,
+                                                    fill: 'hsl(var(--primary))',
+                                                    stroke: 'hsl(var(--background))',
+                                                    strokeWidth: 2,
+                                                }}
+                                            />
+                                        </RechartsAreaChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </ChartContainer>
                         </div>
                     ) : (

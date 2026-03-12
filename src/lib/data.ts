@@ -325,7 +325,6 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
                     COUNT(*) as orders
                 FROM orders
                 WHERE status IN ('paid', 'delivered', 'shipped')
-                AND created_at >= NOW() - INTERVAL '365 days'
                 GROUP BY 1
                 ORDER BY 1 ASC;
             `;
