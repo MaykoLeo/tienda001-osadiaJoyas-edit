@@ -1,0 +1,14 @@
+# See https://www.robotstxt.org/robotstxt.html for documentation
+
+# Allow all ethical crawlers access to the site
+User-agent: *
+Allow: /
+
+# Disallow specific routes that should not be indexed
+Disallow: /admin
+Disallow: /api/
+Disallow: /checkout
+Disallow: /cart
+
+# You can specify the location of your sitemap here once it's generated
+# Sitemap: https://www.yourdomain.com/sitemap.xml

@@ -1,0 +1,99 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Madeleina Sans', sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 240 14% 94%;
+    --foreground: 0 0% 18%;
+    --card: 240 14% 94%;
+    --card-foreground: 0 0% 18%;
+    --popover: 240 14% 94%;
+    --popover-foreground: 0 0% 18%;
+    --primary: 96 3% 54%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 26 9% 48%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 215 28% 94%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 26 9% 48%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 20% 90%;
+    --input: 215 20% 90%;
+    --ring: 96 3% 54%;
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 220 18% 12%;
+    --foreground: 210 40% 98%;
+    --card: 220 18% 12%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 18% 12%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 180 75% 45%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 38 85% 65%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 32.6% 17.5%;
+    --input: 217 32.6% 17.5%;
+    --ring: 180 75% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    background-image:
+        radial-gradient(at 27% 37%, hsl(var(--secondary)) 0px, transparent 50%),
+        radial-gradient(at 97% 21%, hsl(var(--accent) / 0.1) 0px, transparent 50%),
+        radial-gradient(at 52% 99%, hsl(var(--primary) / 0.15) 0px, transparent 50%),
+        radial-gradient(at 10% 29%, hsl(var(--primary) / 0.2) 0px, transparent 50%),
+        radial-gradient(at 97% 96%, hsl(var(--secondary)) 0px, transparent 50%),
+        radial-gradient(at 33% 50%, hsl(var(--accent) / 0.05) 0px, transparent 50%),
+        radial-gradient(at 79% 53%, hsl(var(--background)) 0px, transparent 50%);
+  }
+}
+
+/* === Estilos de Scrollbar Adaptables === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--primary)); /* Gris en claro, Cian en oscuro */
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Hover para modo oscuro */
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #14b8a6; /* Teal-500 */
+}
+
+/* Hover para modo claro */
+:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--secondary));
+}

@@ -1,0 +1,362 @@
+'use server';
+
+import { getDb } from './db';
+import type { Product, Coupon, SalesMetrics, OrderData, OrderStatus, Order, Category, OrderItem, PaymentType } from './types';
+import { unstable_noStore as noStore } from 'next/cache';
+
+// --- FUNCIONES DE PRODUCTO ---
+
+// --- CORRECCIÓN FINAL: Lógica de cálculo de precio de oferta implementada ---
+function _mapDbRowToProduct(row: any, categoryIds: number[]): Product {
+    const price = parseFloat(row.price);
+    let salePrice: number | null = null;
+
+    const discountPercentage = row.discount_percentage ? parseFloat(row.discount_percentage) : null;
+    const offerStartDate = row.offer_start_date ? new Date(row.offer_start_date) : null;
+    const offerEndDate = row.offer_end_date ? new Date(row.offer_end_date) : null;
+    const now = new Date();
+
+    // Calcular el precio de oferta solo si el descuento es válido y la fecha actual está dentro del rango
+    if (discountPercentage && discountPercentage > 0) {
+        const isDateRangeValid = (!offerStartDate || now >= offerStartDate) && (!offerEndDate || now <= offerEndDate);
+        if (isDateRangeValid) {
+            salePrice = price - (price * (discountPercentage / 100));
+        }
+    }
+
+    return {
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        price: price,
+        salePrice: salePrice,
+        images: row.images || [],
+        stock: row.stock,
+        featured: row.is_featured,
+        categoryIds: categoryIds,
+        createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+        // Mapear los nuevos campos para referencia
+        discountPercentage: discountPercentage,
+        offerStartDate: offerStartDate,
+        offerEndDate: offerEndDate,
+    };
+}
+
+// getProductById ahora también busca las categorías del producto.
+export async function getProductById(id: number): Promise<Product | undefined> {
+    noStore();
+    try {
+        const db = getDb();
+        const productRows = await db`SELECT * FROM products WHERE id = ${id}`;
+        if (productRows.length === 0) return undefined;
+
+        const categoryRows = await db`SELECT category_id FROM product_categories WHERE product_id = ${id}`;
+        const categoryIds = categoryRows.map((r: any) => r.category_id);
+
+        return _mapDbRowToProduct(productRows[0], categoryIds);
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch product.');
+    }
+}
+
+// Obtiene múltiples productos por sus IDs en una sola consulta.
+export async function getProductsByIds(ids: number[]): Promise<Product[]> {
+    noStore();
+    if (ids.length === 0) {
+        return [];
+    }
+    try {
+        const db = getDb();
+        const productsRows = await db`SELECT * FROM products WHERE id = ANY(${ids})`;
+
+        if (productsRows.length === 0) return [];
+
+        const productCategoryRows = await db`SELECT product_id, category_id FROM product_categories WHERE product_id = ANY(${ids})`;
+
+        const productsWithCategories = productsRows.map((productRow: any) => {
+            const categoryIds = productCategoryRows
+                .filter((pc: any) => pc.product_id === productRow.id)
+                .map((pc: any) => pc.category_id);
+            return _mapDbRowToProduct(productRow, categoryIds);
+        });
+
+        return productsWithCategories;
+    } catch (error) {
+        console.error('Database Error in getProductsByIds:', error);
+        throw new Error('Failed to fetch products by IDs.');
+    }
+}
+
+
+// --- FUNCIONES DE CATEGORÍA Y CUPONES ---
+function _mapDbRowToCategory(row: any): Category { return { id: row.id, name: row.name, parentId: row.parent_id }; }
+export async function getCategories(): Promise<Category[]> { noStore(); try { const db = getDb(); const rows = await db`SELECT * FROM categories ORDER BY parent_id, name ASC`; return rows.map(_mapDbRowToCategory); } catch (error) { console.error('Database Error:', error); throw new Error('Failed to fetch categories.'); } }
+export async function createCategory(name: string, parentId: number | null = null): Promise<Category> { try { const db = getDb(); const result = await db`INSERT INTO categories (name, parent_id) VALUES (${name}, ${parentId}) RETURNING *;`; return _mapDbRowToCategory(result[0]); } catch (error: any) { if (error.message.includes('duplicate key value')) { throw new Error(`La categoría '${name}' ya existe.`); } console.error('Database Error:', error); throw new Error('Failed to create category.'); } }
+export async function deleteCategory(id: number): Promise<{ success: boolean; message?: string }> { try { const db = getDb(); const children = await db`SELECT 1 FROM categories WHERE parent_id = ${id} LIMIT 1`; if (children.length > 0) { return { success: false, message: 'No se puede eliminar. La categoría tiene subcategorías asociadas.' }; } const products = await db`SELECT 1 FROM product_categories WHERE category_id = ${id} LIMIT 1`; if (products.length > 0) { return { success: false, message: 'No se puede eliminar. La categoría está asignada a uno o más productos.' }; } await db`DELETE FROM categories WHERE id = ${id}`; return { success: true }; } catch (error) { console.error('Database Error:', error); throw new Error('Failed to delete category.'); } }
+function _mapDbRowToCoupon(row: any): Coupon { return { id: row.id, code: row.code, discountType: row.discount_type, discountValue: parseFloat(row.discount_value), minPurchaseAmount: row.min_purchase_amount ? parseFloat(row.min_purchase_amount) : null, expiryDate: row.expiry_date, isActive: row.is_active, }; }
+export async function getCoupons(): Promise<Coupon[]> { noStore(); try { const db = getDb(); const rows = await db`SELECT * FROM coupons ORDER BY created_at DESC`; return rows.map(_mapDbRowToCoupon); } catch (error) { console.error('Database Error:', error); throw new Error('Failed to fetch coupons.'); } }
+export async function getCouponByCode(code: string): Promise<Coupon | undefined> { noStore(); try { const db = getDb(); const rows = await db`SELECT * FROM coupons WHERE code = ${code.toUpperCase()} AND is_active = TRUE AND (expiry_date IS NULL OR expiry_date > NOW())`; if (rows.length === 0) return undefined; return _mapDbRowToCoupon(rows[0]); } catch (error) { console.error('Database Error:', error); throw new Error('Failed to fetch coupon.'); } }
+export async function createCoupon(coupon: Omit<Coupon, 'id'>): Promise<Coupon> { const { code, discountType, discountValue, minPurchaseAmount, expiryDate, isActive } = coupon; try { const db = getDb(); const result = await db`INSERT INTO coupons (code, discount_type, discount_value, min_purchase_amount, expiry_date, is_active) VALUES (${code.toUpperCase()}, ${discountType}, ${discountValue}, ${minPurchaseAmount}, ${expiryDate?.toISOString()}, ${isActive}) RETURNING *;`; return _mapDbRowToCoupon(result[0]); } catch (error: any) { if (error.message.includes('duplicate key value')) { throw new Error(`El código de cupón '${coupon.code}' ya existe.`); } console.error('Database Error:', error); throw new Error('Failed to create coupon.'); } }
+export async function updateCoupon(id: number, couponData: Partial<Omit<Coupon, 'id'>>): Promise<Coupon> { const { code, discountType, discountValue, minPurchaseAmount, expiryDate, isActive } = couponData; try { const db = getDb(); const result = await db`UPDATE coupons SET code = COALESCE(${code?.toUpperCase()}, code), discount_type = COALESCE(${discountType}, discount_type), discount_value = COALESCE(${discountValue}, discount_value), min_purchase_amount = COALESCE(${minPurchaseAmount}, min_purchase_amount), expiry_date = ${expiryDate?.toISOString() || null}, is_active = COALESCE(${isActive}, is_active) WHERE id = ${id} RETURNING *;`; return _mapDbRowToCoupon(result[0]); } catch (error: any) { if (error.message.includes('duplicate key value')) { throw new Error(`El código de cupón '${couponData.code}' ya existe.`); } console.error('Database Error:', error); throw new Error('Failed to update coupon.'); } }
+export async function deleteCoupon(id: number): Promise<void> { try { const db = getDb(); await db`DELETE FROM coupons WHERE id = ${id}`; } catch (error) { console.error('Database Error:', error); throw new Error('Failed to delete coupon.'); } }
+
+export async function updateCategory(id: number, name: string): Promise<Category> {
+    try {
+        const db = getDb();
+
+        // Primero obtener la categoría actual para conocer su parent_id
+        const currentCategory = await db`
+            SELECT * FROM categories WHERE id = ${id};
+        `;
+
+        if (currentCategory.length === 0) {
+            throw new Error('Category not found.');
+        }
+
+        const parentId = currentCategory[0].parent_id;
+
+        // Validar que no exista otra categoría con el mismo nombre y parent_id
+        const existing = parentId === null
+            ? await db`
+                SELECT id FROM categories 
+                WHERE name = ${name} 
+                AND parent_id IS NULL 
+                AND id != ${id};
+              `
+            : await db`
+                SELECT id FROM categories 
+                WHERE name = ${name} 
+                AND parent_id = ${parentId} 
+                AND id != ${id};
+              `;
+
+        if (existing.length > 0) {
+            throw new Error(`La categoría '${name}' ya existe.`);
+        }
+
+        // Actualizar la categoría
+        const result = await db`
+            UPDATE categories 
+            SET name = ${name} 
+            WHERE id = ${id} 
+            RETURNING *;
+        `;
+
+        return _mapDbRowToCategory(result[0]);
+    } catch (error: any) {
+        if (error.message.includes('duplicate key value')) {
+            throw new Error(`La categoría '${name}' ya existe.`);
+        }
+        if (error.message.includes('ya existe')) {
+            throw error; // Re-lanzar el error de validación personalizado
+        }
+        console.error('Database Error:', error);
+        throw new Error('Failed to update category.');
+    }
+}
+
+// --- LÓGICA DE ÓRDENES ---
+
+export async function createOrder(orderData: OrderData): Promise<{ orderId?: number, error?: string }> {
+    try {
+        const db = getDb();
+        for (const item of orderData.items) {
+            const productResult = await db`SELECT stock, name FROM products WHERE id = ${item.productId}`;
+            if (productResult.length === 0) return { error: `Producto con ID ${item.productId} no encontrado.` };
+            if (productResult[0].stock < item.quantity) {
+                return { error: `Stock insuficiente para \"${productResult[0].name}\".` };
+            }
+        }
+
+        const { customerName, customerEmail, customerPhone, total, status, items, couponCode, discountAmount, deliveryMethod, paymentType, pickupName, pickupDni, shippingAddress, shippingCity, shippingPostalCode, notes } = orderData;
+
+        const orderResult = await db`
+            INSERT INTO orders (customer_name, customer_email, customer_phone, total, status, items, coupon_code, discount_amount, delivery_method, payment_type, pickup_name, pickup_dni, shipping_address, shipping_city, shipping_postal_code, notes, created_at)
+            VALUES (${customerName}, ${customerEmail}, ${customerPhone}, ${total}, ${status}, ${JSON.stringify(items)}::jsonb, ${couponCode}, ${discountAmount}, ${deliveryMethod}, ${paymentType}, ${pickupName}, ${pickupDni}, ${shippingAddress}, ${shippingCity}, ${shippingPostalCode}, ${notes || null}, ${new Date().toISOString()})
+            RETURNING id;
+        `;
+        return { orderId: orderResult[0].id };
+    } catch (error: any) {
+        console.error('Database Error:', error);
+        return { error: error.message || 'Failed to create order.' };
+    }
+}
+
+export async function deductStockForOrder(orderId: number): Promise<void> {
+    try {
+        const db = getDb();
+        const orderRows = await db`SELECT items FROM orders WHERE id = ${orderId}`;
+        if (orderRows.length > 0) {
+            const items = orderRows[0].items as OrderItem[];
+            for (const item of items) {
+                await db`UPDATE products SET stock = stock - ${item.quantity} WHERE id = ${item.productId} AND stock >= ${item.quantity}`;
+            }
+            console.log(`Stock deducted for order ${orderId}`);
+        }
+    } catch (error) {
+        console.error(`CRITICAL: Failed to deduct stock for order ${orderId}.`, error);
+        throw new Error('Failed to deduct stock.');
+    }
+}
+
+export async function updateOrderStatus(orderId: number, status: OrderStatus, paymentId?: string | null): Promise<void> {
+    try {
+        const db = getDb();
+        if (paymentId !== undefined) {
+            await db`UPDATE orders SET status = ${status}, payment_id = COALESCE(${paymentId}, payment_id) WHERE id = ${orderId}`;
+        } else {
+            await db`UPDATE orders SET status = ${status} WHERE id = ${orderId}`;
+        }
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to update order status.');
+    }
+}
+
+function mapOrderFromDb(row: any): Order {
+    return {
+        id: row.id, customerName: row.customer_name, customerEmail: row.customer_email,
+        customerPhone: row.customer_phone, total: parseFloat(row.total), status: row.status as OrderStatus,
+        createdAt: new Date(row.created_at), items: row.items, couponCode: row.coupon_code,
+        discountAmount: row.discount_amount ? parseFloat(row.discount_amount) : undefined,
+        paymentId: row.payment_id || undefined, deliveryMethod: row.delivery_method, paymentType: row.payment_type, pickupName: row.pickup_name,
+        pickupDni: row.pickup_dni, shippingAddress: row.shipping_address, shippingCity: row.shipping_city,
+        shippingPostalCode: row.shipping_postal_code, notes: row.notes,
+    };
+}
+
+export async function getOrderById(id: number): Promise<Order | undefined> { noStore(); try { const db = getDb(); const result = await db`SELECT * FROM orders WHERE id = ${id}`; if (result.length === 0) return undefined; return mapOrderFromDb(result[0]); } catch (error) { console.error('Database Error:', error); throw new Error('Failed to fetch order.'); } }
+export async function getOrderByPaymentId(paymentId: string): Promise<Order | undefined> { noStore(); try { const db = getDb(); const result = await db`SELECT * FROM orders WHERE payment_id = ${paymentId}`; if (result.length === 0) return undefined; return mapOrderFromDb(result[0]); } catch (error) { console.error('Database Error:', error); throw new Error('Failed to fetch order by payment ID.'); } }
+
+export async function createOrderFromWebhook(paymentData: any): Promise<{ newOrder?: Order, error?: string }> {
+    const { payer, additional_info, transaction_amount, external_reference, id: paymentId } = paymentData;
+    if (!external_reference || !additional_info?.items || additional_info.items.length === 0) {
+        return { error: 'Webhook data is missing fields to create an order.' };
+    }
+
+    const items: OrderItem[] = additional_info.items.map((item: any) => ({
+        productId: parseInt(item.id),
+        name: item.title,
+        image: item.picture_url || '',
+        quantity: parseInt(item.quantity),
+        priceAtPurchase: parseFloat(item.unit_price),
+        originalPrice: null,
+    }));
+
+    const orderData = {
+        customerName: payer.first_name ? `${payer.first_name} ${payer.last_name || ''}`.trim() : 'N/A',
+        customerEmail: payer.email, total: transaction_amount, status: 'paid' as OrderStatus,
+        items: items, paymentId: String(paymentId), deliveryMethod: 'shipping' as const, paymentType: 'QR / Tarjeta' as PaymentType,
+        shippingAddress: 'N/A', shippingCity: 'N/A', shippingPostalCode: 'N/A',
+    };
+
+    try {
+        const db = getDb();
+        const orderResult = await db`
+            INSERT INTO orders (id, customer_name, customer_email, total, status, items, payment_id, delivery_method, payment_type, shipping_address, shipping_city, shipping_postal_code, created_at)
+            VALUES (${external_reference}, ${orderData.customerName}, ${orderData.customerEmail}, ${orderData.total}, ${orderData.status}, ${JSON.stringify(orderData.items)}::jsonb, ${orderData.paymentId}, ${orderData.deliveryMethod}, ${orderData.paymentType}, ${orderData.shippingAddress}, ${orderData.shippingCity}, ${orderData.shippingPostalCode}, ${new Date().toISOString()})
+            ON CONFLICT (id) DO NOTHING RETURNING *;
+        `;
+        if (orderResult.length === 0) {
+            const existingOrder = await getOrderById(parseInt(String(external_reference), 10));
+            return { newOrder: existingOrder };
+        }
+        return { newOrder: mapOrderFromDb(orderResult[0]) };
+    } catch (error: any) {
+        console.error('Database Error creating from webhook:', error);
+        return { error: error.message || 'Failed to create order from webhook.' };
+    }
+}
+
+export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise<SalesMetrics> {
+    noStore();
+    try {
+        const db = getDb();
+
+        let revenueResult;
+        let productsResult;
+        let revenueByDateResult;
+
+        if (startDate && endDate) {
+            revenueResult = await db`
+                SELECT SUM(total) as totalRevenue, COUNT(*) as totalSales
+                FROM orders
+                WHERE status IN ('paid', 'delivered', 'shipped')
+                AND created_at >= ${startDate.toISOString()}
+                AND created_at <= ${endDate.toISOString()}
+            `;
+            productsResult = await db`
+                SELECT (item->>'productId')::int as "productId", item->>'name' as name, SUM((item->>'quantity')::int) as count
+                FROM orders, jsonb_array_elements(items) as item
+                WHERE status IN ('paid', 'delivered', 'shipped')
+                AND created_at >= ${startDate.toISOString()}
+                AND created_at <= ${endDate.toISOString()}
+                GROUP BY 1, 2 ORDER BY count DESC LIMIT 5;
+            `;
+            revenueByDateResult = await db`
+                SELECT
+                    DATE(created_at AT TIME ZONE 'America/Argentina/Buenos_Aires') as date,
+                    SUM(total) as revenue,
+                    COUNT(*) as orders
+                FROM orders
+                WHERE status IN ('paid', 'delivered', 'shipped')
+                AND created_at >= ${startDate.toISOString()}
+                AND created_at <= ${endDate.toISOString()}
+                GROUP BY 1
+                ORDER BY 1 ASC;
+            `;
+        } else {
+            revenueResult = await db`
+                SELECT SUM(total) as totalRevenue, COUNT(*) as totalSales
+                FROM orders
+                WHERE status IN ('paid', 'delivered', 'shipped')
+            `;
+            productsResult = await db`
+                SELECT (item->>'productId')::int as "productId", item->>'name' as name, SUM((item->>'quantity')::int) as count
+                FROM orders, jsonb_array_elements(items) as item
+                WHERE status IN ('paid', 'delivered', 'shipped')
+                GROUP BY 1, 2 ORDER BY count DESC LIMIT 5;
+            `;
+            revenueByDateResult = await db`
+                SELECT
+                    DATE(created_at AT TIME ZONE 'America/Argentina/Buenos_Aires') as date,
+                    SUM(total) as revenue,
+                    COUNT(*) as orders
+                FROM orders
+                WHERE status IN ('paid', 'delivered', 'shipped')
+                AND created_at >= NOW() - INTERVAL '365 days'
+                GROUP BY 1
+                ORDER BY 1 ASC;
+            `;
+        }
+
+        const { totalrevenue, totalsales } = revenueResult[0];
+        return {
+            totalRevenue: parseFloat(totalrevenue) || 0,
+            totalSales: parseInt(totalsales) || 0,
+            topSellingProducts: productsResult.map((r: any) => ({ productId: r.productId, name: r.name, count: Number(r.count) })),
+            revenueByDate: revenueByDateResult.map((r: any) => ({
+                date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date).split('T')[0],
+                revenue: parseFloat(r.revenue) || 0,
+                orders: parseInt(r.orders) || 0,
+            })),
+        };
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch sales metrics.');
+    }
+}
+
+
+export async function getOrders(): Promise<Order[]> {
+    noStore();
+    try {
+        const db = getDb();
+        const rows = await db`SELECT * FROM orders ORDER BY created_at DESC`;
+        return rows.map(mapOrderFromDb);
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch orders.');
+    }
+}
