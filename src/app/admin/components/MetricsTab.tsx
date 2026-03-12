@@ -92,6 +92,7 @@ export function MetricsTab({
     onPeriodChange: (startDate?: Date, endDate?: Date) => void;
 }) {
     const [activePeriod, setActivePeriod] = useState<PeriodKey>('all');
+    const [chartType, setChartType] = useState<'revenue' | 'orders'>('revenue');
 
     const totalProducts = products.length;
     const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
@@ -191,16 +192,41 @@ export function MetricsTab({
                 )}
             </div>
 
-            {/* Revenue Over Time Chart */}
+            {/* Revenue / Orders Over Time Chart */}
             <Card className="shadow-md">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-primary" />
-                        Ingresos en el Tiempo
-                    </CardTitle>
-                    <CardDescription>
-                        Evolución diaria de ingresos — <span className="font-medium">{activePeriodOption.description}</span>
-                    </CardDescription>
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 space-y-2 sm:space-y-0">
+                    <div>
+                        <CardTitle className="flex items-center gap-2">
+                            {chartType === 'revenue' ? (
+                                <><DollarSign className="h-4 w-4 text-primary" /> Ingresos en el Tiempo</>
+                            ) : (
+                                <><ShoppingCart className="h-4 w-4 text-primary" /> Órdenes en el Tiempo</>
+                            )}
+                        </CardTitle>
+                        <CardDescription>
+                            Evolución de {chartType === 'revenue' ? 'ingresos' : 'órdenes completadas'} — <span className="font-medium">{activePeriodOption.description}</span>
+                        </CardDescription>
+                    </div>
+                    
+                    {/* Toggle Chart Type */}
+                    <div className="flex bg-muted p-1 rounded-lg w-fit">
+                        <Button
+                            variant={chartType === 'revenue' ? 'default' : 'ghost'}
+                            size="sm"
+                            className="text-xs h-7 px-3"
+                            onClick={() => setChartType('revenue')}
+                        >
+                            Ingresos
+                        </Button>
+                        <Button
+                            variant={chartType === 'orders' ? 'default' : 'ghost'}
+                            size="sm"
+                            className="text-xs h-7 px-3"
+                            onClick={() => setChartType('orders')}
+                        >
+                            Órdenes
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {isMetricsSpinning || !salesMetrics ? (
@@ -223,9 +249,9 @@ export function MetricsTab({
                                             margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
                                         >
                                             <defs>
-                                                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                                <linearGradient id="gradientColor" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor={chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))'} stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor={chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))'} stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
                                             <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -243,39 +269,52 @@ export function MetricsTab({
                                                 axisLine={false}
                                                 tickMargin={8}
                                                 tick={{ fontSize: 11 }}
-                                                tickFormatter={(v) => `$${Number(v).toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
+                                                tickFormatter={(v) => chartType === 'revenue' 
+                                                    ? `$${Number(v).toLocaleString('es-AR', { maximumFractionDigits: 0 })}`
+                                                    : Number(v).toString()
+                                                }
                                                 width={72}
                                             />
                                             <Tooltip
-                                                cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                                cursor={{ stroke: chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))', strokeWidth: 1, strokeDasharray: '4 4' }}
                                                 content={({ active, payload, label }) => {
                                                     if (!active || !payload?.length) return null;
-                                                    const revenue = payload.find(p => p.dataKey === 'revenue')?.value as number;
-                                                    const orders = (payload[0]?.payload?.orders ?? 0) as number;
+                                                    const revenue = payload[0]?.payload?.revenue as number ?? 0;
+                                                    const orders = payload[0]?.payload?.orders as number ?? 0;
+                                                    
                                                     return (
                                                         <div className="rounded-lg border bg-background p-3 shadow-md text-sm space-y-1 z-50 relative">
                                                             <p className="font-semibold capitalize">{formatTooltipDate(label)}</p>
-                                                            <p className="text-primary font-bold">${Number(revenue).toLocaleString('es-AR')}</p>
-                                                            <p className="text-muted-foreground">{orders} {orders === 1 ? 'orden' : 'órdenes'}</p>
+                                                            {chartType === 'revenue' ? (
+                                                                <>
+                                                                    <p className="text-primary font-bold">Ingresos: ${Number(revenue).toLocaleString('es-AR')}</p>
+                                                                    <p className="text-muted-foreground">{orders} {orders === 1 ? 'orden completada' : 'órdenes completadas'}</p>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <p className="font-bold text-[hsl(var(--chart-2,210_100%_50%))]">{orders} {orders === 1 ? 'orden completada' : 'órdenes completadas'}</p>
+                                                                    <p className="text-muted-foreground">Ingresos: ${Number(revenue).toLocaleString('es-AR')}</p>
+                                                                </>
+                                                            )}
                                                         </div>
                                                     );
                                                 }}
                                             />
                                             <Area
                                                 type="monotone"
-                                                dataKey="revenue"
-                                                stroke="hsl(var(--primary))"
+                                                dataKey={chartType}
+                                                stroke={chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))'}
                                                 strokeWidth={2}
-                                                fill="url(#revenueGradient)"
+                                                fill="url(#gradientColor)"
                                                 dot={{
                                                     r: 4,
                                                     fill: 'hsl(var(--background))',
-                                                    stroke: 'hsl(var(--primary))',
+                                                    stroke: chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))',
                                                     strokeWidth: 2,
                                                 }}
                                                 activeDot={{
                                                     r: 6,
-                                                    fill: 'hsl(var(--primary))',
+                                                    fill: chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))',
                                                     stroke: 'hsl(var(--background))',
                                                     strokeWidth: 2,
                                                 }}
