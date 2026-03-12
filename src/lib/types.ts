@@ -90,6 +90,7 @@ export interface Coupon {
 export interface SalesMetrics {
   totalRevenue: number;
   totalSales: number;
+  pendingOrders: number;
   topSellingProducts: {
     productId: number;
     name: string;

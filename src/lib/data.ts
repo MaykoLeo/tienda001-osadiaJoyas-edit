@@ -280,7 +280,10 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
 
         if (startDate && endDate) {
             revenueResult = await db`
-                SELECT SUM(total) as totalRevenue, COUNT(*) as totalSales
+                SELECT 
+                    SUM(total) as totalRevenue, 
+                    COUNT(*) as totalSales,
+                    (SELECT COUNT(*) FROM orders WHERE status IN ('pending', 'pending_payment', 'awaiting_payment_in_store') AND created_at >= ${startDate.toISOString()} AND created_at <= ${endDate.toISOString()}) as pendingOrders
                 FROM orders
                 WHERE status IN ('paid', 'delivered', 'shipped')
                 AND created_at >= ${startDate.toISOString()}
@@ -309,7 +312,10 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
             `;
         } else {
             revenueResult = await db`
-                SELECT SUM(total) as totalRevenue, COUNT(*) as totalSales
+                SELECT 
+                    SUM(total) as totalRevenue, 
+                    COUNT(*) as totalSales,
+                    (SELECT COUNT(*) FROM orders WHERE status IN ('pending', 'pending_payment', 'awaiting_payment_in_store')) as pendingOrders
                 FROM orders
                 WHERE status IN ('paid', 'delivered', 'shipped')
             `;
@@ -332,10 +338,11 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
             `;
         }
 
-        const { totalrevenue, totalsales } = revenueResult[0];
+        const { totalrevenue, totalsales, pendingorders } = revenueResult[0];
         return {
             totalRevenue: parseFloat(totalrevenue) || 0,
             totalSales: parseInt(totalsales) || 0,
+            pendingOrders: parseInt(pendingorders) || 0,
             topSellingProducts: productsResult.map((r: any) => ({ productId: r.productId, name: r.name, count: Number(r.count) })),
             revenueByDate: revenueByDateResult.map((r: any) => ({
                 date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date).split('T')[0],

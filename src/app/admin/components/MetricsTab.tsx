@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Package, Wallet, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, BarChart } from 'lucide-react';
+import { Loader2, Package, Wallet, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, BarChart, CreditCard, Clock } from 'lucide-react';
 import type { Product, SalesMetrics, Category } from '@/lib/types';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart as RechartsBarChart, Bar as RechartsBar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart as RechartsAreaChart, Area } from 'recharts';
@@ -242,6 +242,38 @@ export function MetricsTab({
                                     {isMetricsSpinning || !salesMetrics
                                         ? <Loader2 className="h-6 w-6 animate-spin" />
                                         : `${salesMetrics.totalSales}`}
+                                </div>
+                                <p className="text-xs text-muted-foreground capitalize">{activePeriodOption.description}</p>
+                            </CardContent>
+                        </Card>
+
+                        {/* Ticket Promedio */}
+                        <Card className="shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Ticket Promedio</CardTitle>
+                                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">
+                                    {isMetricsSpinning || !salesMetrics
+                                        ? <Loader2 className="h-6 w-6 animate-spin" />
+                                        : `$${salesMetrics.totalSales > 0 ? (salesMetrics.totalRevenue / salesMetrics.totalSales).toLocaleString('es-AR', { maximumFractionDigits: 0 }) : '0'}`}
+                                </div>
+                                <p className="text-xs text-muted-foreground capitalize">{activePeriodOption.description}</p>
+                            </CardContent>
+                        </Card>
+
+                        {/* Órdenes Pendientes */}
+                        <Card className="shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Órdenes Pendientes</CardTitle>
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">
+                                    {isMetricsSpinning || !salesMetrics
+                                        ? <Loader2 className="h-6 w-6 animate-spin" />
+                                        : `${salesMetrics.pendingOrders}`}
                                 </div>
                                 <p className="text-xs text-muted-foreground capitalize">{activePeriodOption.description}</p>
                             </CardContent>
