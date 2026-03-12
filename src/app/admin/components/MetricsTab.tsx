@@ -148,6 +148,14 @@ export function MetricsTab({
         return salesMetrics.revenueByDate;
     }, [salesMetrics, activePeriod]);
 
+    // Data mapped with a stable key for smooth Recharts path animations
+    const chartDisplayData = useMemo(() => {
+        return processedRevenueData.map(item => ({
+            ...item,
+            value: chartType === 'revenue' ? item.revenue : item.allOrders
+        }));
+    }, [processedRevenueData, chartType]);
+
     const isMetricsSpinning = isLoading || isMetricsLoading;
 
     // Format dates on the X axis depending on the period length
@@ -249,7 +257,7 @@ export function MetricsTab({
                                 <div style={{ minWidth: activePeriod === 'all' && processedRevenueData.length > 10 ? `${processedRevenueData.length * 64}px` : '100%', height: '100%' }}>
                                     <ResponsiveContainer width="100%" height="100%">
                                         <RechartsAreaChart
-                                            data={processedRevenueData}
+                                            data={chartDisplayData}
                                             margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
                                         >
                                             <defs>
@@ -320,7 +328,7 @@ export function MetricsTab({
                                             />
                                             <Area
                                                 type="monotone"
-                                                dataKey={chartType === 'revenue' ? 'revenue' : 'allOrders'}
+                                                dataKey="value"
                                                 stroke={chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))'}
                                                 strokeWidth={2}
                                                 fill="url(#gradientColor)"
