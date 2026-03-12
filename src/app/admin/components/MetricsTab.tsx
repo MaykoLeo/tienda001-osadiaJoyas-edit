@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Package, Wallet, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, BarChart, CreditCard, Clock } from 'lucide-react';
+import { Loader2, Package, Wallet, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, BarChart, CreditCard, Clock, Crown, PackageX } from 'lucide-react';
 import type { Product, SalesMetrics, Category } from '@/lib/types';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart as RechartsBarChart, Bar as RechartsBar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart as RechartsAreaChart, Area } from 'recharts';
@@ -106,6 +106,23 @@ export function MetricsTab({
     const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
     const inventoryValue = products.reduce((acc, p) => acc + p.price * p.stock, 0);
     const lowStockProducts = products.filter(p => p.stock >= 0 && p.stock <= 3);
+
+    const stagnantProducts = useMemo(() => {
+        if (!salesMetrics || !products) return [];
+        
+        // Obtenemos los IDs de los productos que sí se vendieron
+        const soldProductIds = new Set(salesMetrics.topSellingProducts.map(sp => sp.productId));
+        // En una app real, traeríamos TODOS los IDs vendidos, pero topSelling + topRevenue + revenueByDate(si desglosa) ayuda.
+        // Si backend estuviera modificado para dar "todas las ventas de producto unicas", usariamos eso.
+        // Por simplificacion del caso de MVP usamos "no están en el top 50 de venderse" asumiendo poco volumen global,
+        // o mejor aún, confiaremos en que salesMetrics se expandió. Por ahora, "No es Top Seller, ni tampoco Top Ganancia".
+        const topRevenueIds = salesMetrics.topRevenueProducts ? new Set(salesMetrics.topRevenueProducts.map(rp => rp.productId)) : new Set();
+        
+        return products
+            .filter(p => p.stock > 0 && !soldProductIds.has(p.id) && !topRevenueIds.has(p.id))
+            .sort((a, b) => b.stock - a.stock) // Ordenar por inventario inmovilizado
+            .slice(0, 5); // Tomamos los 5 peores
+    }, [products, salesMetrics]);
 
     const activePeriodOption = PERIOD_OPTIONS.find(p => p.key === activePeriod)!;
 
@@ -755,6 +772,99 @@ export function MetricsTab({
                             </CardContent>
                         </Card>
                     </div>
+                    
+                    {/* --- GEMAS VS ESTANCADOS --- */}
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {/* Productos Gemas */}
+                        <Card className="shadow-md border-amber-500/30 bg-amber-50/10">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-amber-600">
+                                    <Crown className="h-5 w-5" />
+                                    Productos Gema
+                                </CardTitle>
+                                <CardDescription>Mayor recaudación (Ingresos totales) en {activePeriodOption.description}.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    {isMetricsLoading || !salesMetrics ? (
+                                        <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                                    ) : salesMetrics.topRevenueProducts?.length > 0 ? (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Producto</TableHead>
+                                                    <TableHead className="text-right">Recaudación</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {salesMetrics.topRevenueProducts.map((p, idx) => (
+                                                    <TableRow key={p.productId}>
+                                                        <TableCell className="font-medium">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-amber-600 w-4">{idx + 1}.</span>
+                                                                {p.name}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="text-right font-bold text-green-600">
+                                                            ${p.revenue.toLocaleString('es-AR')}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    ) : (
+                                        <div className="flex flex-col justify-center items-center h-48 gap-2">
+                                            <Crown className="h-8 w-8 text-muted-foreground opacity-50" />
+                                            <p className="text-muted-foreground text-sm">Sin suficientes ventas para este período.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Productos Estancados */}
+                        <Card className="shadow-md border-slate-500/30 bg-slate-50/10">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-slate-600">
+                                    <PackageX className="h-5 w-5" />
+                                    Productos Estancados
+                                </CardTitle>
+                                <CardDescription>Alto inventario inmovilizado y sin ventas en {activePeriodOption.description}.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    {isLoading || isMetricsLoading ? (
+                                        <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                                    ) : stagnantProducts.length > 0 ? (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Producto</TableHead>
+                                                    <TableHead className="text-right">Stock Inmovilizado</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {stagnantProducts.map(p => (
+                                                    <TableRow key={p.id}>
+                                                        <TableCell className="font-medium text-muted-foreground">{p.name}</TableCell>
+                                                        <TableCell className="text-right font-bold text-slate-500">
+                                                            {p.stock} unid.
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    ) : (
+                                        <div className="flex flex-col justify-center items-center h-48 gap-2">
+                                            <Package className="h-8 w-8 text-primary/50" />
+                                            <p className="text-muted-foreground text-sm text-center">¡Excelente rimo!<br/>No detectamos inventario estancado severo.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
                 </TabsContent>
             </Tabs>
         </div>

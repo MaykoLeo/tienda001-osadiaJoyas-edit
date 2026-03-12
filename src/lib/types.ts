@@ -96,6 +96,11 @@ export interface SalesMetrics {
     name: string;
     count: number;
   }[];
+  topRevenueProducts: {
+    productId: number;
+    name: string;
+    revenue: number;
+  }[];
   revenueByDate: {
     date: string; // 'YYYY-MM-DD'
     revenue: number;
