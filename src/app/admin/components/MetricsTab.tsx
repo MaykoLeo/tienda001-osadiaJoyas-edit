@@ -314,6 +314,9 @@ export function MetricsTab({
                                                 stroke={chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))'}
                                                 strokeWidth={2}
                                                 fill="url(#gradientColor)"
+                                                isAnimationActive={true}
+                                                animationDuration={1000}
+                                                animationEasing="ease-in-out"
                                                 dot={{
                                                     r: 4,
                                                     fill: 'hsl(var(--background))',
@@ -322,9 +325,8 @@ export function MetricsTab({
                                                 }}
                                                 activeDot={{
                                                     r: 6,
+                                                    strokeWidth: 0,
                                                     fill: chartType === 'revenue' ? 'hsl(var(--primary))' : 'hsl(var(--chart-2, 210 100% 50%))',
-                                                    stroke: 'hsl(var(--background))',
-                                                    strokeWidth: 2,
                                                 }}
                                             />
                                         </RechartsAreaChart>
@@ -369,7 +371,7 @@ export function MetricsTab({
                         <div className="text-2xl font-bold">
                             {isMetricsSpinning || !salesMetrics
                                 ? <Loader2 className="h-6 w-6 animate-spin" />
-                                : `+${salesMetrics.totalSales}`}
+                                : `${salesMetrics.totalSales}`}
                         </div>
                         <p className="text-xs text-muted-foreground capitalize">{activePeriodOption.description}</p>
                     </CardContent>
