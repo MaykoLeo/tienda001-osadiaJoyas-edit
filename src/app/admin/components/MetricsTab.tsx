@@ -651,7 +651,7 @@ export function MetricsTab({
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {salesMetrics.topSellingProducts.map((p, idx) => (
+                                                {salesMetrics.topSellingProducts.slice(0, 5).map((p, idx) => (
                                                     <TableRow key={p.productId}>
                                                         <TableCell className="text-muted-foreground font-medium">{idx + 1}</TableCell>
                                                         <TableCell className="font-medium">{p.name}</TableCell>
