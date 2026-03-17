@@ -192,7 +192,7 @@ async function getProductsInternal(
             ${whereClause}
             GROUP BY p.id
             ${havingClause}
-            ORDER BY ${orderBy} ${orderDirection}
+            ORDER BY ${orderBy} ${orderDirection}, p.id ASC
             ${limitClause}
         `;
 

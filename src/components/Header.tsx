@@ -16,8 +16,6 @@ import {
 import { ThemeToggle } from './ThemeToggle';
 import { usePathname } from 'next/navigation';
 import { GlobalSearch } from './GlobalSearch';
-import { getProducts } from '@/lib/data/products';
-import type { Product } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -26,20 +24,9 @@ export default function Header() {
   const pathname = usePathname();
   const { cartCount, setIsSidebarOpen } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {
-        try {
-            const fetchedProducts = await getProducts();
-            setProducts(fetchedProducts);
-        } catch (error) {
-            console.error("Failed to fetch products for search:", error);
-        }
-    }
-    fetchData();
-
     const handleScroll = () => {
         setIsScrolled(window.scrollY > 10);
     };
@@ -61,7 +48,14 @@ export default function Header() {
 
   return (
     <header className={cn(
-        "sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60 transition-all duration-300",
+        // DS Glassmorphism:
+        // Light: Champagne Cream translúcido con blur sutil
+        // Dark: Carbon rgba(18,18,18,0.7) + blur(10px) — Technological Luxury
+        "sticky top-0 z-50 w-full border-b border-border/40",
+        "bg-[hsl(40,33%,97%)]/80 backdrop-blur-sm",
+        "dark:bg-[rgba(18,18,18,0.7)] dark:backdrop-blur-[10px]",
+        "supports-[backdrop-filter]:bg-background/60",
+        "transition-all duration-300",
         isScrolled ? 'h-16' : 'h-20'
     )}>
       <div className="container flex h-full items-center">
@@ -80,8 +74,20 @@ export default function Header() {
               <SheetContent side="left" className='w-full max-w-[300px]'>
                   <SheetHeader>
                       <SheetTitle>
-                          <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
-                              <Image src="https://i.imgur.com/iYTQ6pp.png" alt="OSADÍA Logo" width={120} height={40} />
+                          <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="group block outline-none">
+                              <div 
+                                className="w-[120px] h-[40px] bg-foreground group-hover:bg-primary transition-colors duration-300"
+                                style={{
+                                  maskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
+                                  WebkitMaskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
+                                  maskSize: 'contain',
+                                  WebkitMaskSize: 'contain',
+                                  maskRepeat: 'no-repeat',
+                                  WebkitMaskRepeat: 'no-repeat'
+                                }}
+                                role="img"
+                                aria-label="OSADÍA Logo"
+                              />
                           </Link>
                       </SheetTitle>
                   </SheetHeader>
@@ -98,7 +104,7 @@ export default function Header() {
           {!pathname.startsWith('/admin') && (
             <div className={cn("hidden w-full max-w-sm", isTiendaPage ? "lg:block" : "md:block")}>
               <Suspense fallback={<Skeleton className="h-10 w-full" />}>
-                <GlobalSearch allProducts={products} />
+                <GlobalSearch />
               </Suspense>
             </div>
           )}
@@ -106,8 +112,20 @@ export default function Header() {
 
         {/* Center Section: Logo */}
         <div className="flex-1 flex justify-center">
-             <Link href="/" className="flex items-center space-x-2">
-                <Image src="https://i.imgur.com/iYTQ6pp.png" alt="OSADÍA Logo" width={140} height={50} priority />
+             <Link href="/" className="group flex items-center space-x-2 outline-none">
+                <div 
+                  className="w-[140px] h-[50px] bg-foreground group-hover:bg-primary transition-colors duration-300"
+                  style={{
+                    maskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
+                    WebkitMaskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
+                    maskSize: 'contain',
+                    WebkitMaskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    WebkitMaskRepeat: 'no-repeat'
+                  }}
+                  role="img"
+                  aria-label="OSADÍA Logo"
+                />
              </Link>
         </div>
 

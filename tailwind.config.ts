@@ -18,8 +18,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['"Madeleina Sans"', 'sans-serif'],
-        headline: ['"Fino Sans"', 'sans-serif'],
+        sans: ['var(--font-inter)', 'Inter', 'sans-serif'],
+        body: ['var(--font-inter)', 'Inter', 'sans-serif'],
+        headline: ['var(--font-playfair)', 'Playfair Display', 'serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -74,9 +75,12 @@ export default {
         },
       },
       borderRadius: {
-        lg: 'var(--radius)',
+        lg: 'var(--radius)',           // 8px — cards
         md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        sm: 'calc(var(--radius) - 4px)', // 4px — buttons/inputs
+        button: '4px',
+        card: '8px',
+        full: '9999px',
       },
       keyframes: {
         'accordion-down': {

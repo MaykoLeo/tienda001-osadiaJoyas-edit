@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { memo } from 'react'; // Importamos memo
+import { memo } from 'react';
 import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,7 +16,6 @@ interface ProductCardProps {
   product: Product;
 }
 
-// Envolvemos el componente con React.memo para optimizar el renderizado
 export const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const hasStock = product.stock > 0;
@@ -32,8 +31,10 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
 
   return (
     <Card className={cn(
-        "flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700",
-        "h-full", // Asegura que la tarjeta ocupe toda la altura del contenedor flex/grid
+        // DS: card radius 8px, subtle shadow, architectural precision
+        "flex flex-col overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 rounded-[8px] shadow-md",
+        "border border-border",
+        "h-full",
         !hasStock && "opacity-50"
     )}>
       <CardHeader className="p-0">
@@ -46,31 +47,39 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
               height={600}
               className="aspect-square object-cover w-full transition-transform duration-500 group-hover:scale-105"
               data-ai-hint={product.aiHint}
-              // En caso de error, la imagen no se mostrará, pero el div de fondo mantendrá el espacio
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           </div>
-          
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {product.salePrice && <Badge className='shadow-md' variant="destructive">OFERTA</Badge>}
-            {discount > 0 && <Badge className='shadow-md' variant="destructive">{`${discount}% OFF`}</Badge>}
+
+          {/* DS: Hover blur overlay — 4px backdrop-filter with 5% opacity shift */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[4px] bg-black/5" />
+
+          <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+            {product.salePrice && <Badge className='shadow-md rounded-[4px]' variant="destructive">OFERTA</Badge>}
+            {discount > 0 && <Badge className='shadow-md rounded-[4px]' variant="destructive">{`${discount}% OFF`}</Badge>}
           </div>
 
-          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className='p-2 bg-background/80 rounded-full shadow-lg'>
-                <Eye className='text-foreground' />
+          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+            <div className='p-2 bg-background/80 rounded-full shadow-lg backdrop-blur-sm'>
+                <Eye className='text-foreground w-4 h-4' />
             </div>
           </div>
         </Link>
       </CardHeader>
+
       <CardContent className="flex-1 flex flex-col p-4 bg-card">
         <div className="flex-1">
           <Link href={`/products/${product.id}`} className={cn('group', !hasStock && "pointer-events-none")}>
-            <CardTitle className="font-headline text-lg hover:text-primary transition-colors leading-tight">{product.name}</CardTitle>
+            {/* DS: Playfair Display for product titles */}
+            <CardTitle className="font-headline text-lg leading-tight tracking-[-0.02em] hover:text-primary transition-colors duration-300">
+              {product.name}
+            </CardTitle>
           </Link>
-          {product.shortDescription && <CardDescription className="mt-1 text-sm">{product.shortDescription}</CardDescription>}
+          {product.shortDescription && (
+            <CardDescription className="mt-1 text-sm font-body">{product.shortDescription}</CardDescription>
+          )}
         </div>
-        
+
         {product.salePrice ? (
             <div className='flex items-baseline gap-2 mt-2'>
                 <p className="text-2xl font-bold text-primary">
@@ -86,9 +95,19 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
             </p>
         )}
       </CardContent>
+
       <CardFooter className="p-4 pt-0 bg-card">
-        <Button onClick={() => addToCart(product)} size="sm" className="w-full shadow-md" disabled={!hasStock}>
-            {hasStock ? <><ShoppingCart className="mr-2 h-4 w-4" /> Añadir al Carrito</> : <><Ban className="mr-2 h-4 w-4" />Sin Stock</>}
+        {/* DS: Button — 4px radius, uppercase, tracking wide, 300ms gold transition */}
+        <Button
+          onClick={() => addToCart(product)}
+          size="sm"
+          className="w-full shadow-sm rounded-[4px] uppercase tracking-widest text-xs font-medium transition-all duration-300"
+          disabled={!hasStock}
+        >
+          {hasStock
+            ? <><ShoppingCart className="mr-2 h-4 w-4" /> Añadir al Carrito</>
+            : <><Ban className="mr-2 h-4 w-4" />Sin Stock</>
+          }
         </Button>
       </CardFooter>
     </Card>

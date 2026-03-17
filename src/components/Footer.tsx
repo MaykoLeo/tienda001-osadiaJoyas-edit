@@ -68,44 +68,58 @@ export default function Footer() {
     ];
 
   return (
-    <footer className="bg-secondary/50 border-t mt-8">
-      <div className="container py-8 md:py-12 text-secondary-foreground">
+    <footer className="bg-muted/50 border-t mt-16">
+      <div className="container py-12 md:py-16 text-foreground">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="space-y-4 md:col-span-1">
-                <Image src="https://i.imgur.com/iYTQ6pp.png" alt="OSADÍA Logo" width={120} height={40} />
-                <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Osadía. Todos los derechos reservados.</p>
-                 <div className="flex gap-4">
-                    <Link href="https://www.instagram.com/osadia.cta" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram className="h-6 w-6"/></Link>
-                    <Link href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-muted-foreground hover:text-primary transition-colors"><Facebook className="h-6 w-6"/></Link>
+            <div className="space-y-6 md:col-span-1">
+                <Link href="/" className="group block w-fit h-fit outline-none">
+                  <div 
+                    className="w-[140px] h-[50px] bg-foreground group-hover:bg-primary transition-colors duration-300"
+                    style={{
+                      maskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
+                      WebkitMaskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
+                      maskSize: 'contain',
+                      WebkitMaskSize: 'contain',
+                      maskRepeat: 'no-repeat',
+                      WebkitMaskRepeat: 'no-repeat'
+                    }}
+                    role="img"
+                    aria-label="OSADÍA Logo"
+                  />
+                </Link>
+                <p className="text-sm text-muted-foreground leading-relaxed">&copy; {new Date().getFullYear()} Osadía Joyas. <br/>Arquitectura en cada pieza.</p>
+                 <div className="flex gap-5">
+                    <Link href="https://www.instagram.com/osadia.cta" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors duration-300"><Instagram className="h-5 w-5"/></Link>
+                    <Link href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-muted-foreground hover:text-primary transition-colors duration-300"><Facebook className="h-5 w-5"/></Link>
                 </div>
             </div>
             
-            <div className="space-y-4">
-                <h4 className="font-semibold text-lg">Navegación</h4>
-                <nav className="flex flex-col gap-2">
+            <div className="space-y-6">
+                <h4 className="font-headline font-semibold text-xl tracking-tight">Navegación</h4>
+                <nav className="flex flex-col gap-3">
                     {navLinks.map(link => (
-                        <Link key={link.href} href={link.href} className="text-muted-foreground hover:text-primary transition-colors w-fit">
+                        <Link key={link.href} href={link.href} className="text-muted-foreground hover:text-primary transition-colors duration-300 w-fit text-sm uppercase tracking-wider font-medium">
                             {link.label}
                         </Link>
                     ))}
                 </nav>
             </div>
 
-            <div className="space-y-4">
-                 <h4 className="font-semibold text-lg">Información</h4>
-                 <nav className="flex flex-col gap-2">
-                    <Link href="/pages/garantia" className="text-muted-foreground hover:text-primary transition-colors w-fit">Garantía</Link>
-                    <Link href="/pages/preguntas-frecuentes" className="text-muted-foreground hover:text-primary transition-colors w-fit">Preguntas Frecuentes</Link>
-                    <Link href="/pages/como-comprar" className="text-muted-foreground hover:text-primary transition-colors w-fit">Cómo Comprar</Link>
+            <div className="space-y-6">
+                 <h4 className="font-headline font-semibold text-xl tracking-tight">Información</h4>
+                 <nav className="flex flex-col gap-3">
+                    <Link href="/pages/garantia" className="text-muted-foreground hover:text-primary transition-colors duration-300 w-fit text-sm uppercase tracking-wider font-medium">Garantía</Link>
+                    <Link href="/pages/preguntas-frecuentes" className="text-muted-foreground hover:text-primary transition-colors duration-300 w-fit text-sm uppercase tracking-wider font-medium">Preguntas Frecuentes</Link>
+                    <Link href="/pages/como-comprar" className="text-muted-foreground hover:text-primary transition-colors duration-300 w-fit text-sm uppercase tracking-wider font-medium">Cómo Comprar</Link>
                  </nav>
             </div>
             
-            <div className="space-y-4">
-                <h4 className="font-semibold text-lg">Newsletter</h4>
-                <p className="text-sm text-muted-foreground">
+            <div className="space-y-6">
+                <h4 className="font-headline font-semibold text-xl tracking-tight">Newsletter</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                     {mailchimpConfigured 
-                        ? "Suscríbete para recibir novedades y ofertas."
-                        : "La suscripción no está disponible."
+                        ? "Sé el primero en conocer nuestras nuevas colecciones y eventos exclusivos."
+                        : "Suscripción temporalmente fuera de servicio."
                     }
                 </p>
                 <NewsletterForm />

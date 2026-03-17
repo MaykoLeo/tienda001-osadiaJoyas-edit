@@ -85,7 +85,7 @@ export function HeroCarousel() {
             <CarouselContent>
                 {carouselSlides.map((slide, index) => (
                     <CarouselItem key={index}>
-                    <div className="relative text-center h-[60vh] md:h-[70vh] rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center p-4">
+                    <div className="relative text-center h-[60vh] md:h-[70vh] rounded-[8px] overflow-hidden shadow-2xl flex items-center justify-center p-4">
                         <div className="absolute inset-0 z-0">
                         <Image
                             src={slide.image}
@@ -93,21 +93,26 @@ export function HeroCarousel() {
                             fill
                             className="object-cover"
                             data-ai-hint={slide.aiHint}
-                            priority={index === 0} // Prioriza la carga de la primera imagen
-                            sizes="100vw" // La imagen ocupa todo el ancho de la ventana
+                            priority={index === 0}
+                            sizes="100vw"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10"></div>
                         </div>
-                        <div className="relative z-10 text-white max-w-4xl mx-auto">
-                        <h1 className="text-5xl font-headline font-bold sm:text-6xl lg:text-7xl drop-shadow-lg">
-                            {slide.title}
-                        </h1>
-                        <p className="mt-4 text-lg text-slate-100 drop-shadow-md">
-                            {slide.description}
-                        </p>
-                        <Button asChild size="lg" className="mt-8 shadow-lg">
-                            <Link href={slide.buttonLink}>{slide.buttonText}</Link>
-                        </Button>
+                        <div className="relative z-10 text-white w-full max-w-screen-xl mx-auto px-8 grid grid-cols-12 gap-8">
+                          <div className="col-span-12 lg:col-span-8 lg:col-start-3">
+                            {/* DS: Playfair Display para el título hero con letter-spacing -0.02em */}
+                            <h1 className="font-headline font-semibold text-5xl sm:text-6xl lg:text-7xl drop-shadow-lg tracking-[-0.02em] leading-tight mb-6">
+                                {slide.title}
+                            </h1>
+                            {/* DS: Inter para la descripción */}
+                            <p className="text-lg font-body text-white/90 drop-shadow-md max-w-xl mx-auto mb-10">
+                                {slide.description}
+                            </p>
+                            {/* DS: CTA uppercase + tracking-widest + 4px radius (heredado de button.tsx) */}
+                            <Button asChild size="lg" className="shadow-lg uppercase tracking-widest text-sm font-medium px-10 h-14">
+                                <Link href={slide.buttonLink}>{slide.buttonText}</Link>
+                            </Button>
+                          </div>
                         </div>
                     </div>
                     </CarouselItem>

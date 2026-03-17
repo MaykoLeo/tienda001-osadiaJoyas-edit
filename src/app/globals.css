@@ -4,53 +4,81 @@
 @tailwind utilities;
 
 body {
-  font-family: 'Madeleina Sans', sans-serif;
+  font-family: var(--font-inter, 'Inter'), sans-serif;
 }
 
+/* === Osadía Joyas Design System v1.0 === */
+/* Light Mode: Modern Heritage (Cream + Champagne Gold) */
 @layer base {
   :root {
-    --background: 240 14% 94%;
-    --foreground: 0 0% 18%;
-    --card: 240 14% 94%;
-    --card-foreground: 0 0% 18%;
-    --popover: 240 14% 94%;
-    --popover-foreground: 0 0% 18%;
-    --primary: 96 3% 54%;
+    /* Layout */
+    --background: 40 33% 97%;      /* #F9F7F2 — Champagne Cream */
+    --foreground: 0 0% 10%;        /* #1A1A1A — Carbon Black */
+    --card: 0 0% 100%;             /* #FFFFFF — Pure White surface */
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    /* Brand: Champagne Gold */
+    --primary: 43 62% 52%;         /* #D4AF37 — Champagne Gold */
     --primary-foreground: 0 0% 100%;
-    --secondary: 26 9% 48%;
+
+    /* Muted Gold for secondary actions */
+    --secondary: 37 40% 50%;       /* #B5964B — Muted Gold */
     --secondary-foreground: 0 0% 100%;
-    --muted: 215 28% 94%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 26 9% 48%;
+
+    /* Neutral tones */
+    --muted: 40 20% 92%;           /* Soft cream tint */
+    --muted-foreground: 0 0% 34%;  /* #575757 — Dark grey */
+    --accent: 43 62% 52%;
     --accent-foreground: 0 0% 100%;
+
+    /* Utility */
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 215 20% 90%;
-    --input: 215 20% 90%;
-    --ring: 96 3% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 20% 88%;          /* #E5E1D8 */
+    --input: 30 20% 88%;
+    --ring: 43 62% 52%;
     --radius: 0.5rem;
+
+    /* Skeleton color (Cream tint) */
+    --skeleton-base: 40 30% 91%;
+    --skeleton-shine: 40 30% 96%;
   }
  
+  /* Dark Mode: Technological Luxury (Carbon + Turquoise) */
   .dark {
-    --background: 220 18% 12%;
-    --foreground: 210 40% 98%;
-    --card: 220 18% 12%;
-    --card-foreground: 210 40% 98%;
-    --popover: 220 18% 12%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 180 75% 45%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 38 85% 65%;
-    --accent-foreground: 210 40% 98%;
+    --background: 0 0% 7%;         /* #121212 — Deep Carbon */
+    --foreground: 0 0% 96%;        /* #F5F5F5 — Off-White */
+    --card: 0 0% 11%;              /* #1C1C1C — Surface Carbon */
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 0 0% 96%;
+
+    /* Brand: Turquoise Glow */
+    --primary: 168 100% 45%;       /* #00E5BC — Turquoise */
+    --primary-foreground: 0 0% 7%;
+
+    /* Muted secondary */
+    --secondary: 0 0% 17%;
+    --secondary-foreground: 0 0% 96%;
+
+    /* Neutral Carbon tones */
+    --muted: 0 0% 18%;             /* #2D2D2D */
+    --muted-foreground: 0 0% 63%;  /* #A0A0A0 */
+    --accent: 168 100% 45%;
+    --accent-foreground: 0 0% 7%;
+
+    /* Utility */
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 32.6% 17.5%;
-    --input: 217 32.6% 17.5%;
-    --ring: 180 75% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 18%;            /* #2D2D2D */
+    --input: 0 0% 18%;
+    --ring: 168 100% 45%;
+
+    /* Skeleton color (Dark Carbon shimmer) */
+    --skeleton-base: 0 0% 16%;
+    --skeleton-shine: 0 0% 22%;
   }
 }
 
@@ -60,17 +88,21 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-inter, 'Inter'), sans-serif;
     background-color: hsl(var(--background));
     background-image:
-        radial-gradient(at 27% 37%, hsl(var(--secondary)) 0px, transparent 50%),
-        radial-gradient(at 97% 21%, hsl(var(--accent) / 0.1) 0px, transparent 50%),
-        radial-gradient(at 52% 99%, hsl(var(--primary) / 0.15) 0px, transparent 50%),
-        radial-gradient(at 10% 29%, hsl(var(--primary) / 0.2) 0px, transparent 50%),
-        radial-gradient(at 97% 96%, hsl(var(--secondary)) 0px, transparent 50%),
-        radial-gradient(at 33% 50%, hsl(var(--accent) / 0.05) 0px, transparent 50%),
-        radial-gradient(at 79% 53%, hsl(var(--background)) 0px, transparent 50%);
+        radial-gradient(at 97% 21%, hsl(var(--primary) / 0.05) 0px, transparent 50%),
+        radial-gradient(at 52% 99%, hsl(var(--primary) / 0.08) 0px, transparent 50%),
+        radial-gradient(at 10% 29%, hsl(var(--primary) / 0.06) 0px, transparent 50%);
+  }
+
+  /* DS: Playfair Display para todos los headings por defecto */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-playfair, 'Playfair Display'), serif;
+    letter-spacing: -0.02em;
   }
 }
+
 
 /* === Estilos de Scrollbar Adaptables === */
 ::-webkit-scrollbar {

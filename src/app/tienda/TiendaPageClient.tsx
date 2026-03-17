@@ -39,7 +39,11 @@ export function TiendaPageClient({
   const { ref, inView } = useInView({ threshold: 0.1 });
 
   useEffect(() => {
-    setProducts(initialProducts);
+    // DS Fix: Prevent duplicate keys on initial load/filter change
+    const uniqueInitial = initialProducts.filter((p, index, self) => 
+      index === self.findIndex((t) => t.id === p.id)
+    );
+    setProducts(uniqueInitial);
     setPage(1);
     setHasMore(initialHasMore);
   }, [paramsStr, initialProducts, initialHasMore]); // Depend on the string representation
@@ -61,7 +65,12 @@ export function TiendaPageClient({
       const data = await response.json();
       const newProducts = data.products || [];
 
-      setProducts(prev => [...prev, ...newProducts]);
+      setProducts(prev => {
+        // DS Fix: Deduplicate by ID to prevent "duplicate key" React error
+        const existingIds = new Set(prev.map(p => p.id));
+        const uniqueNew = newProducts.filter((p: Product) => !existingIds.has(p.id));
+        return [...prev, ...uniqueNew];
+      });
       setPage(nextPage);
       setHasMore(newProducts.length > 0 && newProducts.length === ITEMS_PER_PAGE);
     } catch (error) {
