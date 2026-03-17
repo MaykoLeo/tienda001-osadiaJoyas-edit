@@ -290,21 +290,14 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
                 AND created_at <= ${endDate.toISOString()}
             `;
             productsResult = await db`
-                SELECT (item->>'productId')::int as "productId", item->>'name' as name, SUM((item->>'quantity')::int) as count
+                SELECT (item->>'productId')::int as "productId", item->>'name' as name, SUM((item->>'quantity')::int) as count, SUM((item->>'quantity')::int * (item->>'priceAtPurchase')::numeric) as revenue
                 FROM orders, jsonb_array_elements(items) as item
                 WHERE status IN ('paid', 'delivered', 'shipped')
                 AND created_at >= ${startDate.toISOString()}
                 AND created_at <= ${endDate.toISOString()}
-                GROUP BY 1, 2 ORDER BY count DESC LIMIT 5;
+                GROUP BY 1, 2 ORDER BY revenue DESC;
             `;
-            gemasResult = await db`
-                SELECT (item->>'productId')::int as "productId", item->>'name' as name, SUM((item->>'quantity')::int * (item->>'priceAtPurchase')::numeric) as revenue
-                FROM orders, jsonb_array_elements(items) as item
-                WHERE status IN ('paid', 'delivered', 'shipped')
-                AND created_at >= ${startDate.toISOString()}
-                AND created_at <= ${endDate.toISOString()}
-                GROUP BY 1, 2 ORDER BY revenue DESC LIMIT 5;
-            `;
+            gemasResult = productsResult; // Use the same consolidated result
             revenueByDateResult = await db`
                 SELECT
                     DATE(created_at AT TIME ZONE 'America/Argentina/Buenos_Aires') as date,
@@ -328,17 +321,12 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
                 WHERE status IN ('paid', 'delivered', 'shipped')
             `;
             productsResult = await db`
-                SELECT (item->>'productId')::int as "productId", item->>'name' as name, SUM((item->>'quantity')::int) as count
+                SELECT (item->>'productId')::int as "productId", item->>'name' as name, SUM((item->>'quantity')::int) as count, SUM((item->>'quantity')::int * (item->>'priceAtPurchase')::numeric) as revenue
                 FROM orders, jsonb_array_elements(items) as item
                 WHERE status IN ('paid', 'delivered', 'shipped')
-                GROUP BY 1, 2 ORDER BY count DESC LIMIT 5;
+                GROUP BY 1, 2 ORDER BY revenue DESC;
             `;
-            gemasResult = await db`
-                SELECT (item->>'productId')::int as "productId", item->>'name' as name, SUM((item->>'quantity')::int * (item->>'priceAtPurchase')::numeric) as revenue
-                FROM orders, jsonb_array_elements(items) as item
-                WHERE status IN ('paid', 'delivered', 'shipped')
-                GROUP BY 1, 2 ORDER BY revenue DESC LIMIT 5;
-            `;
+            gemasResult = productsResult; // Use the same consolidated result
             revenueByDateResult = await db`
                 SELECT
                     DATE(created_at AT TIME ZONE 'America/Argentina/Buenos_Aires') as date,
@@ -358,7 +346,7 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
             totalSales: parseInt(totalsales) || 0,
             pendingOrders: parseInt(pendingorders) || 0,
             topSellingProducts: productsResult.map((r: any) => ({ productId: r.productId, name: r.name, count: Number(r.count) })),
-            topRevenueProducts: gemasResult.map((r: any) => ({ productId: r.productId, name: r.name, revenue: parseFloat(r.revenue) || 0 })),
+            topRevenueProducts: productsResult.map((r: any) => ({ productId: r.productId, name: r.name, revenue: parseFloat(r.revenue) || 0 })),
             revenueByDate: revenueByDateResult.map((r: any) => ({
                 date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date).split('T')[0],
                 revenue: parseFloat(r.revenue) || 0,
