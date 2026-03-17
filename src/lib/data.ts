@@ -386,6 +386,21 @@ export async function getOrders(): Promise<Order[]> {
     }
 }
 
+export async function getEarliestOrderDate(): Promise<Date | null> {
+    noStore();
+    try {
+        const db = getDb();
+        const result = await db`SELECT MIN(created_at) as earliest_date FROM orders WHERE status IN ('paid', 'delivered', 'shipped')`;
+        if (result.length > 0 && result[0].earliest_date) {
+            return new Date(result[0].earliest_date);
+        }
+        return null;
+    } catch (error) {
+        console.error('Database Error:', error);
+        return null;
+    }
+}
+
 export async function fetchProductMetrics(productId: number, startDate?: Date, endDate?: Date) {
     noStore();
     try {

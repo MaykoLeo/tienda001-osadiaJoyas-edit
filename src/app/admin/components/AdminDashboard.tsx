@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import type { Product, Coupon, SalesMetrics, Category, Order, OrderStatus } from '@/lib/types';
 import { getFilteredProducts } from '@/lib/data/products';
-import { getCoupons, getSalesMetrics, getCategories, getOrders } from '@/lib/data';
+import { getCoupons, getSalesMetrics, getCategories, getOrders, getEarliestOrderDate } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,6 +48,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
     const [categories, setCategories] = useState<Category[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [salesMetrics, setSalesMetrics] = useState<SalesMetrics | null>(null);
+    const [earliestOrderDate, setEarliestOrderDate] = useState<Date | null>(null);
     const [metricsDateRange, setMetricsDateRange] = useState<{start?: Date, end?: Date}>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isMetricsLoading, setIsMetricsLoading] = useState(false);
@@ -79,12 +80,13 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
         try {
             // Agregar timestamp para forzar bypass de caché
             const timestamp = Date.now();
-            const [fetchedProducts, fetchedCoupons, fetchedMetrics, fetchedCategories, fetchedOrders] = await Promise.all([
+            const [fetchedProducts, fetchedCoupons, fetchedMetrics, fetchedCategories, fetchedOrders, fetchedEarliestDate] = await Promise.all([
                 getFilteredProducts({ limit: -1, _ts: timestamp }),
                 getCoupons(),
                 getSalesMetrics(metricsDateRange.start, metricsDateRange.end),
                 getCategories(),
                 getOrders(),
+                getEarliestOrderDate(),
             ]);
             console.log('[fetchData] Products fetched:', fetchedProducts.length, 'items'); // DEBUG
             setProducts(fetchedProducts);
@@ -92,6 +94,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
             setSalesMetrics(fetchedMetrics);
             setCategories(fetchedCategories);
             setOrders(fetchedOrders);
+            setEarliestOrderDate(fetchedEarliestDate);
         } catch (error) {
             toast({ title: 'Error al cargar los datos del panel', description: (error as Error).message, variant: 'destructive' });
         }
@@ -331,7 +334,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
                         <TabsTrigger value="orders">Órdenes</TabsTrigger>
                     </TabsList>
                 </div>
-                <TabsContent value="overview" className="mt-6"><MetricsTab products={products} salesMetrics={salesMetrics} isLoading={isLoading} isMetricsLoading={isMetricsLoading} categories={categories} onPeriodChange={fetchMetrics} /></TabsContent>
+                <TabsContent value="overview" className="mt-6"><MetricsTab products={products} salesMetrics={salesMetrics} earliestOrderDate={earliestOrderDate} isLoading={isLoading} isMetricsLoading={isMetricsLoading} categories={categories} onPeriodChange={fetchMetrics} /></TabsContent>
                 <TabsContent value="products" className="mt-6"><ProductsTab products={products} isLoading={isLoading} onAdd={() => handleOpenProductDialog()} onEdit={handleOpenProductDialog} onDelete={handleDeleteProduct} onToggleFeatured={handleToggleFeatured} onExport={exportProductsToCSV} onImport={handleOpenImportDialog} categories={categories} /></TabsContent>
                 <TabsContent value="categories" className="mt-6"><CategoriesTab categories={categories} isLoading={isLoading} onActionComplete={fetchData} /></TabsContent>
                 <TabsContent value="coupons" className="mt-6"><CouponsTab coupons={coupons} isLoading={isLoading} onAdd={() => handleOpenCouponDialog()} onEdit={handleOpenCouponDialog} onDelete={handleDeleteCoupon} onExport={exportCouponsToCSV} /></TabsContent>

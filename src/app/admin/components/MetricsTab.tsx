@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Package, Wallet, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, BarChart, CreditCard, Clock, Crown, PackageX, Search, ChevronLeft, Plus } from 'lucide-react';
+import { Loader2, Package, Wallet, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, BarChart, CreditCard, Clock, Crown, PackageX, Search, ChevronLeft, Plus, Calendar as CalendarIcon } from 'lucide-react';
 import type { Product, SalesMetrics, Category } from '@/lib/types';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart as RechartsBarChart, Bar as RechartsBar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart as RechartsAreaChart, Area } from 'recharts';
@@ -19,7 +19,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
 
-type PeriodKey = '7d' | '30d' | '90d' | 'year' | 'all';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { DateRange } from 'react-day-picker';
+import { cn } from '@/lib/utils';
+
+type PeriodKey = '7d' | '30d' | '90d' | 'year' | 'all' | 'custom';
 
 interface PeriodOption {
     key: PeriodKey;
@@ -86,6 +91,7 @@ const PERIOD_OPTIONS: PeriodOption[] = [
 export function MetricsTab({
     products,
     salesMetrics,
+    earliestOrderDate,
     isLoading,
     isMetricsLoading,
     categories,
@@ -93,12 +99,14 @@ export function MetricsTab({
 }: {
     products: Product[];
     salesMetrics: SalesMetrics | null;
+    earliestOrderDate?: Date | null;
     isLoading: boolean;
     isMetricsLoading: boolean;
     categories: Category[];
     onPeriodChange: (startDate?: Date, endDate?: Date) => void;
 }) {
     const [activePeriod, setActivePeriod] = useState<PeriodKey>('all');
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
     const [chartType, setChartType] = useState<'revenue' | 'orders'>('revenue');
 
     // --- ESTADOS: BUSCADOR DE PRODUCTOS ---
@@ -112,6 +120,10 @@ export function MetricsTab({
     const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
     const [lowStockThreshold, setLowStockThreshold] = useState<number>(3);
+
+    // Gem & Stagnant Ranking States
+    const [gemSortKey, setGemSortKey] = useState<'revenue' | 'sold'>('revenue');
+    const [gemSortOrder, setGemSortOrder] = useState<'asc' | 'desc'>('desc');
 
     // Filter Logic
     const parentCategoriesList = useMemo(() => categories.filter(c => !c.parentId), [categories]);
@@ -151,28 +163,63 @@ export function MetricsTab({
     const stagnantProducts = useMemo(() => {
         if (!salesMetrics || !products) return [];
         
-        // Obtenemos los IDs de los productos que sí se vendieron
         const soldProductIds = new Set(salesMetrics.topSellingProducts.map(sp => sp.productId));
-        // En una app real, traeríamos TODOS los IDs vendidos, pero topSelling + topRevenue + revenueByDate(si desglosa) ayuda.
-        // Si backend estuviera modificado para dar "todas las ventas de producto unicas", usariamos eso.
-        // Por simplificacion del caso de MVP usamos "no están en el top 50 de venderse" asumiendo poco volumen global,
-        // o mejor aún, confiaremos en que salesMetrics se expandió. Por ahora, "No es Top Seller, ni tampoco Top Ganancia".
         const topRevenueIds = salesMetrics.topRevenueProducts ? new Set(salesMetrics.topRevenueProducts.map(rp => rp.productId)) : new Set();
         
         return products
             .filter(p => p.stock > 0 && !soldProductIds.has(p.id) && !topRevenueIds.has(p.id))
-            .sort((a, b) => b.stock - a.stock) // Ordenar por inventario inmovilizado
-            .slice(0, 5); // Tomamos los 5 peores
+            .sort((a, b) => b.stock - a.stock); // No slice here, letting ScrollArea handle it
     }, [products, salesMetrics]);
 
-    const activePeriodOption = PERIOD_OPTIONS.find(p => p.key === activePeriod)!;
+    const gemRankings = useMemo(() => {
+        if (!salesMetrics) return [];
+        
+        // Unir datos de ventas por cantidad e ingresos
+        const revenueMap = new Map(salesMetrics.topRevenueProducts?.map(p => [p.productId, p.revenue]) || []);
+        const soldMap = new Map(salesMetrics.topSellingProducts?.map(p => [p.productId, p.count]) || []);
+        
+        const allSoldIds = new Set([...revenueMap.keys(), ...soldMap.keys()]);
+        
+        const data = Array.from(allSoldIds).map(id => {
+            const product = products.find(p => p.id === id);
+            return {
+                id,
+                name: product?.name || 'Producto Desconocido',
+                revenue: revenueMap.get(id) || 0,
+                sold: soldMap.get(id) || 0
+            };
+        });
+
+        return data.sort((a, b) => {
+            const multiplier = gemSortOrder === 'desc' ? 1 : -1;
+            if (gemSortKey === 'revenue') return (b.revenue - a.revenue) * multiplier;
+            return (b.sold - a.sold) * multiplier;
+        });
+    }, [salesMetrics, products, gemSortKey, gemSortOrder]);
+
+    const toggleGemSort = (key: 'revenue' | 'sold') => {
+        if (gemSortKey === key) {
+            setGemSortOrder(gemSortOrder === 'desc' ? 'asc' : 'desc');
+        } else {
+            setGemSortKey(key);
+            setGemSortOrder('desc');
+        }
+    };
+
+    const activePeriodOption = activePeriod === 'custom' 
+        ? { description: dateRange?.from ? (dateRange.to ? `entre ${format(dateRange.from, 'dd/MM/yyyy')} y ${format(dateRange.to, 'dd/MM/yyyy')}` : `desde el ${format(dateRange.from, 'dd/MM/yyyy')}`) : 'período personalizado' }
+        : PERIOD_OPTIONS.find(p => p.key === activePeriod)!;
 
     const handlePeriodChange = useCallback((periodKey: PeriodKey) => {
         setActivePeriod(periodKey);
-        const option = PERIOD_OPTIONS.find(p => p.key === periodKey)!;
-        const { startDate, endDate } = option.getDates();
-        onPeriodChange(startDate, endDate);
-    }, [onPeriodChange]);
+        if (periodKey === 'custom') {
+            onPeriodChange(dateRange?.from, dateRange?.to);
+        } else {
+            const option = PERIOD_OPTIONS.find(p => p.key === periodKey)!;
+            const { startDate, endDate } = option.getDates();
+            onPeriodChange(startDate, endDate);
+        }
+    }, [onPeriodChange, dateRange]);
 
     // --- EFECTO: OBTENER DATOS DEL PRODUCTO SELECCIONADO ---
     useEffect(() => {
@@ -183,8 +230,16 @@ export function MetricsTab({
 
         async function fetchMetrics() {
             setIsProductMetricsLoading(true);
-            const option = PERIOD_OPTIONS.find(p => p.key === activePeriod)!;
-            const { startDate, endDate } = option.getDates();
+            let startDate, endDate;
+            if (activePeriod === 'custom') {
+                startDate = dateRange?.from;
+                endDate = dateRange?.to;
+            } else {
+                const option = PERIOD_OPTIONS.find(p => p.key === activePeriod)!;
+                const dates = option.getDates();
+                startDate = dates.startDate;
+                endDate = dates.endDate;
+            }
             
             const result = await getProductMetricsAction(Number(selectedProductId), startDate, endDate);
             if (result.success && result.data) {
@@ -288,6 +343,47 @@ export function MetricsTab({
                             {option.label}
                         </Button>
                     ))}
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant={activePeriod === 'custom' ? 'default' : 'outline'}
+                                size="sm"
+                                disabled={isMetricsSpinning}
+                                className={cn("text-xs justify-start text-left font-normal", !dateRange && "text-muted-foreground")}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateRange?.from ? (
+                                    dateRange.to ? (
+                                        `${format(dateRange.from, 'dd/MM')} - ${format(dateRange.to, 'dd/MM')}`
+                                    ) : (
+                                        format(dateRange.from, 'dd/MM')
+                                    )
+                                ) : (
+                                    <span>Personalizado</span>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                initialFocus
+                                mode="range"
+                                defaultMonth={dateRange?.from}
+                                selected={dateRange}
+                                onSelect={(range) => {
+                                    setDateRange(range);
+                                    if (range?.from) {
+                                        setActivePeriod('custom');
+                                        onPeriodChange(range.from, range.to);
+                                    }
+                                }}
+                                numberOfMonths={2}
+                                disabled={(date) => 
+                                    date > new Date() || 
+                                    (earliestOrderDate ? date < earliestOrderDate : false)
+                                }
+                            />
+                        </PopoverContent>
+                    </Popover>
                 </div>
                 {isMetricsLoading && !isLoading && (
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground ml-1" />
@@ -898,36 +994,50 @@ export function MetricsTab({
                     {/* --- GEMAS VS ESTANCADOS --- */}
                     <div className="grid gap-6 md:grid-cols-2">
                         {/* Productos Gemas */}
-                        <Card className="shadow-md border-amber-500/30 bg-amber-50/10">
-                            <CardHeader>
+                        <Card className="shadow-md border-amber-500/30 bg-amber-50/10 flex flex-col h-[500px]">
+                            <CardHeader className="pb-2">
                                 <CardTitle className="flex items-center gap-2 text-amber-600">
                                     <Crown className="h-5 w-5" />
-                                    Productos Gema
+                                    Ranking de Productos Gema
                                 </CardTitle>
-                                <CardDescription>Mayor recaudación (Ingresos totales) en {activePeriodOption.description}.</CardDescription>
+                                <CardDescription>Ordenado por {gemSortKey === 'revenue' ? 'recaudación' : 'unidades vendidas'} en {activePeriodOption.description}.</CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <div className="overflow-x-auto">
+                            <CardContent className="flex-1 overflow-hidden pt-0">
+                                <ScrollArea className="h-full w-full pr-4">
                                     {isMetricsLoading || !salesMetrics ? (
-                                        <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                                    ) : salesMetrics.topRevenueProducts?.length > 0 ? (
+                                        <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                                    ) : gemRankings.length > 0 ? (
                                         <Table>
-                                            <TableHeader>
+                                            <TableHeader className="sticky top-0 bg-background/95 backdrop-blur z-10 shadow-sm">
                                                 <TableRow>
-                                                    <TableHead className="text-slate-900 dark:text-slate-100 font-bold">Producto</TableHead>
-                                                    <TableHead className="text-right text-slate-900 dark:text-slate-100 font-bold">Recaudación</TableHead>
+                                                    <TableHead className="text-xs font-bold w-[50%]">Producto</TableHead>
+                                                    <TableHead 
+                                                        className="text-right text-xs font-bold cursor-pointer hover:text-primary transition-colors select-none"
+                                                        onClick={() => toggleGemSort('sold')}
+                                                    >
+                                                        Vendidos {gemSortKey === 'sold' && (gemSortOrder === 'desc' ? '↓' : '↑')}
+                                                    </TableHead>
+                                                    <TableHead 
+                                                        className="text-right text-xs font-bold cursor-pointer hover:text-primary transition-colors select-none"
+                                                        onClick={() => toggleGemSort('revenue')}
+                                                    >
+                                                        Ingresos {gemSortKey === 'revenue' && (gemSortOrder === 'desc' ? '↓' : '↑')}
+                                                    </TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {salesMetrics.topRevenueProducts.map((p, idx) => (
-                                                    <TableRow key={p.productId}>
-                                                        <TableCell className="font-medium dark:text-slate-300">
+                                                {gemRankings.map((p, idx) => (
+                                                    <TableRow key={p.id}>
+                                                        <TableCell className="text-xs py-2">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-xs font-bold text-amber-600 w-4">{idx + 1}.</span>
-                                                                {p.name}
+                                                                <span className="text-[10px] font-bold text-amber-600/50 w-4">{idx + 1}</span>
+                                                                <span className="truncate max-w-[120px]" title={p.name}>{p.name}</span>
                                                             </div>
                                                         </TableCell>
-                                                        <TableCell className="text-right font-bold text-green-600">
+                                                        <TableCell className="text-right text-xs font-medium py-2">
+                                                            {p.sold} <span className="text-[10px] text-muted-foreground">unid.</span>
+                                                        </TableCell>
+                                                        <TableCell className="text-right text-xs font-bold text-green-600 py-2">
                                                             ${p.revenue.toLocaleString('es-AR')}
                                                         </TableCell>
                                                     </TableRow>
@@ -935,54 +1045,56 @@ export function MetricsTab({
                                             </TableBody>
                                         </Table>
                                     ) : (
-                                        <div className="flex flex-col justify-center items-center h-48 gap-2">
-                                            <Crown className="h-8 w-8 text-muted-foreground opacity-50" />
-                                            <p className="text-muted-foreground text-sm">Sin suficientes ventas para este período.</p>
+                                        <div className="flex flex-col justify-center items-center h-full gap-2 py-20">
+                                            <Crown className="h-8 w-8 text-muted-foreground opacity-20" />
+                                            <p className="text-muted-foreground text-xs">Sin ventas en este período.</p>
                                         </div>
                                     )}
-                                </div>
+                                </ScrollArea>
                             </CardContent>
                         </Card>
 
                         {/* Productos Estancados */}
-                        <Card className="shadow-md border-slate-500/30 bg-slate-50/10">
-                            <CardHeader>
+                        <Card className="shadow-md border-slate-500/30 bg-slate-50/10 flex flex-col h-[500px]">
+                            <CardHeader className="pb-2">
                                 <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
                                     <PackageX className="h-5 w-5" />
                                     Productos Estancados
                                 </CardTitle>
-                                <CardDescription>Alto inventario inmovilizado y sin ventas en {activePeriodOption.description}.</CardDescription>
+                                <CardDescription>Inventario inmovilizado sin rotación en {activePeriodOption.description}.</CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <div className="overflow-x-auto">
+                            <CardContent className="flex-1 overflow-hidden pt-0">
+                                <ScrollArea className="h-full w-full pr-4">
                                     {isLoading || isMetricsLoading ? (
-                                        <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                                        <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>
                                     ) : stagnantProducts.length > 0 ? (
                                         <Table>
-                                            <TableHeader>
+                                            <TableHeader className="sticky top-0 bg-background/95 backdrop-blur z-10 shadow-sm">
                                                 <TableRow>
-                                                    <TableHead className="text-slate-900 dark:text-slate-100 font-bold">Producto</TableHead>
-                                                    <TableHead className="text-right text-slate-900 dark:text-slate-100 font-bold">Stock Inmovilizado</TableHead>
+                                                    <TableHead className="text-xs font-bold">Producto</TableHead>
+                                                    <TableHead className="text-right text-xs font-bold">Stock Inmovilizado</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
                                                 {stagnantProducts.map(p => (
                                                     <TableRow key={p.id}>
-                                                        <TableCell className="font-medium text-muted-foreground dark:text-slate-300">{p.name}</TableCell>
-                                                        <TableCell className="text-right font-bold text-slate-500 dark:text-slate-400">
-                                                            {p.stock} unid.
+                                                        <TableCell className="text-xs py-2 text-muted-foreground dark:text-slate-300">
+                                                            {p.name}
+                                                        </TableCell>
+                                                        <TableCell className="text-right text-xs font-bold text-slate-500 py-2">
+                                                            {p.stock} <span className="text-[10px] opacity-70">unid.</span>
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
                                         </Table>
                                     ) : (
-                                        <div className="flex flex-col justify-center items-center h-48 gap-2">
-                                            <Package className="h-8 w-8 text-primary/50" />
-                                            <p className="text-muted-foreground text-sm text-center">¡Excelente rimo!<br/>No detectamos inventario estancado severo.</p>
+                                        <div className="flex flex-col justify-center items-center h-full gap-2 py-20">
+                                            <Package className="h-8 w-8 text-primary/20" />
+                                            <p className="text-muted-foreground text-xs text-center px-4">¡Excelente rotación!<br/>No hay inventario estancado.</p>
                                         </div>
                                     )}
-                                </div>
+                                </ScrollArea>
                             </CardContent>
                         </Card>
                     </div>
