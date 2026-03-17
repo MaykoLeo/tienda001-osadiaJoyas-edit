@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Package, Wallet, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, BarChart, CreditCard, Clock, Crown, PackageX } from 'lucide-react';
+import { Loader2, Package, Wallet, DollarSign, ShoppingCart, TrendingUp, AlertTriangle, BarChart, CreditCard, Clock, Crown, PackageX, Search, ChevronLeft, Plus } from 'lucide-react';
 import type { Product, SalesMetrics, Category } from '@/lib/types';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart as RechartsBarChart, Bar as RechartsBar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart as RechartsAreaChart, Area } from 'recharts';
@@ -14,6 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMemo, useEffect } from 'react';
 import { getProductMetricsAction } from '@/app/admin/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import Image from 'next/image';
 
 type PeriodKey = '7d' | '30d' | '90d' | 'year' | 'all';
 
@@ -101,6 +104,42 @@ export function MetricsTab({
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
     const [productMetrics, setProductMetrics] = useState<any[]>([]);
     const [isProductMetricsLoading, setIsProductMetricsLoading] = useState(false);
+    
+    // UI Local States for Advanced Search
+    const [searchQuery, setSearchQuery] = useState('');
+    const [browsingMode, setBrowsingMode] = useState<'search' | 'categories' | 'products'>('search');
+    const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+
+    // Filter Logic
+    const parentCategoriesList = useMemo(() => categories.filter(c => !c.parentId), [categories]);
+    const childCategoriesList = useMemo(() =>
+        selectedParentId
+            ? categories.filter(c => c.parentId === selectedParentId)
+            : []
+    , [categories, selectedParentId]);
+
+    const filteredSearchProducts = useMemo(() => {
+        if (browsingMode === 'search') {
+            if (!searchQuery) return [];
+            const lowerQuery = searchQuery.toLowerCase();
+            return products.filter(p =>
+                p.name.toLowerCase().includes(lowerQuery) ||
+                p.id.toString().includes(lowerQuery) ||
+                (p.sku && p.sku.toLowerCase().includes(lowerQuery))
+            ).slice(0, 10);
+        } else if (browsingMode === 'products' && selectedCategoryId) {
+            return products.filter(p => p.categoryIds.includes(selectedCategoryId));
+        }
+        return [];
+    }, [products, searchQuery, browsingMode, selectedCategoryId]);
+
+    const resetAdvancedSearch = () => {
+        setBrowsingMode('search');
+        setSelectedParentId(null);
+        setSelectedCategoryId(null);
+        setSearchQuery('');
+    };
 
     const totalProducts = products.length;
     const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
@@ -551,21 +590,167 @@ export function MetricsTab({
                             <div className="flex flex-col md:flex-row gap-6">
                                 {/* Selector */}
                                 <div className="w-full md:w-1/3 space-y-4">
-                                    <Select 
-                                        value={selectedProductId || undefined} 
-                                        onValueChange={(val) => setSelectedProductId(val)}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Seleccionar un producto..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {products.map(p => (
-                                                <SelectItem key={p.id} value={p.id.toString()}>
-                                                    {p.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="space-y-4 border rounded-lg p-4 bg-background/50 shadow-inner">
+                                        {browsingMode === 'search' ? (
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Buscar Producto</label>
+                                                    <div className="relative">
+                                                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                        <Input
+                                                            placeholder="Nombre, SKU o ID..."
+                                                            className="pl-9 h-11"
+                                                            value={searchQuery}
+                                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                                            autoComplete="off"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {searchQuery && (
+                                                    <ScrollArea className="h-48 border rounded-md bg-card">
+                                                        <div className="p-2 space-y-1">
+                                                            {filteredSearchProducts.length === 0 ? (
+                                                                <p className="text-xs text-center text-muted-foreground py-8 italic">No se encontraron productos</p>
+                                                            ) : (
+                                                                filteredSearchProducts.map(p => (
+                                                                    <button
+                                                                        key={p.id}
+                                                                        type="button"
+                                                                        className="w-full flex items-center gap-3 p-2 hover:bg-primary/10 rounded-md text-left transition-colors"
+                                                                        onClick={() => {
+                                                                            setSelectedProductId(p.id.toString());
+                                                                            setSearchQuery('');
+                                                                        }}
+                                                                    >
+                                                                        <div className="h-10 w-10 relative flex-shrink-0 bg-muted rounded overflow-hidden border">
+                                                                            {p.images?.[0] && <Image src={p.images[0]} alt="" fill className="object-cover" />}
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className="font-medium text-sm truncate">{p.name}</p>
+                                                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                                                                <span className="font-mono bg-muted px-1 rounded">ID: {p.id}</span>
+                                                                                {p.sku && <span className="font-mono bg-muted px-1 rounded">SKU: {p.sku}</span>}
+                                                                            </div>
+                                                                        </div>
+                                                                        <Plus className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                                                    </button>
+                                                                ))
+                                                            )}
+                                                        </div>
+                                                    </ScrollArea>
+                                                )}
+
+                                                <div className="pt-2">
+                                                    <div className="relative text-center mb-4">
+                                                        <span className="absolute inset-x-0 top-1/2 border-t -translate-y-1/2"></span>
+                                                        <span className="relative z-10 bg-background/50 px-2 text-[10px] text-muted-foreground uppercase tracking-tighter">O también</span>
+                                                    </div>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        className="w-full text-xs h-10 border border-dashed hover:border-primary/50 hover:bg-primary/5"
+                                                        onClick={() => setBrowsingMode('categories')}
+                                                    >
+                                                        Elegir manualmente desde categorías
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4 pt-1">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <button 
+                                                        onClick={resetAdvancedSearch}
+                                                        className="text-[10px] font-bold flex items-center gap-1 text-primary hover:text-primary/80 transition-colors uppercase tracking-widest"
+                                                    >
+                                                        <ChevronLeft className="h-3 w-3" /> Volver al buscador
+                                                    </button>
+                                                </div>
+
+                                                {browsingMode === 'categories' && !selectedParentId && (
+                                                    <div className="space-y-2 animate-in fade-in slide-in-from-left-2 duration-200">
+                                                        <p className="text-xs font-medium text-muted-foreground px-1">Categoría Principal:</p>
+                                                        <div className="grid grid-cols-1 gap-1.5">
+                                                            {parentCategoriesList.map(cat => (
+                                                                <Button 
+                                                                    key={cat.id} 
+                                                                    variant="outline" 
+                                                                    className="justify-start h-auto py-2.5 px-3 text-sm hover:bg-primary/5 hover:border-primary/30"
+                                                                    onClick={() => setSelectedParentId(cat.id)}
+                                                                >
+                                                                    {cat.name}
+                                                                </Button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {browsingMode === 'categories' && selectedParentId && (
+                                                    <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
+                                                        <button 
+                                                            onClick={() => setSelectedParentId(null)}
+                                                            className="text-[10px] flex items-center gap-1 text-muted-foreground hover:text-foreground mb-1"
+                                                        >
+                                                            <ChevronLeft className="h-2.5 w-2.5" /> Volver a categorías principales
+                                                        </button>
+                                                        <p className="text-xs font-medium text-muted-foreground px-1">Sub-Categoría:</p>
+                                                        <div className="grid grid-cols-1 gap-1.5">
+                                                            {childCategoriesList.map(cat => (
+                                                                <Button 
+                                                                    key={cat.id} 
+                                                                    variant="outline" 
+                                                                    className="justify-start h-auto py-2.5 px-3 text-sm hover:bg-primary/5 hover:border-primary/30"
+                                                                    onClick={() => {
+                                                                        setSelectedCategoryId(cat.id);
+                                                                        setBrowsingMode('products');
+                                                                    }}
+                                                                >
+                                                                    {cat.name}
+                                                                </Button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {browsingMode === 'products' && (
+                                                    <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                                                        <button 
+                                                            onClick={() => {
+                                                                setBrowsingMode('categories');
+                                                                setSelectedCategoryId(null);
+                                                            }}
+                                                            className="text-[10px] flex items-center gap-1 text-muted-foreground hover:text-foreground mb-1"
+                                                        >
+                                                            <ChevronLeft className="h-2.5 w-2.5" /> Volver a subcategorías
+                                                        </button>
+                                                        <ScrollArea className="h-56 border rounded-md bg-card">
+                                                            <div className="p-2 space-y-1">
+                                                                {filteredSearchProducts.length === 0 ? (
+                                                                    <p className="text-xs text-center text-muted-foreground py-10">No hay productos en esta categoría</p>
+                                                                ) : (
+                                                                    filteredSearchProducts.map(p => (
+                                                                        <button
+                                                                            key={p.id}
+                                                                            type="button"
+                                                                            className="w-full flex items-center gap-3 p-2 hover:bg-primary/10 rounded-md text-left transition-all"
+                                                                            onClick={() => setSelectedProductId(p.id.toString())}
+                                                                        >
+                                                                            <div className="h-10 w-10 relative flex-shrink-0 bg-muted rounded overflow-hidden border">
+                                                                                {p.images?.[0] && <Image src={p.images[0]} alt="" fill className="object-cover" />}
+                                                                            </div>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <p className="font-medium text-sm truncate">{p.name}</p>
+                                                                                <p className="text-[10px] text-muted-foreground font-mono">Stock: {p.stock}</p>
+                                                                            </div>
+                                                                        </button>
+                                                                    )))}
+                                                                </div>
+                                                            </ScrollArea>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
 
                                     {selectedProductId && (
                                         <div className="bg-muted/50 rounded-lg p-4 space-y-3 mt-4">
@@ -633,15 +818,16 @@ export function MetricsTab({
                                                         tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                                                     />
                                                     <Tooltip 
+                                                        cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }}
                                                         content={({ active, payload, label }) => {
                                                             if (!active || !payload?.length) return null;
                                                             return (
-                                                                <div className="rounded-lg border bg-background p-3 shadow-md text-sm">
-                                                                    <p className="font-semibold mb-1 capitalize">{
-                                                                        (() => { try { return format(parseISO(label), 'EEEE d MMM'); } catch { return label; } })()
+                                                                <div className="rounded-lg border bg-background p-3 shadow-md text-sm border-primary/20">
+                                                                    <p className="font-semibold mb-1 capitalize text-primary-foreground/90">{
+                                                                        (() => { try { return format(parseISO(label), 'EEEE d MMM', { locale: es }); } catch { return label; } })()
                                                                     }</p>
                                                                     <p className="text-primary font-medium">Unidades: {payload[0]?.value}</p>
-                                                                    <p className="text-green-600 font-medium">Ingresos: ${Number(payload[0]?.payload?.revenue).toLocaleString('es-AR')}</p>
+                                                                    <p className="text-green-500 font-medium">Ingresos: ${Number(payload[0]?.payload?.revenue).toLocaleString('es-AR')}</p>
                                                                 </div>
                                                             );
                                                         }}
