@@ -111,6 +111,7 @@ export function MetricsTab({
     const [browsingMode, setBrowsingMode] = useState<'search' | 'categories' | 'products'>('search');
     const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+    const [lowStockThreshold, setLowStockThreshold] = useState<number>(3);
 
     // Filter Logic
     const parentCategoriesList = useMemo(() => categories.filter(c => !c.parentId), [categories]);
@@ -145,7 +146,7 @@ export function MetricsTab({
     const totalProducts = products.length;
     const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
     const inventoryValue = products.reduce((acc, p) => acc + p.price * p.stock, 0);
-    const lowStockProducts = products.filter(p => p.stock >= 0 && p.stock <= 3);
+    const lowStockProducts = products.filter(p => p.stock >= 0 && p.stock <= lowStockThreshold).sort((a,b) => a.stock - b.stock);
 
     const stagnantProducts = useMemo(() => {
         if (!salesMetrics || !products) return [];
@@ -763,6 +764,40 @@ export function MetricsTab({
                                                 />
                                             )}
                                             <div className="space-y-1">
+                                                <p className="text-sm font-medium text-muted-foreground">Precio Actual</p>
+                                                <div className="flex flex-wrap items-baseline gap-2">
+                                                    {(() => {
+                                                        const product = products.find(p => p.id.toString() === selectedProductId);
+                                                        if (!product) return null;
+                                                        
+                                                        const hasDiscount = product.salePrice !== null && product.salePrice < product.price;
+                                                        
+                                                        return (
+                                                            <>
+                                                                {hasDiscount ? (
+                                                                    <>
+                                                                        <span className="text-2xl font-bold text-primary">
+                                                                            ${product.salePrice?.toLocaleString('es-AR')}
+                                                                        </span>
+                                                                        <span className="text-sm text-muted-foreground line-through decoration-destructive/50">
+                                                                            ${product.price.toLocaleString('es-AR')}
+                                                                        </span>
+                                                                        <span className="text-[10px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                                                                            Oferta
+                                                                        </span>
+                                                                    </>
+                                                                ) : (
+                                                                    <span className="text-2xl font-bold text-primary">
+                                                                        ${product.price.toLocaleString('es-AR')}
+                                                                    </span>
+                                                                )}
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1">
                                                 <p className="text-sm font-medium text-muted-foreground">Ventas Totales (Período)</p>
                                                 <p className="text-2xl font-bold text-primary">
                                                     {isProductMetricsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 
@@ -1030,15 +1065,42 @@ export function MetricsTab({
                         </Card>
 
                         {/* Low Stock Alert */}
-                        <Card className="shadow-md">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <AlertTriangle className="text-amber-500" />
-                                    Alertas de Stock Bajo
-                                </CardTitle>
-                                <CardDescription>Productos con 3 unidades o menos en stock, incluyendo agotados.</CardDescription>
+                        <Card className="shadow-md flex flex-col h-full">
+                            <CardHeader className="pb-2">
+                                <div className="flex items-start justify-between">
+                                    <div className="space-y-1">
+                                        <CardTitle className="flex items-center gap-2">
+                                            <AlertTriangle className="text-amber-500 h-5 w-5" />
+                                            Alertas de Stock
+                                        </CardTitle>
+                                        <CardDescription>Productos con {lowStockThreshold} unidades o menos.</CardDescription>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border">
+                                        <span className="text-xs text-muted-foreground px-1 hidden sm:inline-block">Umbral:</span>
+                                        <div className="flex items-center">
+                                            <button 
+                                                className="h-6 w-6 flex items-center justify-center rounded-sm hover:bg-background border-r border-transparent hover:border-border text-muted-foreground hover:text-foreground transition-colors"
+                                                onClick={() => setLowStockThreshold(Math.max(0, lowStockThreshold - 1))}
+                                            >
+                                                -
+                                            </button>
+                                            <Input 
+                                                type="number" 
+                                                value={lowStockThreshold}
+                                                onChange={(e) => setLowStockThreshold(Math.max(0, parseInt(e.target.value) || 0))}
+                                                className="w-10 h-6 p-0 text-center border-0 bg-transparent text-sm font-medium focus-visible:ring-0 focus-visible:ring-offset-0"
+                                            />
+                                            <button 
+                                                className="h-6 w-6 flex items-center justify-center rounded-sm hover:bg-background border-l border-transparent hover:border-border text-muted-foreground hover:text-foreground transition-colors"
+                                                onClick={() => setLowStockThreshold(lowStockThreshold + 1)}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="flex-1">
                                 <div className="overflow-x-auto">
                                     {isLoading ? (
                                         <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>

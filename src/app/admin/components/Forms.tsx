@@ -227,7 +227,7 @@ export function ProductForm({
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <Label>Inicio de Oferta</Label>
-                    <Popover open={isStartDatePickerOpen} onOpenChange={setStartDatePickerOpen}>
+                    <Popover modal={true} open={isStartDatePickerOpen} onOpenChange={setStartDatePickerOpen}>
                         <PopoverTrigger asChild>
                             <Button variant={"outline"} className={cn("border-2 w-full justify-start text-left font-normal", !startDate && "text-muted-foreground", errors.offerStartDate && "border-destructive")}>
                                 <CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "PPP", { locale: es }) : <span>Elegir fecha</span>}
@@ -252,7 +252,7 @@ export function ProductForm({
                 </div>
                 <div>
                     <Label>Fin de Oferta</Label>
-                    <Popover open={isEndDatePickerOpen} onOpenChange={setEndDatePickerOpen}>
+                    <Popover modal={true} open={isEndDatePickerOpen} onOpenChange={setEndDatePickerOpen}>
                         <PopoverTrigger asChild>
                             <Button variant={"outline"} className={cn("border-2 w-full justify-start text-left font-normal", !endDate && "text-muted-foreground", errors.offerEndDate && "border-destructive")}>
                                 <CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "PPP", { locale: es }) : <span>Elegir fecha</span>}
@@ -361,7 +361,7 @@ export function CouponForm({ coupon, formId, errors }: { coupon?: Coupon, formId
             </div>
             <div>
                 <Label>Fecha de Expiración <span className="text-xs text-muted-foreground">(Vacío = Sin Expiración)</span></Label>
-                <Popover open={isExpiryDatePickerOpen} onOpenChange={setExpiryDatePickerOpen}>
+                <Popover modal={true} open={isExpiryDatePickerOpen} onOpenChange={setExpiryDatePickerOpen}>
                     <PopoverTrigger asChild>
                         <Button variant={"outline"} className={cn("border-2 w-full justify-start text-left font-normal", !expiryDate && "text-muted-foreground", errors.expiryDate && "border-destructive")}>
                             <CalendarIcon className="mr-2 h-4 w-4" />{expiryDate ? format(expiryDate, "PPP", { locale: es }) : <span>Elegir fecha</span>}
