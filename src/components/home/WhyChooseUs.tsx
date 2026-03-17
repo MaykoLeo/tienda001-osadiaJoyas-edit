@@ -28,9 +28,12 @@ const whyChooseUsFeatures = [
 export function WhyChooseUs() {
     return (
         <section id="why-choose-us" className="space-y-12 py-5">
-            <div className="text-center">
-                <h2 className="text-4xl font-headline font-bold">¿Por Qué Elegir Osadía?</h2>
-                <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">
+            <div className="text-center space-y-3">
+                <span className="text-primary uppercase tracking-[0.4em] text-[10px] font-headline font-bold">
+                    Experiencia Osadía
+                </span>
+                <h2 className="text-5xl font-headline font-bold">¿Por Qué Elegirnos?</h2>
+                <p className="mt-4 text-muted-foreground/80 max-w-2xl mx-auto font-body">
                     Creemos que una joya es más que un accesorio, es una declaración. Por eso, te ofrecemos una experiencia de compra única.
                 </p>
             </div>

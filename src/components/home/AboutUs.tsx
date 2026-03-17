@@ -3,40 +3,48 @@ import { Button } from '@/components/ui/button';
 import { Gem } from 'lucide-react';
 import Link from 'next/link';
 import { InstagramIcon } from '@/components/icons/InstagramIcon';
+import Image from 'next/image';
 
 export function AboutUs() {
     return (
-        <section id="about" className="grid md:grid-cols-3 gap-12 items-center py-5">
-            <div className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl">
-                    <iframe
-                    src="https://maps.google.com/maps?q=La%20Rioja%20416,%20Catamarca,%20Argentina&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen={true}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Ubicación de la tienda"
-                    className='grayscale hover:grayscale-0 transition-all duration-500'
-                ></iframe>
+        <section id="about" className="grid md:grid-cols-2 gap-16 items-center py-20">
+            <div className="relative aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl group">
+                <Image
+                    src="/Captura5.jpg"
+                    alt="Esencia Osadía"
+                    fill
+                    className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/10 group-hover:opacity-0 transition-opacity duration-700" />
             </div>
-            <div className='space-y-6 md:col-span-2'>
-                <h2 className="text-4xl font-headline font-bold">Sobre Nosotros</h2>
-                <p className="text-muted-foreground leading-relaxed text-lg">
-                    En Osadía entendemos la joyería como un lenguaje visual que transmite identidad y estilo. Nuestra marca nace de la unión entre diseño contemporáneo y una mirada minimalista, creando piezas que equilibran simplicidad, precisión y una fuerte carga simbólica.
-                </p>
-                <p className="text-muted-foreground leading-relaxed text-lg">
-                    Trabajamos con materiales de alta calidad para lograr joyas versátiles y modernas. Cada pieza está pensada para acompañar distintos momentos y proyectar una identidad clara y elegante. En Osadía, cada diseño inspira y perdura.
-                </p>
+
+            <div className='space-y-8'>
+                <div className="space-y-3">
+                    <span className="text-primary uppercase tracking-[0.4em] text-[10px] font-headline font-bold block">
+                        Sobre Nosotros
+                    </span>
+                    <h2 className="text-5xl font-headline font-bold leading-[1.1]">
+                        Nuestra Esencia
+                    </h2>
+                </div>
+
+                <div className="space-y-6 text-muted-foreground/90 leading-relaxed text-lg font-body">
+                    <p>
+                        En Osadía entendemos la joyería como un lenguaje visual que transmite identidad y estilo. Nuestra marca nace de la unión entre diseño contemporáneo y una mirada minimalista, creando piezas que equilibran simplicidad, precisión y una fuerte carga simbólica.
+                    </p>
+                    <p>
+                        Trabajamos con materiales de alta calidad para lograr joyas versátiles y modernas. Cada pieza está pensada para acompañar distintos momentos y proyectar una identidad clara y elegante. En Osadía, cada diseño inspira y perdura.
+                    </p>
+                </div>
                 <div className='flex flex-wrap gap-4 pt-4'>
-                        <Button asChild className="shadow-md" size="lg">
+                    <Button asChild className="rounded-full px-8 py-6 text-xs uppercase tracking-widest font-bold shadow-gold/20 shadow-lg hover:shadow-xl transition-all" size="lg">
                         <Link href="https://www.instagram.com/osadia.cta" target="_blank" rel="noopener noreferrer">
-                            <InstagramIcon className="w-6 h-6 mr-2" /> Síguenos en Instagram
+                            <InstagramIcon className="w-4 h-4 mr-3" /> Síguenos en Instagram
                         </Link>
                     </Button>
-                        <Button asChild variant="outline" className="shadow-md" size="lg">
+                    <Button asChild variant="outline" className="rounded-full px-8 py-6 text-xs uppercase tracking-widest font-bold hover:bg-primary/5 transition-all border-primary/20" size="lg">
                         <Link href="/tienda">
-                            <Gem className="mr-2" /> Nuestros Productos
+                            <Gem className="w-4 h-4 mr-3" /> Nuestros Productos
                         </Link>
                     </Button>
                 </div>

@@ -725,7 +725,7 @@ export function MetricsTab({
                                                                             {p.images?.[0] && <Image src={p.images[0]} alt="" fill className="object-cover" />}
                                                                         </div>
                                                                         <div className="flex-1 min-w-0">
-                                                                            <p className="font-medium text-sm truncate transition-colors">{p.name}</p>
+                                                                            <p className="font-medium text-sm truncate transition-colors group-hover:text-foreground">{p.name}</p>
                                                                             <div className="flex items-center gap-2 text-[10px] text-muted-foreground transition-colors">
                                                                                 <span className="font-mono bg-muted group-hover:bg-primary/10 px-1 rounded transition-colors text-muted-foreground group-hover:text-foreground">ID: {p.id}</span>
                                                                                 {p.sku && <span className="font-mono bg-muted group-hover:bg-primary/10 px-1 rounded transition-colors text-muted-foreground group-hover:text-foreground">SKU: {p.sku}</span>}
@@ -773,7 +773,7 @@ export function MetricsTab({
                                                                 <Button 
                                                                     key={cat.id} 
                                                                     variant="outline" 
-                                                                    className="justify-start h-auto py-2.5 px-3 text-sm hover:bg-primary/5 hover:border-primary/30"
+                                                                    className="justify-start h-auto py-2.5 px-3 text-sm hover:bg-primary/5 hover:border-primary/30 transition-all text-foreground hover:text-foreground"
                                                                     onClick={() => setSelectedParentId(cat.id)}
                                                                 >
                                                                     {cat.name}
@@ -797,7 +797,7 @@ export function MetricsTab({
                                                                 <Button 
                                                                     key={cat.id} 
                                                                     variant="outline" 
-                                                                    className="justify-start h-auto py-2.5 px-3 text-sm hover:bg-primary/5 hover:border-primary/30"
+                                                                    className="justify-start h-auto py-2.5 px-3 text-sm hover:bg-primary/5 hover:border-primary/30 transition-all text-foreground hover:text-foreground"
                                                                     onClick={() => {
                                                                         setSelectedCategoryId(cat.id);
                                                                         setBrowsingMode('products');
@@ -830,15 +830,15 @@ export function MetricsTab({
                                                                         <button
                                                                             key={p.id}
                                                                             type="button"
-                                                                            className="w-full flex items-center gap-3 p-2 hover:bg-primary/10 rounded-md text-left transition-all"
+                                                                            className="w-full flex items-center gap-3 p-2 hover:bg-primary/10 rounded-md text-left transition-all group"
                                                                             onClick={() => setSelectedProductId(p.id.toString())}
                                                                         >
                                                                             <div className="h-10 w-10 relative flex-shrink-0 bg-muted rounded overflow-hidden border">
                                                                                 {p.images?.[0] && <Image src={p.images[0]} alt="" fill className="object-cover" />}
                                                                             </div>
                                                                             <div className="flex-1 min-w-0">
-                                                                                <p className="font-medium text-sm truncate">{p.name}</p>
-                                                                                <p className="text-[10px] text-muted-foreground font-mono">Stock: {p.stock}</p>
+                                                                                <p className="font-medium text-sm truncate group-hover:text-foreground transition-colors">{p.name}</p>
+                                                                                <p className="text-[10px] text-muted-foreground font-mono group-hover:text-foreground/70 transition-colors">Stock: {p.stock}</p>
                                                                             </div>
                                                                         </button>
                                                                     )))}

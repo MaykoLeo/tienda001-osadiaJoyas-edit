@@ -37,10 +37,11 @@ export default function Header() {
 
   const navLinks = [
     { href: '/', label: 'Inicio' },
-    { href: '/tienda', label: 'Productos' },
+    { href: '/tienda', label: 'Tienda' },
     { href: '/#about', label: 'Sobre Nosotros' },
     { href: '/pages/garantia', label: 'Garantía' },
-    { href: '/pages/preguntas-frecuentes', label: 'Preguntas Frecuentes' },
+    { href: 'https://wa.me/your-number', label: 'Contacto' },
+    { href: '/pages/preguntas-frecuentes', label: 'FAQ' },
     { href: '/pages/como-comprar', label: 'Cómo Comprar' },
   ];
 
@@ -48,73 +49,103 @@ export default function Header() {
 
   return (
     <header className={cn(
-        // DS Glassmorphism:
-        // Light: Champagne Cream translúcido con blur sutil
-        // Dark: Carbon rgba(18,18,18,0.7) + blur(10px) — Technological Luxury
-        "sticky top-0 z-50 w-full border-b border-border/40",
-        "bg-[hsl(40,33%,97%)]/80 backdrop-blur-sm",
-        "dark:bg-[rgba(18,18,18,0.7)] dark:backdrop-blur-[10px]",
-        "supports-[backdrop-filter]:bg-background/60",
-        "transition-all duration-300",
-        isScrolled ? 'h-16' : 'h-20'
+        "sticky top-0 z-50 w-full transition-all duration-300",
+        isScrolled ? "translate-y-0" : "translate-y-0"
     )}>
-      <div className="container flex h-full items-center">
-        
-        {/* Left Section: Mobile Menu and Search Bar */}
-        <div className="flex items-center gap-2 flex-1">
-          {/* Mobile Menu - Now visible on all screen sizes */}
-          <div>
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                  <Menu />
-                  <span className="sr-only">Abrir menú</span>
-                  </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className='w-full max-w-[300px]'>
-                  <SheetHeader>
-                      <SheetTitle>
-                          <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="group block outline-none">
-                              <div 
-                                className="w-[120px] h-[40px] bg-foreground group-hover:bg-primary transition-colors duration-300"
-                                style={{
-                                  maskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
-                                  WebkitMaskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
-                                  maskSize: 'contain',
-                                  WebkitMaskSize: 'contain',
-                                  maskRepeat: 'no-repeat',
-                                  WebkitMaskRepeat: 'no-repeat'
-                                }}
-                                role="img"
-                                aria-label="OSADÍA Logo"
-                              />
-                          </Link>
-                      </SheetTitle>
-                  </SheetHeader>
-                  <nav className="flex flex-col gap-6 p-4 text-lg mt-4">
-                      {navLinks.map((link) => (
-                      <Link key={link.href} href={link.href} onClick={() => setIsMobileMenuOpen(false)} className="text-foreground hover:text-primary transition-colors">
-                          {link.label}
-                      </Link>
-                      ))}
-                  </nav>
-              </SheetContent>
-              </Sheet>
+      {/* Informative Address Bar with Blur */}
+      <div className="w-full bg-background/60 backdrop-blur-md border-b border-border/10 py-1.5 hidden sm:block">
+          <div className="container flex justify-center items-center">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/80 font-medium">
+                  La Rioja 416, Catamarca, Argentina
+              </p>
           </div>
-          {!pathname.startsWith('/admin') && (
-            <div className={cn("hidden w-full max-w-sm", isTiendaPage ? "lg:block" : "md:block")}>
-              <Suspense fallback={<Skeleton className="h-10 w-full" />}>
-                <GlobalSearch />
-              </Suspense>
-            </div>
-          )}
-        </div>
+      </div>
 
-        {/* Center Section: Logo */}
-        <div className="flex-1 flex justify-center">
-             <Link href="/" className="group flex items-center space-x-2 outline-none">
+      <div className={cn(
+        // DS Glassmorphism:
+        "w-full border-b border-border/40 transition-all duration-300",
+        "bg-[hsl(40,33%,97%)]/90 backdrop-blur-md",
+        "dark:bg-[rgba(15,15,15,0.8)] dark:backdrop-blur-[12px]",
+        isScrolled ? 'h-16' : 'h-24'
+      )}>
+        <div className="container h-full flex items-center gap-4">
+          
+          {/* LEFT: Navigation Links - Now including "Garantía" */}
+          <nav className="flex-1 hidden lg:flex items-center gap-6 xl:gap-8">
+            {navLinks.slice(0, 4).map((link) => (
+              <Link 
+                key={link.href} 
+                href={link.href} 
+                className={cn(
+                  "text-[13px] uppercase tracking-[0.2em] font-headline transition-all hover:text-primary relative group",
+                   pathname === link.href ? "text-primary" : "text-foreground/80"
+                )}
+              >
+                {link.label}
+                <span className={cn(
+                    "absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full",
+                    pathname === link.href && "w-full"
+                )} />
+              </Link>
+            ))}
+          </nav>
+
+          {/* LEFT: Mobile Menu Button (Visible on md and smaller) */}
+          <div className="lg:hidden flex items-center gap-2 flex-1">
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="hover:bg-primary/5">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Abrir menú</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className='w-full max-w-[300px] border-r-primary/20 bg-background/95 backdrop-blur-md'>
+                <SheetHeader className="mb-8">
+                  <SheetTitle className="text-left">
+                    <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="group inline-block outline-none">
+                      <div 
+                        className="w-[120px] h-[40px] bg-foreground group-hover:bg-primary transition-colors duration-300"
+                        style={{
+                          maskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
+                          WebkitMaskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
+                          maskSize: 'contain',
+                          WebkitMaskSize: 'contain',
+                          maskRepeat: 'no-repeat',
+                          WebkitMaskRepeat: 'no-repeat'
+                        }}
+                        role="img"
+                        aria-label="OSADÍA Logo"
+                      />
+                    </Link>
+                  </SheetTitle>
+                </SheetHeader>
+                <nav className="flex flex-col gap-8 text-xs font-headline uppercase tracking-[0.2em]">
+                  {navLinks.map((link) => (
+                    <Link 
+                      key={link.href} 
+                      href={link.href} 
+                      onClick={() => setIsMobileMenuOpen(false)} 
+                      className={cn(
+                          "transition-colors hover:text-primary py-2 border-b border-border/20",
+                           pathname === link.href ? "text-primary" : "text-foreground"
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* CENTER: Logo */}
+          <div className="flex-shrink-0 flex justify-center px-4">
+              <Link href="/" className="group flex items-center outline-none transition-transform hover:scale-105 duration-300">
                 <div 
-                  className="w-[140px] h-[50px] bg-foreground group-hover:bg-primary transition-colors duration-300"
+                  className={cn(
+                      "transition-all duration-300 bg-foreground group-hover:bg-primary",
+                      isScrolled ? "w-[120px] h-[45px]" : "w-[150px] h-[55px]"
+                  )}
                   style={{
                     maskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
                     WebkitMaskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',
@@ -126,24 +157,62 @@ export default function Header() {
                   role="img"
                   aria-label="OSADÍA Logo"
                 />
-             </Link>
-        </div>
+              </Link>
+          </div>
 
-        {/* Right Section: Icons */}
-        <div className="flex items-center justify-end space-x-1 flex-1">
-          <ThemeToggle />
-          {!pathname.startsWith('/admin') && (
-            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} aria-label="Carrito de compras">
-              <div className="relative">
-                <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                    {cartCount}
-                  </span>
-                )}
+          {/* RIGHT: Navigation + Search + Icons */}
+          <div className="flex-1 flex items-center justify-end gap-4 lg:gap-8">
+            <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
+              {navLinks.slice(4, 5).map((link) => (
+                <Link 
+                  key={link.href} 
+                  href={link.href} 
+                  className={cn(
+                    "text-[13px] uppercase tracking-[0.2em] font-headline transition-all hover:text-primary relative group",
+                     pathname === link.href ? "text-primary" : "text-foreground/80"
+                  )}
+                  target={link.href.startsWith('http') ? "_blank" : undefined}
+                >
+                  {link.label}
+                  <span className={cn(
+                      "absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full",
+                      pathname === link.href && "w-full"
+                  )} />
+                </Link>
+              ))}
+            </nav>
+
+            {!pathname.startsWith('/admin') && (
+              <div className="hidden md:block w-full max-w-[140px] lg:max-w-[200px]">
+                <Suspense fallback={<div className="h-9 w-full bg-muted/20 animate-pulse rounded-full" />}>
+                  <GlobalSearch />
+                </Suspense>
               </div>
-            </Button>
-          )}
+            )}
+            
+            <div className="flex items-center gap-1 sm:gap-2">
+              <div className="hidden sm:block">
+                <ThemeToggle />
+              </div>
+              
+              {!pathname.startsWith('/admin') && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsSidebarOpen(true)} 
+                  className="relative hover:bg-primary/5 transition-colors"
+                  aria-label="Carrito de compras"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                      {cartCount}
+                    </span>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </header>

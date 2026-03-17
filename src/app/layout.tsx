@@ -63,7 +63,7 @@ export default function RootLayout({
           src="https://upload-widget.cloudinary.com/global/all.js"
           strategy="afterInteractive"
         />
-        <Toaster /> 
+        <Toaster />
       </body>
     </html>
   );

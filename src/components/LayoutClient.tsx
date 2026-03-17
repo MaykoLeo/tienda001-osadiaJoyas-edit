@@ -25,7 +25,6 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
     if (!isMounted) {
         return (
             <div className="relative flex min-h-dvh flex-col bg-background/80 backdrop-blur-sm">
-                <TopBar />
                 <Header />
                 <main className="flex-1">
                     {children}
@@ -40,7 +39,6 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
         <>
             {/* Este div contiene el flujo principal de la página y el efecto de desenfoque */}
             <div className="relative flex min-h-dvh flex-col bg-background/80 backdrop-blur-sm">
-                <TopBar />
                 <Header />
                 <main className="flex-1">
                     {children}

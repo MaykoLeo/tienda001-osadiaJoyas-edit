@@ -37,6 +37,7 @@ const SectionSkeleton = () => (
 const FeaturedProducts = dynamic(() => import('@/components/home/FeaturedProducts').then(mod => mod.FeaturedProducts));
 const WhyChooseUs = dynamic(() => import('@/components/home/WhyChooseUs').then(mod => mod.WhyChooseUs));
 const AboutUs = dynamic(() => import('@/components/home/AboutUs').then(mod => mod.AboutUs));
+const OurStore = dynamic(() => import('@/components/home/OurStore').then(mod => mod.OurStore));
 
 
 export default async function Home() {
@@ -44,7 +45,7 @@ export default async function Home() {
         <div className="space-y-16">
             {/* Hero Carousel Section - Se carga inmediatamente */}
             <section className="w-full -mx-px">
-                 <HeroCarousel />
+                <HeroCarousel />
             </section>
 
             {/* Contenedor para el contenido que se cargará de forma diferida */}
@@ -53,34 +54,40 @@ export default async function Home() {
                     <FeaturedProducts />
                 </Suspense>
 
-                <Separator className="w-1/2 mx-auto my-8"/>
+                <Separator className="w-1/2 mx-auto my-8" />
 
                 {/* Instagram Section - Es ligera, no necesita lazy loading */}
                 <section id="instagram">
                     <div className="flex items-center justify-center gap-8">
                         <Separator className="flex-1" />
                         <div className="text-center flex-shrink-0">
-                            <Button asChild variant="ghost" className="group h-auto rounded-full px-5 py-1 text-2xl font-headline text-muted-foreground tracking-wider hover:bg-accent hover:text-accent-foreground transition-colors">
+                            <Button asChild variant="ghost" className="group h-auto rounded-full px-6 py-2 text-2xl font-headline text-muted-foreground tracking-wider hover:bg-accent hover:text-accent-foreground transition-all [&_svg]:size-7">
                                 <Link href="https://www.instagram.com/osadia.cta" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4">
-                                    <InstagramIcon className="w-10 h-10 text-muted-foreground transition-all duration-300 group-hover:text-[#E1306C] group-hover:scale-110" />
-                                    <span>osadia.cta</span>
+                                    <InstagramIcon className="text-muted-foreground transition-all duration-300 group-hover:text-[#E1306C] group-hover:scale-110" />
+                                    <span className="group-hover:translate-x-1 transition-transform">osadia.cta</span>
                                 </Link>
                             </Button>
                         </div>
                         <Separator className="flex-1" />
                     </div>
                 </section>
-                
-                <Separator className="w-1/2 mx-auto my-8"/>
+
+                <Separator className="w-1/2 mx-auto my-8" />
 
                 <Suspense fallback={<SectionSkeleton />}>
                     <WhyChooseUs />
                 </Suspense>
 
-                <Separator className="w-1/2 mx-auto my-8"/>
+                <Separator className="w-1/2 mx-auto my-8" />
 
                 <Suspense fallback={<SectionSkeleton />}>
                     <AboutUs />
+                </Suspense>
+
+                <Separator className="w-1/2 mx-auto my-8" />
+
+                <Suspense fallback={<SectionSkeleton />}>
+                    <OurStore />
                 </Suspense>
             </div>
         </div>
