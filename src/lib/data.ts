@@ -295,7 +295,7 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
                 WHERE status IN ('paid', 'delivered', 'shipped')
                 AND created_at >= ${startDate.toISOString()}
                 AND created_at <= ${endDate.toISOString()}
-                GROUP BY 1, 2 ORDER BY revenue DESC;
+                GROUP BY 1, 2 ORDER BY count DESC;
             `;
             gemasResult = productsResult; // Use the same consolidated result
             revenueByDateResult = await db`
@@ -324,7 +324,7 @@ export async function getSalesMetrics(startDate?: Date, endDate?: Date): Promise
                 SELECT (item->>'productId')::int as "productId", item->>'name' as name, SUM((item->>'quantity')::int) as count, SUM((item->>'quantity')::int * (item->>'priceAtPurchase')::numeric) as revenue
                 FROM orders, jsonb_array_elements(items) as item
                 WHERE status IN ('paid', 'delivered', 'shipped')
-                GROUP BY 1, 2 ORDER BY revenue DESC;
+                GROUP BY 1, 2 ORDER BY count DESC;
             `;
             gemasResult = productsResult; // Use the same consolidated result
             revenueByDateResult = await db`

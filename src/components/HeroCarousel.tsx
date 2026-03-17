@@ -97,6 +97,8 @@ export function HeroCarousel() {
                             sizes="100vw"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10"></div>
+                        {/* DS Fix: Degradado inferior ultra-suave (fade to background 100%) para disimular el borde */}
+                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-b from-transparent via-[hsl(40,33%,97%)]/20 to-[hsl(40,33%,97%)] dark:via-[#121212]/20 dark:to-[#121212]"></div>
                         </div>
                         <div className="relative z-10 text-white w-full max-w-screen-xl mx-auto px-8 grid grid-cols-12 gap-8">
                           <div className="col-span-12 lg:col-span-8 lg:col-start-3">

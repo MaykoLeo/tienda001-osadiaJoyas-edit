@@ -651,7 +651,7 @@ export function MetricsTab({
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {salesMetrics.topSellingProducts.slice(0, 5).map((p, idx) => (
+                                                {salesMetrics.topSellingProducts.slice(0, 5).sort((a,b) => b.count - a.count).map((p, idx) => (
                                                     <TableRow key={p.productId}>
                                                         <TableCell className="text-muted-foreground font-medium">{idx + 1}</TableCell>
                                                         <TableCell className="font-medium">{p.name}</TableCell>
@@ -715,7 +715,7 @@ export function MetricsTab({
                                                                     <button
                                                                         key={p.id}
                                                                         type="button"
-                                                                        className="w-full flex items-center gap-3 p-2 hover:bg-primary/10 rounded-md text-left transition-colors"
+                                                                        className="w-full flex items-center gap-3 p-2 hover:bg-primary/10 group rounded-md text-left transition-colors"
                                                                         onClick={() => {
                                                                             setSelectedProductId(p.id.toString());
                                                                             setSearchQuery('');
@@ -725,13 +725,13 @@ export function MetricsTab({
                                                                             {p.images?.[0] && <Image src={p.images[0]} alt="" fill className="object-cover" />}
                                                                         </div>
                                                                         <div className="flex-1 min-w-0">
-                                                                            <p className="font-medium text-sm truncate">{p.name}</p>
-                                                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                                                                <span className="font-mono bg-muted px-1 rounded">ID: {p.id}</span>
-                                                                                {p.sku && <span className="font-mono bg-muted px-1 rounded">SKU: {p.sku}</span>}
+                                                                            <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">{p.name}</p>
+                                                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground group-hover:text-primary/70 transition-colors">
+                                                                                <span className="font-mono bg-muted group-hover:bg-primary/5 px-1 rounded">ID: {p.id}</span>
+                                                                                {p.sku && <span className="font-mono bg-muted group-hover:bg-primary/5 px-1 rounded">SKU: {p.sku}</span>}
                                                                             </div>
                                                                         </div>
-                                                                        <Plus className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                                                        <Plus className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all" />
                                                                     </button>
                                                                 ))
                                                             )}
@@ -849,66 +849,6 @@ export function MetricsTab({
                                                 </div>
                                             )}
                                         </div>
-
-                                    {selectedProductId && (
-                                        <div className="bg-muted/50 rounded-lg p-4 space-y-3 mt-4">
-                                            {products.find(p => p.id.toString() === selectedProductId)?.images?.[0] && (
-                                                <img 
-                                                    src={products.find(p => p.id.toString() === selectedProductId)?.images[0]} 
-                                                    alt="Producto" 
-                                                    className="w-full h-32 object-contain bg-white rounded-md border"
-                                                />
-                                            )}
-                                            <div className="space-y-1">
-                                                <p className="text-sm font-medium text-muted-foreground">Precio Actual</p>
-                                                <div className="flex flex-wrap items-baseline gap-2">
-                                                    {(() => {
-                                                        const product = products.find(p => p.id.toString() === selectedProductId);
-                                                        if (!product) return null;
-                                                        
-                                                        const hasDiscount = product.salePrice !== null && product.salePrice < product.price;
-                                                        
-                                                        return (
-                                                            <>
-                                                                {hasDiscount ? (
-                                                                    <>
-                                                                        <span className="text-2xl font-bold text-primary">
-                                                                            ${product.salePrice?.toLocaleString('es-AR')}
-                                                                        </span>
-                                                                        <span className="text-sm text-muted-foreground line-through decoration-destructive/50">
-                                                                            ${product.price.toLocaleString('es-AR')}
-                                                                        </span>
-                                                                        <span className="text-[10px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                                                                            Oferta
-                                                                        </span>
-                                                                    </>
-                                                                ) : (
-                                                                    <span className="text-2xl font-bold text-primary">
-                                                                        ${product.price.toLocaleString('es-AR')}
-                                                                    </span>
-                                                                )}
-                                                            </>
-                                                        );
-                                                    })()}
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <p className="text-sm font-medium text-muted-foreground">Ventas Totales (Período)</p>
-                                                <p className="text-2xl font-bold text-primary">
-                                                    {isProductMetricsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 
-                                                    productMetrics.reduce((acc, curr) => acc + curr.unitsSold, 0)} <span className="text-base font-normal text-foreground">unidades</span>
-                                                </p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-sm font-medium text-muted-foreground">Ingresos Generados (Período)</p>
-                                                <p className="text-2xl font-bold text-green-600">
-                                                    {isProductMetricsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 
-                                                    `$${productMetrics.reduce((acc, curr) => acc + curr.revenue, 0).toLocaleString('es-AR')}`}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
 
                                 {/* Gráfico Individual */}
@@ -987,6 +927,72 @@ export function MetricsTab({
                                     )}
                                 </div>
                             </div>
+
+                            {/* Rediseño Layout Individual: Fila Horizontal debajo del gráfico */}
+                            {selectedProductId && !isProductMetricsLoading && productMetrics.length > 0 && (
+                                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                                    {/* Miniatura y Info Básica */}
+                                    <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/30 border border-border/50">
+                                        <div className="h-16 w-16 relative flex-shrink-0 bg-white rounded border overflow-hidden">
+                                            {products.find(p => p.id.toString() === selectedProductId)?.images?.[0] ? (
+                                                <Image 
+                                                    src={products.find(p => p.id.toString() === selectedProductId)!.images[0]} 
+                                                    alt="" fill className="object-contain p-1" 
+                                                />
+                                            ) : (
+                                                <Package className="h-full w-full p-4 text-muted-foreground/20" />
+                                            )}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Producto</p>
+                                            <p className="text-sm font-bold truncate" title={products.find(p => p.id.toString() === selectedProductId)?.name}>
+                                                {products.find(p => p.id.toString() === selectedProductId)?.name}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Precio Actual */}
+                                    <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Precio Actual</p>
+                                        <div className="flex items-baseline gap-2">
+                                            {(() => {
+                                                const product = products.find(p => p.id.toString() === selectedProductId);
+                                                if (!product) return null;
+                                                const hasDiscount = product.salePrice !== null && product.salePrice < product.price;
+                                                return (
+                                                    <>
+                                                        <span className="text-xl font-bold text-primary">
+                                                            ${(hasDiscount ? product.salePrice : product.price)?.toLocaleString('es-AR')}
+                                                        </span>
+                                                        {hasDiscount && (
+                                                            <span className="text-xs text-muted-foreground line-through opacity-50">
+                                                                ${product.price.toLocaleString('es-AR')}
+                                                            </span>
+                                                        )}
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* Ventas en el Período */}
+                                    <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Ventas (Período)</p>
+                                        <p className="text-xl font-bold">
+                                            {productMetrics.reduce((acc, curr) => acc + curr.unitsSold, 0)}
+                                            <span className="text-xs font-medium text-muted-foreground ml-1.5 whitespace-nowrap">unidades</span>
+                                        </p>
+                                    </div>
+
+                                    {/* Ingresos en el Período */}
+                                    <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Ingresos (Período)</p>
+                                        <p className="text-xl font-bold text-green-600 dark:text-green-500">
+                                            ${productMetrics.reduce((acc, curr) => acc + curr.revenue, 0).toLocaleString('es-AR')}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -1100,15 +1106,15 @@ export function MetricsTab({
                     </div>
                     
                     {/* SEPARADOR: ESTADO GENERAL */}
-                    <div className="pt-8 pb-4">
+                    <div className="pt-8 pb-4 text-center">
                         <div className="flex items-center gap-4 mb-2">
                             <Separator className="flex-1" />
-                            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap bg-muted/30 px-3 py-1 rounded-full border border-border/50">
+                            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground whitespace-nowrap bg-muted/30 px-4 py-1.5 rounded-full border border-border/50 font-sans">
                                 Estado General del Inventario
                             </h3>
                             <Separator className="flex-1" />
                         </div>
-                        <p className="text-[11px] text-center text-muted-foreground/60">
+                        <p className="text-[10px] text-muted-foreground/60 font-sans">
                             Estas métricas reflejan el estado actual de tu stock y no se ven afectadas por el filtro de fecha actual.
                         </p>
                     </div>

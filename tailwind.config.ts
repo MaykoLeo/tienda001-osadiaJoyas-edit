@@ -99,10 +99,16 @@ export default {
             height: '0',
           },
         },
+        'blur-pulse': {
+          '0%': { 'backdrop-filter': 'blur(0px)', opacity: '0' },
+          '50%': { 'backdrop-filter': 'blur(4px)', opacity: '1' },
+          '100%': { 'backdrop-filter': 'blur(0px)', opacity: '0' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'blur-pulse': 'blur-pulse 0.5s ease-in-out forwards',
       },
     },
   },

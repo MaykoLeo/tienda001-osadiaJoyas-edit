@@ -51,8 +51,8 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
             />
           </div>
 
-          {/* DS: Hover blur overlay — 4px backdrop-filter with 5% opacity shift */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[4px] bg-black/5" />
+          {/* DS: Hover blur overlay — 4px backdrop-filter pulse during 500ms zoom transition */}
+          <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:animate-blur-pulse bg-black/5" />
 
           <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
             {product.salePrice && <Badge className='shadow-md rounded-[4px]' variant="destructive">OFERTA</Badge>}
