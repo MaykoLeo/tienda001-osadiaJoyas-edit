@@ -652,6 +652,7 @@ export function MetricsTab({
                                                         fill="hsl(var(--primary))" 
                                                         radius={[4, 4, 0, 0]}
                                                         maxBarSize={50}
+                                                        activeBar={{ fill: 'hsl(var(--primary))', opacity: 0.8, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
                                                     />
                                                 </RechartsBarChart>
                                             </ResponsiveContainer>
@@ -695,6 +696,98 @@ export function MetricsTab({
                         </Card>
                     </div>
 
+                    {/* --- GEMAS VS ESTANCADOS --- */}
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {/* Productos Gemas */}
+                        <Card className="shadow-md border-amber-500/30 bg-amber-50/10">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-amber-600">
+                                    <Crown className="h-5 w-5" />
+                                    Productos Gema
+                                </CardTitle>
+                                <CardDescription>Mayor recaudación (Ingresos totales) en {activePeriodOption.description}.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    {isMetricsLoading || !salesMetrics ? (
+                                        <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                                    ) : salesMetrics.topRevenueProducts?.length > 0 ? (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="text-slate-900 dark:text-slate-100 font-bold">Producto</TableHead>
+                                                    <TableHead className="text-right text-slate-900 dark:text-slate-100 font-bold">Recaudación</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {salesMetrics.topRevenueProducts.map((p, idx) => (
+                                                    <TableRow key={p.productId}>
+                                                        <TableCell className="font-medium dark:text-slate-300">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-amber-600 w-4">{idx + 1}.</span>
+                                                                {p.name}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="text-right font-bold text-green-600">
+                                                            ${p.revenue.toLocaleString('es-AR')}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    ) : (
+                                        <div className="flex flex-col justify-center items-center h-48 gap-2">
+                                            <Crown className="h-8 w-8 text-muted-foreground opacity-50" />
+                                            <p className="text-muted-foreground text-sm">Sin suficientes ventas para este período.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Productos Estancados */}
+                        <Card className="shadow-md border-slate-500/30 bg-slate-50/10">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+                                    <PackageX className="h-5 w-5" />
+                                    Productos Estancados
+                                </CardTitle>
+                                <CardDescription>Alto inventario inmovilizado y sin ventas en {activePeriodOption.description}.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    {isLoading || isMetricsLoading ? (
+                                        <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                                    ) : stagnantProducts.length > 0 ? (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="text-slate-900 dark:text-slate-100 font-bold">Producto</TableHead>
+                                                    <TableHead className="text-right text-slate-900 dark:text-slate-100 font-bold">Stock Inmovilizado</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {stagnantProducts.map(p => (
+                                                    <TableRow key={p.id}>
+                                                        <TableCell className="font-medium text-muted-foreground dark:text-slate-300">{p.name}</TableCell>
+                                                        <TableCell className="text-right font-bold text-slate-500 dark:text-slate-400">
+                                                            {p.stock} unid.
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    ) : (
+                                        <div className="flex flex-col justify-center items-center h-48 gap-2">
+                                            <Package className="h-8 w-8 text-primary/50" />
+                                            <p className="text-muted-foreground text-sm text-center">¡Excelente rimo!<br/>No detectamos inventario estancado severo.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
                     <div className="grid gap-6 md:grid-cols-2">
                         {/* Productos por Categoría Chart */}
                         <Card className="shadow-md">
@@ -715,7 +808,11 @@ export function MetricsTab({
                                                         <XAxis dataKey="category" tickLine={false} axisLine={false} tickMargin={8} />
                                                         <YAxis allowDecimals={false} />
                                                         <Tooltip cursor={false} content={<ChartTooltipContent />} />
-                                                        <RechartsBar dataKey="products" radius={8} />
+                                                        <RechartsBar 
+                                                            dataKey="products" 
+                                                            radius={8} 
+                                                            activeBar={{ fill: 'hsl(var(--primary))', opacity: 0.8, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                                                        />
                                                     </RechartsBarChart>
                                                 </ResponsiveContainer>
                                             </ChartContainer>
@@ -766,98 +863,6 @@ export function MetricsTab({
                                         <div className="flex justify-center items-center h-24 gap-3">
                                             <Package className="h-8 w-8 text-muted-foreground" />
                                             <p className="text-muted-foreground">¡Todo bien! No hay productos con bajo stock.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                    
-                    {/* --- GEMAS VS ESTANCADOS --- */}
-                    <div className="grid gap-6 md:grid-cols-2">
-                        {/* Productos Gemas */}
-                        <Card className="shadow-md border-amber-500/30 bg-amber-50/10">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-amber-600">
-                                    <Crown className="h-5 w-5" />
-                                    Productos Gema
-                                </CardTitle>
-                                <CardDescription>Mayor recaudación (Ingresos totales) en {activePeriodOption.description}.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="overflow-x-auto">
-                                    {isMetricsLoading || !salesMetrics ? (
-                                        <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                                    ) : salesMetrics.topRevenueProducts?.length > 0 ? (
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Producto</TableHead>
-                                                    <TableHead className="text-right">Recaudación</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {salesMetrics.topRevenueProducts.map((p, idx) => (
-                                                    <TableRow key={p.productId}>
-                                                        <TableCell className="font-medium">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-xs font-bold text-amber-600 w-4">{idx + 1}.</span>
-                                                                {p.name}
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell className="text-right font-bold text-green-600">
-                                                            ${p.revenue.toLocaleString('es-AR')}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    ) : (
-                                        <div className="flex flex-col justify-center items-center h-48 gap-2">
-                                            <Crown className="h-8 w-8 text-muted-foreground opacity-50" />
-                                            <p className="text-muted-foreground text-sm">Sin suficientes ventas para este período.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Productos Estancados */}
-                        <Card className="shadow-md border-slate-500/30 bg-slate-50/10">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-slate-600">
-                                    <PackageX className="h-5 w-5" />
-                                    Productos Estancados
-                                </CardTitle>
-                                <CardDescription>Alto inventario inmovilizado y sin ventas en {activePeriodOption.description}.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="overflow-x-auto">
-                                    {isLoading || isMetricsLoading ? (
-                                        <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                                    ) : stagnantProducts.length > 0 ? (
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Producto</TableHead>
-                                                    <TableHead className="text-right">Stock Inmovilizado</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {stagnantProducts.map(p => (
-                                                    <TableRow key={p.id}>
-                                                        <TableCell className="font-medium text-muted-foreground">{p.name}</TableCell>
-                                                        <TableCell className="text-right font-bold text-slate-500">
-                                                            {p.stock} unid.
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    ) : (
-                                        <div className="flex flex-col justify-center items-center h-48 gap-2">
-                                            <Package className="h-8 w-8 text-primary/50" />
-                                            <p className="text-muted-foreground text-sm text-center">¡Excelente rimo!<br/>No detectamos inventario estancado severo.</p>
                                         </div>
                                     )}
                                 </div>
