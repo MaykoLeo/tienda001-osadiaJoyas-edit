@@ -833,51 +833,60 @@ export function MetricsTab({
                                             <p>Sin ventas registradas para este producto en {activePeriodOption.description}.</p>
                                         </div>
                                     ) : (
-                                        <div className="w-full h-full min-h-[250px]">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <RechartsBarChart data={productMetrics} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                                                    <XAxis 
-                                                        dataKey="date" 
-                                                        tickFormatter={(val) => {
-                                                            try { return format(parseISO(val), 'd MMM', { locale: es }); } catch { return val; }
-                                                        }}
-                                                        tickLine={false}
-                                                        axisLine={false}
-                                                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                                                        dy={10}
-                                                    />
-                                                    <YAxis 
-                                                        yAxisId="left"
-                                                        tickLine={false}
-                                                        axisLine={false}
-                                                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                                                    />
-                                                    <Tooltip 
-                                                        cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }}
-                                                        content={({ active, payload, label }) => {
-                                                            if (!active || !payload?.length) return null;
-                                                            return (
-                                                                <div className="rounded-lg border bg-background p-3 shadow-md text-sm border-primary/20">
-                                                                    <p className="font-semibold mb-1 capitalize text-foreground">{
-                                                                        (() => { try { return format(parseISO(label), 'EEEE d MMM', { locale: es }); } catch { return label; } })()
-                                                                    }</p>
-                                                                    <p className="text-primary font-medium">Unidades: {payload[0]?.value}</p>
-                                                                    <p className="text-green-500 font-medium">Ingresos: ${Number(payload[0]?.payload?.revenue).toLocaleString('es-AR')}</p>
-                                                                </div>
-                                                            );
-                                                        }}
-                                                    />
-                                                    <RechartsBar 
-                                                        yAxisId="left"
-                                                        dataKey="unitsSold" 
-                                                        fill="hsl(var(--primary))" 
-                                                        radius={[4, 4, 0, 0]}
-                                                        maxBarSize={50}
-                                                        activeBar={{ fill: 'hsl(var(--primary))', opacity: 0.8, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
-                                                    />
-                                                </RechartsBarChart>
-                                            </ResponsiveContainer>
+                                        <div className="w-full h-full min-h-[250px] overflow-hidden">
+                                            <ScrollArea className="h-full w-full">
+                                                <div style={{ 
+                                                    width: productMetrics.length > 12 
+                                                        ? `${productMetrics.length * 50}px` 
+                                                        : '100%',
+                                                    height: '250px' 
+                                                }}>
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <RechartsBarChart data={productMetrics} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                                                            <XAxis 
+                                                                dataKey="date" 
+                                                                tickFormatter={(val) => {
+                                                                    try { return format(parseISO(val), 'd MMM', { locale: es }); } catch { return val; }
+                                                                }}
+                                                                tickLine={false}
+                                                                axisLine={false}
+                                                                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                                                                dy={10}
+                                                            />
+                                                            <YAxis 
+                                                                yAxisId="left"
+                                                                tickLine={false}
+                                                                axisLine={false}
+                                                                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                                                            />
+                                                            <Tooltip 
+                                                                cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }}
+                                                                content={({ active, payload, label }) => {
+                                                                    if (!active || !payload?.length) return null;
+                                                                    return (
+                                                                        <div className="rounded-lg border bg-background p-3 shadow-md text-sm border-primary/20">
+                                                                            <p className="font-semibold mb-1 capitalize text-foreground">{
+                                                                                (() => { try { return format(parseISO(label), 'EEEE d MMM', { locale: es }); } catch { return label; } })()
+                                                                            }</p>
+                                                                            <p className="text-primary font-medium">Unidades: {payload[0]?.value}</p>
+                                                                            <p className="text-green-500 font-medium">Ingresos: ${Number(payload[0]?.payload?.revenue).toLocaleString('es-AR')}</p>
+                                                                        </div>
+                                                                    );
+                                                                }}
+                                                            />
+                                                            <RechartsBar 
+                                                                yAxisId="left"
+                                                                dataKey="unitsSold" 
+                                                                fill="hsl(var(--primary))" 
+                                                                radius={[4, 4, 0, 0]}
+                                                                maxBarSize={40}
+                                                                activeBar={{ fill: 'hsl(var(--primary))', opacity: 0.8, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                                                            />
+                                                        </RechartsBarChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </ScrollArea>
                                         </div>
                                     )}
                                 </div>
@@ -885,38 +894,6 @@ export function MetricsTab({
                         </CardContent>
                     </Card>
 
-                    {/* Products KPI Cards */}
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        {/* Total de Productos — estático */}
-                        <Card className="shadow-md">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total de Productos</CardTitle>
-                                <Package className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">
-                                    {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : totalProducts}
-                                </div>
-                                <p className="text-xs text-muted-foreground">Productos únicos en el catálogo</p>
-                            </CardContent>
-                        </Card>
-
-                        {/* Valor del Inventario — reemplaza "Inventario Total unidades" */}
-                        <Card className="shadow-md">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Valor del Inventario</CardTitle>
-                                <Wallet className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">
-                                    {isLoading
-                                        ? <Loader2 className="h-8 w-8 animate-spin" />
-                                        : `$${inventoryValue.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
-                                </div>
-                                <p className="text-xs text-muted-foreground">{totalStock} unidades en stock (precio × stock)</p>
-                            </CardContent>
-                        </Card>
-                    </div>
 
                     {/* --- GEMAS VS ESTANCADOS --- */}
                     <div className="grid gap-6 md:grid-cols-2">
@@ -1024,6 +1001,39 @@ export function MetricsTab({
                         </p>
                     </div>
 
+                    {/* Products KPI Cards */}
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+                        {/* Total de Productos — estático */}
+                        <Card className="shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total de Productos</CardTitle>
+                                <Package className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">
+                                    {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : totalProducts}
+                                </div>
+                                <p className="text-xs text-muted-foreground">Productos únicos en el catálogo</p>
+                            </CardContent>
+                        </Card>
+
+                        {/* Valor del Inventario — reemplaza "Inventario Total unidades" */}
+                        <Card className="shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Valor del Inventario</CardTitle>
+                                <Wallet className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">
+                                    {isLoading
+                                        ? <Loader2 className="h-8 w-8 animate-spin" />
+                                        : `$${inventoryValue.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
+                                </div>
+                                <p className="text-xs text-muted-foreground">{totalStock} unidades en stock (precio × stock)</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
                     <div className="grid gap-6 md:grid-cols-2">
                         {/* Productos por Categoría Chart */}
                         <Card className="shadow-md">
@@ -1100,23 +1110,23 @@ export function MetricsTab({
                                     </div>
                                 </div>
                             </CardHeader>
-                            <CardContent className="flex-1">
-                                <div className="overflow-x-auto">
+                            <CardContent className="flex-1 pb-0">
+                                <ScrollArea className="h-80 w-full pr-4">
                                     {isLoading ? (
-                                        <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                                        <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>
                                     ) : lowStockProducts.length > 0 ? (
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
                                                     <TableHead>Producto</TableHead>
-                                                    <TableHead className="text-right">Stock Restante</TableHead>
+                                                    <TableHead className="text-right">Stock</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
                                                 {lowStockProducts.map(p => (
                                                     <TableRow key={p.id}>
-                                                        <TableCell className="font-medium">{p.name}</TableCell>
-                                                        <TableCell className={`text-right font-bold ${p.stock === 0 ? 'text-destructive' : 'text-amber-600'}`}>
+                                                        <TableCell className="font-medium text-xs py-2">{p.name}</TableCell>
+                                                        <TableCell className={`text-right font-bold text-xs py-2 ${p.stock === 0 ? 'text-destructive' : 'text-amber-600'}`}>
                                                             {p.stock === 0 ? 'Agotado' : p.stock}
                                                         </TableCell>
                                                     </TableRow>
@@ -1124,12 +1134,12 @@ export function MetricsTab({
                                             </TableBody>
                                         </Table>
                                     ) : (
-                                        <div className="flex justify-center items-center h-24 gap-3">
-                                            <Package className="h-8 w-8 text-muted-foreground" />
-                                            <p className="text-muted-foreground">¡Todo bien! No hay productos con bajo stock.</p>
+                                        <div className="flex flex-col justify-center items-center h-full gap-3 py-10">
+                                            <Package className="h-8 w-8 text-muted-foreground opacity-20" />
+                                            <p className="text-muted-foreground text-sm">¡Todo bien! No hay productos con bajo stock.</p>
                                         </div>
                                     )}
-                                </div>
+                                </ScrollArea>
                             </CardContent>
                         </Card>
                     </div>
