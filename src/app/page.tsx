@@ -62,7 +62,7 @@ export default async function Home() {
                         <div className="text-center flex-shrink-0">
                             <Button asChild variant="ghost" className="group h-auto rounded-full px-5 py-1 text-2xl font-headline text-muted-foreground tracking-wider hover:bg-accent hover:text-accent-foreground transition-colors">
                                 <Link href="https://www.instagram.com/osadia.cta" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4">
-                                    <InstagramIcon className="w-32 h-32 text-muted-foreground transition-colors group-hover:text-[#E1306C]" />
+                                    <InstagramIcon className="w-10 h-10 text-muted-foreground transition-all duration-300 group-hover:text-[#E1306C] group-hover:scale-110" />
                                     <span>osadia.cta</span>
                                 </Link>
                             </Button>

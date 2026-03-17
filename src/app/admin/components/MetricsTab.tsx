@@ -725,13 +725,13 @@ export function MetricsTab({
                                                                             {p.images?.[0] && <Image src={p.images[0]} alt="" fill className="object-cover" />}
                                                                         </div>
                                                                         <div className="flex-1 min-w-0">
-                                                                            <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">{p.name}</p>
-                                                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground group-hover:text-primary/70 transition-colors">
-                                                                                <span className="font-mono bg-muted group-hover:bg-primary/5 px-1 rounded">ID: {p.id}</span>
-                                                                                {p.sku && <span className="font-mono bg-muted group-hover:bg-primary/5 px-1 rounded">SKU: {p.sku}</span>}
+                                                                            <p className="font-medium text-sm truncate transition-colors">{p.name}</p>
+                                                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground transition-colors">
+                                                                                <span className="font-mono bg-muted group-hover:bg-primary/10 px-1 rounded transition-colors text-muted-foreground group-hover:text-foreground">ID: {p.id}</span>
+                                                                                {p.sku && <span className="font-mono bg-muted group-hover:bg-primary/10 px-1 rounded transition-colors text-muted-foreground group-hover:text-foreground">SKU: {p.sku}</span>}
                                                                             </div>
                                                                         </div>
-                                                                        <Plus className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all" />
+                                                                        <Plus className="h-4 w-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-all" />
                                                                     </button>
                                                                 ))
                                                             )}
@@ -1109,45 +1109,63 @@ export function MetricsTab({
                     <div className="pt-8 pb-4 text-center">
                         <div className="flex items-center gap-4 mb-2">
                             <Separator className="flex-1" />
-                            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground whitespace-nowrap bg-muted/30 px-4 py-1.5 rounded-full border border-border/50 font-sans">
+                            <h3 className="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-muted-foreground whitespace-nowrap bg-muted/30 px-6 py-2 rounded-full border border-border/50 font-sans shadow-inner">
                                 Estado General del Inventario
                             </h3>
                             <Separator className="flex-1" />
                         </div>
-                        <p className="text-[10px] text-muted-foreground/60 font-sans">
+                        <p className="text-[11px] sm:text-xs text-muted-foreground/60 font-sans max-w-lg mx-auto leading-relaxed">
                             Estas métricas reflejan el estado actual de tu stock y no se ven afectadas por el filtro de fecha actual.
                         </p>
                     </div>
 
-                    {/* Products KPI Cards */}
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-                        {/* Total de Productos — estático */}
-                        <Card className="shadow-md">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total de Productos</CardTitle>
-                                <Package className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">
-                                    {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : totalProducts}
+                    {/* Métricas Superiores de Inventario */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                        <Card className="bg-muted/30 border-border/50">
+                            <CardContent className="pt-6">
+                                <div className="flex items-center justify-between space-y-0 pb-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Total de Productos</p>
+                                    <Package className="h-4 w-4 text-muted-foreground" />
                                 </div>
+                                <div className="text-2xl font-bold">{totalProducts}</div>
                                 <p className="text-xs text-muted-foreground">Productos únicos en el catálogo</p>
                             </CardContent>
                         </Card>
-
-                        {/* Valor del Inventario — reemplaza "Inventario Total unidades" */}
-                        <Card className="shadow-md">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Valor del Inventario</CardTitle>
-                                <Wallet className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">
-                                    {isLoading
-                                        ? <Loader2 className="h-8 w-8 animate-spin" />
-                                        : `$${inventoryValue.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
+                        
+                        <Card className="bg-muted/30 border-border/50">
+                            <CardContent className="pt-6">
+                                <div className="flex items-center justify-between space-y-0 pb-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Valor del Inventario</p>
+                                    <Wallet className="h-4 w-4 text-muted-foreground" />
                                 </div>
+                                <div className="text-2xl font-bold">${inventoryValue.toLocaleString('es-AR')}</div>
                                 <p className="text-xs text-muted-foreground">{totalStock} unidades en stock (precio × stock)</p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-muted/30 border-border/50">
+                            <CardContent className="pt-6">
+                                <div className="flex items-center justify-between space-y-0 pb-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Productos Agotados</p>
+                                    <PackageX className="h-4 w-4 text-destructive" />
+                                </div>
+                                <div className="text-2xl font-bold text-destructive">
+                                    {products.filter(p => p.stock === 0).length}
+                                </div>
+                                <p className="text-xs text-muted-foreground">Requieren reposición inmediata</p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-muted/30 border-border/50">
+                            <CardContent className="pt-6">
+                                <div className="flex items-center justify-between space-y-0 pb-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Bajo Stock</p>
+                                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                </div>
+                                <div className="text-2xl font-bold text-amber-500">
+                                    {products.filter(p => p.stock > 0 && p.stock <= lowStockThreshold).length}
+                                </div>
+                                <p className="text-xs text-muted-foreground">Por debajo del umbral ({lowStockThreshold})</p>
                             </CardContent>
                         </Card>
                     </div>
