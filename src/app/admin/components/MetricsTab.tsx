@@ -16,6 +16,7 @@ import { getProductMetricsAction } from '@/app/admin/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
 
 type PeriodKey = '7d' | '30d' | '90d' | 'year' | 'all';
@@ -823,7 +824,7 @@ export function MetricsTab({
                                                             if (!active || !payload?.length) return null;
                                                             return (
                                                                 <div className="rounded-lg border bg-background p-3 shadow-md text-sm border-primary/20">
-                                                                    <p className="font-semibold mb-1 capitalize text-primary-foreground/90">{
+                                                                    <p className="font-semibold mb-1 capitalize text-foreground">{
                                                                         (() => { try { return format(parseISO(label), 'EEEE d MMM', { locale: es }); } catch { return label; } })()
                                                                     }</p>
                                                                     <p className="text-primary font-medium">Unidades: {payload[0]?.value}</p>
@@ -973,6 +974,20 @@ export function MetricsTab({
                             </CardContent>
                         </Card>
                     </div>
+                    
+                    {/* SEPARADOR: ESTADO GENERAL */}
+                    <div className="pt-8 pb-4">
+                        <div className="flex items-center gap-4 mb-2">
+                            <Separator className="flex-1" />
+                            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap bg-muted/30 px-3 py-1 rounded-full border border-border/50">
+                                Estado General del Inventario
+                            </h3>
+                            <Separator className="flex-1" />
+                        </div>
+                        <p className="text-[11px] text-center text-muted-foreground/60">
+                            Estas métricas reflejan el estado actual de tu stock y no se ven afectadas por el filtro de fecha actual.
+                        </p>
+                    </div>
 
                     <div className="grid gap-6 md:grid-cols-2">
                         {/* Productos por Categoría Chart */}
@@ -997,7 +1012,8 @@ export function MetricsTab({
                                                         <RechartsBar 
                                                             dataKey="products" 
                                                             radius={8} 
-                                                            activeBar={{ fill: 'hsl(var(--primary))', opacity: 0.8, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                                                            fill="#3b82f6"
+                                                            activeBar={{ fill: '#60a5fa', stroke: '#60a5fa', strokeWidth: 1 }}
                                                         />
                                                     </RechartsBarChart>
                                                 </ResponsiveContainer>
