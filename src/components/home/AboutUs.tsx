@@ -10,7 +10,7 @@ export function AboutUs() {
         <section id="about" className="grid md:grid-cols-2 gap-16 items-center py-20">
             <div className="relative aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl group">
                 <Image
-                    src="/Captura5.jpg"
+                    src="/Captura5.JPG"
                     alt="Esencia Osadía"
                     fill
                     className="object-cover transition-transform duration-1000 group-hover:scale-105"

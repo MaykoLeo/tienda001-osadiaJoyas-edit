@@ -30,9 +30,9 @@ export function OurStore() {
     }, [emblaApi, onSelect]);
 
     const images = [
-        { src: "/local/foto1.jpg", alt: "Interior del local - Vista 1" },
-        { src: "/local/foto2.jpg", alt: "Interior del local - Vista 2" },
-        { src: "/local/foto3.jpg", alt: "Interior del local - Vista 3" },
+        { src: "/local/foto1.JPG", alt: "Interior del local - Vista 1" },
+        { src: "/local/foto2.JPG", alt: "Interior del local - Vista 2" },
+        { src: "/local/foto3.JPG", alt: "Interior del local - Vista 3" },
     ];
 
     return (
