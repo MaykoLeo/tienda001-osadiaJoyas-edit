@@ -154,6 +154,7 @@ export function ProductForm({
     formId,
     errors,
     categories,
+    allProducts,
     imageUrls,
     onImageUrlsChange,
     onImageRemove,
@@ -162,6 +163,7 @@ export function ProductForm({
     formId: string,
     errors: FieldErrors,
     categories: Category[],
+    allProducts: Product[],
     imageUrls: string[],
     onImageUrlsChange: (urls: string[]) => void;
     onImageRemove: (url: string) => void;
@@ -171,6 +173,7 @@ export function ProductForm({
     const [isStartDatePickerOpen, setStartDatePickerOpen] = useState(false);
     const [isEndDatePickerOpen, setEndDatePickerOpen] = useState(false);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(product?.categoryIds ?? []);
+    const [selectedCrossSellIds, setSelectedCrossSellIds] = useState<number[]>(product?.crossSellIds ?? []);
 
     const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
         setSelectedCategoryIds(prevIds => {
@@ -190,7 +193,21 @@ export function ProductForm({
     // Sincronizar selectedCategoryIds cuando el producto cambia
     useEffect(() => {
         setSelectedCategoryIds(product?.categoryIds ?? []);
-    }, [product?.categoryIds]);
+        setSelectedCrossSellIds(product?.crossSellIds ?? []);
+    }, [product?.categoryIds, product?.crossSellIds]);
+
+    const handleCrossSellChange = (productId: number, isChecked: boolean) => {
+        setSelectedCrossSellIds(prev => {
+            if (isChecked) {
+                if (prev.length >= 3) {
+                    return prev; // Máximo 3 productos
+                }
+                return [...prev, productId];
+            } else {
+                return prev.filter(id => id !== productId);
+            }
+        });
+    };
 
     // Construir árbol de categorías recursivo
     const categoryTree = useMemo(() => buildCategoryTree(categories), [categories]);
@@ -209,6 +226,7 @@ export function ProductForm({
                         <input key={`cat_hidden_${id}`} type="hidden" name="categoryIds" value={String(id)} />
                     ))
                 )}
+                <input type="hidden" name="crossSellIds" value={JSON.stringify(selectedCrossSellIds)} />
                 <input type="hidden" name="images" value={JSON.stringify(imageUrls)} />
             </>
         );
@@ -298,6 +316,41 @@ export function ProductForm({
                 </ScrollArea>
                 <FormError message={errors.categoryIds?.[0]} />
             </div>
+
+            <div>
+                <Label>Productos Sugeridos (Cross-selling) <span className="text-xs text-muted-foreground">(Máximo 3)</span></Label>
+                <ScrollArea className="h-48 w-full rounded-md border-2 p-3 mt-1">
+                    {allProducts.length > 0 ? (
+                        <div className="space-y-2">
+                            {allProducts.filter(p => p.id !== product?.id).map(p => {
+                                const isSelected = selectedCrossSellIds.includes(p.id);
+                                const isDisabled = !isSelected && selectedCrossSellIds.length >= 3;
+                                return (
+                                    <div key={p.id} className="flex items-center space-x-2">
+                                        <Checkbox 
+                                            id={`cross-sell-${p.id}`} 
+                                            checked={isSelected}
+                                            disabled={isDisabled}
+                                            onCheckedChange={(checked) => handleCrossSellChange(p.id, checked === true)}
+                                        />
+                                        <label 
+                                            htmlFor={`cross-sell-${p.id}`} 
+                                            className={cn("text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70", isDisabled && "text-muted-foreground")}
+                                        >
+                                            {p.name}
+                                        </label>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                            No hay productos disponibles
+                        </p>
+                    )}
+                </ScrollArea>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <Label htmlFor="stock">Stock *</Label>

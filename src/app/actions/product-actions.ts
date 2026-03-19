@@ -44,6 +44,7 @@ const productSchema = z.object({
         return val;
     }, z.array(z.string().url("URL de imagen inválida.")).min(1, "Se requiere al menos una imagen.").max(4, "No se pueden subir más de 4 imágenes por producto.")),
     aiHint: z.string().optional(),
+    crossSellIds: z.array(z.coerce.number()).optional(),
 });
 
 const createProductSchema = productSchema.omit({ id: true });
@@ -57,11 +58,22 @@ export async function addProductAction(formData: FormData) {
     if (sanitizedData.offerEndDate === '') sanitizedData.offerEndDate = null;
 
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
+    
+    let crossSellIds: number[] = [];
+    const crossSellIdsRaw = formData.get('crossSellIds');
+    if (crossSellIdsRaw && typeof crossSellIdsRaw === 'string') {
+        try {
+            crossSellIds = JSON.parse(crossSellIdsRaw);
+        } catch (e) {
+            crossSellIds = [];
+        }
+    }
 
     const validatedFields = createProductSchema.safeParse({
         ...sanitizedData,
         featured: sanitizedData.featured === 'on',
         categoryIds,
+        crossSellIds,
     });
 
     if (!validatedFields.success) {
@@ -104,6 +116,16 @@ export async function updateProductAction(id: number, formData: FormData) {
     console.log('[updateProductAction] Raw categoryIds:', formData.getAll('categoryIds'));
     console.log('[updateProductAction] Parsed categoryIds:', categoryIds);
 
+    let crossSellIds: number[] = [];
+    const crossSellIdsRaw = formData.get('crossSellIds');
+    if (crossSellIdsRaw && typeof crossSellIdsRaw === 'string') {
+        try {
+            crossSellIds = JSON.parse(crossSellIdsRaw);
+        } catch (e) {
+            crossSellIds = [];
+        }
+    }
+
     // Solo incluir featured si existe en el formulario, sino usar el valor actual del producto
     const featuredValue = formData.has('featured')
         ? sanitizedData.featured === 'on'
@@ -114,6 +136,7 @@ export async function updateProductAction(id: number, formData: FormData) {
         id,
         featured: featuredValue,
         categoryIds,
+        crossSellIds,
     });
 
     if (!validatedFields.success) {

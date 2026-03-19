@@ -16,16 +16,16 @@ export async function FeaturedProducts() {
     return (
         <section id="featured" className="space-y-8">
             <div className="text-center space-y-3">
-                <span className="text-primary uppercase tracking-[0.4em] text-[10px] font-headline font-bold">
+                <span className="text-primary uppercase tracking-[0.4em] text-[13px] font-headline font-bold">
                     Colección Seleccionada
                 </span>
                 <h2 className="text-5xl font-headline font-bold">Productos Destacados</h2>
                 <p className="mt-4 text-muted-foreground/80 max-w-xl mx-auto font-body italic">Nuestra selección especial, elegida para ti.</p>
             </div>
             {featuredProducts.length > 0 ? (
-                <div className="flex flex-wrap justify-center gap-6">
+                <div className="flex flex-wrap justify-center gap-4">
                     {featuredProducts.map((product) => (
-                        <div key={product.id} className="w-full sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)]">
+                        <div key={product.id} className="w-full sm:w-[calc(50%-8px)] md:w-[calc(33.333%-11px)] lg:w-[calc(25%-12px)]">
                             <ProductCard product={product} />
                         </div>
                     ))}

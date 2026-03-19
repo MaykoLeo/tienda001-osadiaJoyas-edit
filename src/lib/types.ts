@@ -16,6 +16,7 @@ export interface Product {
   offerStartDate?: Date | null;
   offerEndDate?: Date | null;
   aiHint?: string;
+  crossSellIds?: number[];
 }
 
 export interface Category {

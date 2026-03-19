@@ -7,8 +7,8 @@ import Image from 'next/image';
 
 export function AboutUs() {
     return (
-        <section id="about" className="grid md:grid-cols-2 gap-16 items-center py-20">
-            <div className="relative aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl group">
+        <section id="about" className="grid md:grid-cols-5 gap-10 items-center py-10">
+            <div className="md:col-span-2 relative aspect-[2/3] max-h-[440px] w-full rounded-2xl overflow-hidden shadow-2xl group">
                 <Image
                     src="/Captura5.JPG"
                     alt="Esencia Osadía"
@@ -18,9 +18,9 @@ export function AboutUs() {
                 <div className="absolute inset-0 bg-black/10 group-hover:opacity-0 transition-opacity duration-700" />
             </div>
 
-            <div className='space-y-8'>
+            <div className='md:col-span-3 space-y-8'>
                 <div className="space-y-3">
-                    <span className="text-primary uppercase tracking-[0.4em] text-[10px] font-headline font-bold block">
+                    <span className="text-primary uppercase tracking-[0.4em] text-[13px] font-headline font-bold block">
                         Sobre Nosotros
                     </span>
                     <h2 className="text-5xl font-headline font-bold leading-[1.1]">

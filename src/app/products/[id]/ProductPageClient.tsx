@@ -6,7 +6,6 @@ import type { Product } from '@/lib/types';
 import { AlertTriangle, CheckCircle2, Home, CreditCard, Truck, Info } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { LiveVisitorCounter } from './LiveVisitorCounter';
 import { Separator } from '@/components/ui/separator';
 import { ProductCard } from '@/components/ProductCard';
 import { AddToCartButton } from '@/components/AddToCartButton';
@@ -28,17 +27,16 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
                     {product.images && product.images.length > 0 ? (
                         product.images.map((img, index) => (
                              <CarouselItem key={index}>
-                                <Card className='overflow-hidden rounded-lg shadow-lg'>
-                                    <CardContent className="p-0 flex aspect-[4/5] items-center justify-center">
+                                <Card className='overflow-hidden rounded-lg shadow-lg bg-muted/5'>
+                                    <CardContent className="p-0 flex aspect-square md:aspect-auto md:h-[500px] items-center justify-center relative">
                                          <Image
                                             src={img}
                                             alt={`${product.name} - image ${index + 1}`}
-                                            width={800}
-                                            height={1000}
-                                            className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                                            fill
+                                            className="object-contain transition-transform duration-300 group-hover:scale-105"
                                             priority={index === 0}
                                             data-ai-hint={product.aiHint}
-                                            sizes="(max-width: 768px) 90vw, 45vw"
+                                            sizes="(max-width: 768px) 100vw, 50vw"
                                         />
                                     </CardContent>
                                 </Card>
@@ -47,13 +45,12 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
                     ) : (
                         <CarouselItem>
                              <Card className='overflow-hidden rounded-lg shadow-lg'>
-                                <CardContent className="p-0 flex aspect-[4/5] items-center justify-center bg-muted">
+                                <CardContent className="p-0 flex aspect-square md:aspect-auto md:h-[500px] items-center justify-center bg-muted relative">
                                     <Image
                                         src="https://placehold.co/800x1000/EFEFEF/333333?text=Sin+Imagen"
                                         alt="Imagen no disponible"
-                                        width={800}
-                                        height={1000}
-                                        className="object-cover w-full h-full"
+                                        fill
+                                        className="object-contain"
                                     />
                                 </CardContent>
                             </Card>
@@ -73,6 +70,12 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
         <div className="flex flex-col">
           <h1 className="text-3xl lg:text-4xl font-bold font-headline leading-tight">{product.name}</h1>
           
+          {(product.shortDescription || product.description) && (
+            <p className="mt-2 text-lg text-muted-foreground italic font-sans leading-relaxed">
+              {product.shortDescription || product.description}
+            </p>
+          )}
+          
           <div className="mt-4">
             {product.salePrice ? (
                 <div className="flex items-baseline gap-3">
@@ -86,7 +89,7 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
 
             <div className="mt-4 flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <CreditCard className="h-5 w-5 text-green-600"/>
-                <p className="text-green-800 font-semibold text-sm">10% de descuento pagando con Efectivo (solo para Retiro por el local)</p>
+                <p className="text-green-800 font-semibold text-sm">20% de descuento pagando en Efectivo en el local</p>
             </div>
 
           <Separator className="my-6"/>
@@ -108,7 +111,7 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
             </div>
 
             {hasStock && (
-                <div className="w-full">
+                <div className="w-full max-w-sm">
                     <p className="text-sm font-medium mb-2">CANTIDAD</p>
                     <AddToCartButton product={product} />
                 </div>
@@ -136,10 +139,6 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
             </div>
           </div>
 
-          <div className='mt-6 text-sm text-muted-foreground flex items-center gap-2'>
-             <Info className="h-4 w-4"/>
-             <LiveVisitorCounter />
-           </div>
         </div>
       </div>
       
@@ -147,7 +146,7 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
         <section className="space-y-8 pt-8">
             <Separator />
             <div className="text-center">
-                <h2 className="text-3xl font-headline font-bold">También te podrían interesar</h2>
+                <h2 className="text-3xl font-headline font-bold">Completa tu look con...</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {relatedProducts.map((p) => (

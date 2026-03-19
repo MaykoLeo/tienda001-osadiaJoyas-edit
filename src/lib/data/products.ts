@@ -55,6 +55,7 @@ function _mapDbRowToProduct(row: any): Product {
         price: parseFloat(row.price),
         images: parsedImages,
         categoryIds: row.category_ids || [],
+        crossSellIds: row.cross_sell_ids || [],
         stock: row.stock,
         sku: row.sku,
         aiHint: row.ai_hint,
@@ -249,7 +250,7 @@ export async function getProductById(id: number): Promise<Product | undefined> {
 
 export async function createProduct(productData: any): Promise<Product> {
     if (!isDbConfigured) return createProductFromHardcodedData(productData);
-    const { categoryIds, ...newProductData } = productData;
+    const { categoryIds, crossSellIds, ...newProductData } = productData;
     try {
         const db = getDb();
 
@@ -266,14 +267,14 @@ export async function createProduct(productData: any): Promise<Product> {
         const productResult = await db(
             `INSERT INTO products (
                 name, description, short_description, price, images, stock, "sku",
-                ai_hint, featured, discount_percentage, offer_start_date, offer_end_date
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                ai_hint, featured, discount_percentage, offer_start_date, offer_end_date, cross_sell_ids
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             RETURNING *`,
             [
                 newProductData.name, newProductData.description, newProductData.shortDescription,
                 newProductData.price, newProductData.images, newProductData.stock, newProductData.sku,
                 newProductData.aiHint, newProductData.featured || false, newProductData.discountPercentage,
-                newProductData.offerStartDate, newProductData.offerEndDate
+                newProductData.offerStartDate, newProductData.offerEndDate, crossSellIds ? crossSellIds : []
             ]
         );
         const createdProductRow = productResult[0];
@@ -298,7 +299,7 @@ export async function createProduct(productData: any): Promise<Product> {
 
 export async function updateProduct(id: number, productData: Partial<Omit<Product, 'id' | 'salePrice'>>): Promise<Product> {
     if (!isDbConfigured) return updateProductFromHardcodedData(id, productData);
-    const { categoryIds, ...dataToUpdate } = productData;
+    const { categoryIds, crossSellIds, ...dataToUpdate } = productData;
     try {
         const db = getDb();
 
@@ -312,6 +313,10 @@ export async function updateProduct(id: number, productData: Partial<Omit<Produc
             if (existing.length > 0) {
                 throw new Error(`Ya existe un producto con el nombre "${dataToUpdate.name}".`);
             }
+        }
+
+        if (crossSellIds !== undefined) {
+            (dataToUpdate as any).crossSellIds = crossSellIds;
         }
 
         const columns = Object.keys(dataToUpdate).map((key, i) => {

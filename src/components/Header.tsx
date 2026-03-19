@@ -94,7 +94,7 @@ export default function Header() {
           <div className="lg:hidden flex items-center gap-2 flex-1">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:bg-primary/5">
+                <Button variant="ghost" size="icon" className="hover:bg-accent hover:text-accent-foreground border border-transparent hover:border-primary/20 transition-all duration-300">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Abrir menú</span>
                 </Button>
@@ -200,12 +200,12 @@ export default function Header() {
                   variant="ghost" 
                   size="icon" 
                   onClick={() => setIsSidebarOpen(true)} 
-                  className="relative hover:bg-primary/5 transition-colors"
+                  className="relative hover:bg-accent hover:text-accent-foreground border border-transparent hover:border-primary/20 transition-all duration-300"
                   aria-label="Carrito de compras"
                 >
-                  <ShoppingCart className="h-5 w-5" />
+                  <ShoppingCart className="h-[1.2rem] w-[1.2rem]" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground border-2 border-background">
                       {cartCount}
                     </span>
                   )}

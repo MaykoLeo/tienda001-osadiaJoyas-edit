@@ -371,7 +371,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
                     ) : (
                         <>
                             <div className="overflow-y-auto pr-4 -mr-4">
-                                {dialogType === 'product' && <ProductForm product={editingProduct} formId={formId} errors={formErrors} categories={categories} imageUrls={imageUrls} onImageUrlsChange={setImageUrls} onImageRemove={handleImageRemove} />}
+                                {dialogType === 'product' && <ProductForm product={editingProduct} formId={formId} errors={formErrors} categories={categories} allProducts={products} imageUrls={imageUrls} onImageUrlsChange={setImageUrls} onImageRemove={handleImageRemove} />}
                                 {dialogType === 'coupon' && <CouponForm coupon={editingCoupon} formId={formId} errors={formErrors} />}
                             </div>
                             <DialogFooter>

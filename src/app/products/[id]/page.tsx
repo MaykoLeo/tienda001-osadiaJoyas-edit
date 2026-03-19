@@ -55,10 +55,22 @@ export default async function ProductPage(props: { params: Promise<{ id: string 
   }
 
   const allProducts = await getProducts();
-  const relatedProducts = allProducts.filter(p =>
-    p.id !== product.id &&
-    p.categoryIds.some(catId => product.categoryIds.includes(catId))
-  ).slice(0, 4);
+  
+  let relatedProducts: Product[] = [];
+  
+  if (product.crossSellIds && product.crossSellIds.length > 0) {
+      relatedProducts = allProducts.filter(p => product.crossSellIds!.includes(p.id));
+  }
+
+  // Si no hay suficientes, rellenar con productos de la misma categoría automáticamente
+  if (relatedProducts.length < 4) {
+      const categoryProducts = allProducts.filter(p =>
+        p.id !== product.id &&
+        p.categoryIds.some(catId => product.categoryIds.includes(catId)) &&
+        !relatedProducts.some(rp => rp.id === p.id)
+      ).slice(0, 4 - relatedProducts.length);
+      relatedProducts = [...relatedProducts, ...categoryProducts];
+  }
 
   return <ProductPageClient product={product} relatedProducts={relatedProducts} />;
 }

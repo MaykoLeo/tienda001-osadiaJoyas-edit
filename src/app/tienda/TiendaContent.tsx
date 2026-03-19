@@ -72,7 +72,7 @@ export async function TiendaContent({
   };
 
   const allCategoriesPromise = getCategories();
-  const offerProductsPromise = getFilteredProducts({ onSale: true, limit: 4 });
+  const offerProductsPromise = getFilteredProducts({ onSale: true, limit: 12 });
   const initialProductsPromise = getFilteredProducts(queryParams);
   const checkNextPagePromise = getFilteredProducts({
     ...queryParams,
