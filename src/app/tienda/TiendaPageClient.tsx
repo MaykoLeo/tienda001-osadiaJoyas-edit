@@ -34,7 +34,24 @@ export function TiendaPageClient({
   
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
+  const categoryIdStr = searchParams.get('category');
   const paramsStr = searchParams.toString();
+
+  const getCategoryPath = (catId: number): string => {
+    const path: string[] = [];
+    let current = allCategories.find(c => c.id === catId);
+    
+    while (current) {
+      path.unshift(current.name);
+      if (current.parentId) {
+        current = allCategories.find(c => c.id === current?.parentId);
+      } else {
+        current = undefined;
+      }
+    }
+    
+    return path.join(' > ');
+  };
 
   const { ref, inView } = useInView({ threshold: 0.1 });
 
@@ -87,9 +104,13 @@ export function TiendaPageClient({
   }, [inView, hasMore, loadMoreProducts]);
 
   const TitleIcon = query ? Search : Tag;
-  const titleText = query 
-    ? <>Resultados de Búsqueda para: <span className='text-primary'>'{query}'</span></>
-    : 'Todos los Productos';
+  
+  let titleText: React.ReactNode = 'Todos los Productos';
+  if (query) {
+    titleText = <>Resultados de Búsqueda para: <span className='text-primary'>'{query}'</span></>;
+  } else if (categoryIdStr) {
+    titleText = getCategoryPath(Number(categoryIdStr));
+  }
 
   return (
     <div className="space-y-8">

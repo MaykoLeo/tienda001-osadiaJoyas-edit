@@ -14,20 +14,19 @@ import {
   SheetFooter,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Trash2, ShoppingBag, Plus, Minus, Store } from 'lucide-react';
+import { Trash2, ShoppingBag, Plus, Minus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from './ui/scroll-area';
+import { ShippingCalculator } from './ShippingCalculator';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from './ui/label';
 
 export default function CartSidebar() {
-  const { cartItems, removeFromCart, updateQuantity, subtotal, isSidebarOpen, setIsSidebarOpen, totalPrice } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, subtotal, isSidebarOpen, setIsSidebarOpen, totalPrice, shippingCost } = useCart();
 
   return (
     <Sheet
@@ -114,32 +113,30 @@ export default function CartSidebar() {
             </ScrollArea>
             <div className="space-y-4 pr-6">
               <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="shipping">
-                  <AccordionTrigger>Calculá el costo de envío</AccordionTrigger>
+                <AccordionItem value="shipping" className="border-none">
+                  <AccordionTrigger className="hover:no-underline py-2">
+                    <span className="text-sm font-medium">Calculá el costo de envío</span>
+                  </AccordionTrigger>
                   <AccordionContent>
-                    <RadioGroup defaultValue="pickup">
-                      <div className="flex items-center space-x-2 p-4 border rounded-md">
-                        <RadioGroupItem value="pickup" id="pickup" />
-                        <Label htmlFor="pickup" className="flex-1 flex flex-col gap-1 cursor-pointer">
-                          <span className="font-semibold flex items-center gap-2"><Store className="h-4 w-4" />Retirar en el local</span>
-                          <span className="text-xs text-muted-foreground">Av. Siempre Viva 742 - Gratis</span>
-                        </Label>
-                      </div>
-                    </RadioGroup>
+                    <ShippingCalculator />
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
               <Separator />
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
+                <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
                   <span>${subtotal.toLocaleString('es-AR')}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Envío</span>
-                  <span>A coordinar</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Envío</span>
+                  <span className="font-medium text-foreground">
+                    {shippingCost !== null 
+                      ? (shippingCost === 0 ? 'Gratis' : `$${shippingCost.toLocaleString('es-AR')}`) 
+                      : 'Calculá el envío'}
+                  </span>
                 </div>
-                <div className="flex justify-between font-bold text-base">
+                <div className="flex justify-between font-bold text-lg pt-2">
                   <span>Total</span>
                   <span>${totalPrice.toLocaleString('es-AR')}</span>
                 </div>

@@ -14,7 +14,7 @@ export default async function TiendaPage(props: {
   const searchParams = await props.searchParams;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-6 lg:px-10 py-8">
       <Suspense fallback={<Skeleton className="h-screen w-full" />}>
         <TiendaContent searchParams={searchParams} />
       </Suspense>

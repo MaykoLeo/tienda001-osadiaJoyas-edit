@@ -104,11 +104,7 @@ export function ShippingCalculator() {
   };
 
   return (
-    <div className="mt-4 p-3 border rounded-lg bg-secondary/30">
-      <div className="flex items-center gap-2 text-sm font-semibold mb-2">
-        <Truck className="h-5 w-5 text-muted-foreground" />
-        <span className='text-muted-foreground'>Calcula tu envío</span>
-      </div>
+    <div className="space-y-3 mt-4">
       <div className="flex items-center gap-2">
         <Input
           id="shipping-postal-code"
@@ -117,10 +113,10 @@ export function ShippingCalculator() {
           onChange={(e) => setInputCode(e.target.value)}
           onKeyDown={handleKeyPress}
           placeholder="Tu código postal"
-          className="bg-background flex-grow"
+          className="bg-background/50 h-9 text-xs"
           aria-label="Código postal para envío"
         />
-        <Button onClick={handleCalculate} disabled={status === 'loading'} variant="outline" className='bg-background shrink-0'>
+        <Button onClick={handleCalculate} disabled={status === 'loading'} size="sm" variant="secondary" className='shrink-0 h-9'>
           {status === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Calcular'}
         </Button>
       </div>

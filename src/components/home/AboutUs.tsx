@@ -8,14 +8,16 @@ import Image from 'next/image';
 export function AboutUs() {
     return (
         <section id="about" className="grid md:grid-cols-5 gap-10 items-center py-10">
-            <div className="md:col-span-2 relative aspect-[2/3] max-h-[440px] w-full rounded-2xl overflow-hidden shadow-2xl group">
-                <Image
-                    src="/Captura5.JPG"
-                    alt="Esencia Osadía"
-                    fill
-                    className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/10 group-hover:opacity-0 transition-opacity duration-700" />
+            <div className="md:col-span-2 relative p-[2px] border border-primary/30 dark:border-white/10 rounded-[18px] group">
+                <div className="relative aspect-[2/3] max-h-[440px] w-full rounded-2xl overflow-hidden shadow-2xl">
+                    <Image
+                        src="/Captura5.JPG"
+                        alt="Esencia Osadía"
+                        fill
+                        className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/10 group-hover:opacity-0 transition-opacity duration-700" />
+                </div>
             </div>
 
             <div className='md:col-span-3 space-y-8'>

@@ -20,7 +20,7 @@ export async function FeaturedProducts() {
                     Colección Seleccionada
                 </span>
                 <h2 className="text-5xl font-headline font-bold">Productos Destacados</h2>
-                <p className="mt-4 text-muted-foreground/80 max-w-xl mx-auto font-body italic">Nuestra selección especial, elegida para ti.</p>
+                <p className="mt-4 text-muted-foreground/80 max-w-xl mx-auto font-body italic">Nuestra selección especial, elegida para vos.</p>
             </div>
             {featuredProducts.length > 0 ? (
                 <div className="flex flex-wrap justify-center gap-4">

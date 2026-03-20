@@ -94,7 +94,7 @@ export function WhyChooseUs() {
                     <div
                         key={index}
                         className="
-              group flex flex-col items-center text-center p-6 gap-4 rounded-sm
+              group flex flex-col items-center text-center p-6 gap-4 rounded-[8px]
               bg-white border border-primary/30
               dark:bg-[#1A1A1A] dark:border-white/10
               hover:border-primary/70 dark:hover:border-primary/40

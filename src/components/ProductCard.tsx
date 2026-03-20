@@ -38,8 +38,8 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
         !hasStock && "opacity-50"
     )}>
       <CardHeader className="p-0">
-        <Link href={`/products/${product.id}`} className={cn("block relative group", !hasStock && "pointer-events-none")}>
-          <div className={cn("w-full aspect-square overflow-hidden bg-muted", !hasStock && "filter grayscale")}>
+        <Link href={`/products/${product.id}`} className="block relative group">
+          <div className="w-full aspect-square overflow-hidden bg-muted">
             <Image
               src={product.images[0] ?? 'https://placehold.co/600x600.png'}
               alt={product.name}
@@ -69,7 +69,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
 
       <CardContent className="flex-1 flex flex-col p-4 bg-card">
         <div className="flex-1">
-          <Link href={`/products/${product.id}`} className={cn('group', !hasStock && "pointer-events-none")}>
+          <Link href={`/products/${product.id}`} className="group">
             {/* DS: Playfair Display for product titles */}
             <CardTitle className="font-headline text-lg leading-tight tracking-[-0.02em] hover:text-primary transition-colors duration-300">
               {product.name}
