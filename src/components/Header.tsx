@@ -48,7 +48,7 @@ export default function Header() {
 
   const infoLinks = [
     { href: '/pages/garantia', label: 'Garantía' },
-    { href: '/pages/preguntas-frecuentes', label: 'FAQ' },
+    { href: '/pages/preguntas-frecuentes', label: 'Preguntas Frecuentes' },
     { href: '/pages/como-comprar', label: 'Cómo Comprar' },
     { href: '/#about', label: 'Sobre Nosotros' },
   ];
@@ -106,17 +106,22 @@ export default function Header() {
                   <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[200px] bg-background/95 backdrop-blur-lg border-primary/20">
-                {infoLinks.map((link) => (
-                  <DropdownMenuItem key={link.href} asChild className="focus:bg-primary/10 focus:text-primary cursor-pointer">
-                    <Link 
-                      href={link.href} 
-                      className="text-[11px] uppercase tracking-[0.1em] font-headline w-full py-2"
-                    >
-                      {link.label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
+              <DropdownMenuContent align="start" className="w-[220px] bg-background/80 backdrop-blur-md border-primary/10 border-t-0 p-0 overflow-hidden shadow-xl">
+                {/* Soft top gradient instead of border */}
+                <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                
+                <div className="py-2">
+                    {infoLinks.map((link) => (
+                    <DropdownMenuItem key={link.href} asChild className="focus:bg-primary/5 focus:text-primary cursor-pointer px-4">
+                        <Link 
+                        href={link.href} 
+                        className="text-[11px] uppercase tracking-[0.15em] font-headline w-full py-2.5 transition-colors"
+                        >
+                        {link.label}
+                        </Link>
+                    </DropdownMenuItem>
+                    ))}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>
