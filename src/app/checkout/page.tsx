@@ -35,6 +35,7 @@ import { DeliveryMethod, PaymentType } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 import { ShippingCalculator } from "@/components/ShippingCalculator";
 import { useShippingStore } from "@/store/shipping-store";
+import { sendOrderEmailsAction } from "@/app/actions/email-actions";
 
 
 const checkoutSchema = z.object({
@@ -247,6 +248,10 @@ function CheckoutForm() {
       if (paymentType === "Pago en Local") {
         const orderResponse = await createOrder({ ...orderData, status: 'awaiting_payment_in_store' });
         if (orderResponse.error || !orderResponse.orderId) throw new Error(orderResponse.error || "No se pudo generar el pedido.");
+        
+        // Enviar email de notificación para Pago en Local
+        await sendOrderEmailsAction(orderResponse.orderId);
+
         clearCart();
         router.push(`/checkout/success?orderId=${orderResponse.orderId}&type=store_payment`);
       } else {

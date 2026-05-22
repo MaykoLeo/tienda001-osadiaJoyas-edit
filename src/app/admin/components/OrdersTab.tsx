@@ -33,6 +33,15 @@ const statusLabels: Record<OrderStatus, string> = {
     pending: 'Pendiente'
 };
 
+export const getOrderType = (order: Order) => {
+    if (order.paymentId) return 'Pedido Online';
+    if (order.paymentType === 'Pago en Local' as any) return 'Pedido Online';
+    if (order.deliveryMethod === 'shipping' || order.deliveryMethod === 'pay_in_store') return 'Pedido Online';
+    if (order.deliveryMethod === 'pickup' && order.pickupDni && order.pickupDni.length > 0) return 'Pedido Online';
+    if (order.status === 'pending_payment' || order.status === 'awaiting_payment_in_store') return 'Pedido Online';
+    return 'Compra Local';
+};
+
 const OrderRow = React.memo(({ order, onStatusChange }: { order: Order; onStatusChange: (orderId: number, newStatus: OrderStatus) => void; }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [pendingStatus, setPendingStatus] = useState<OrderStatus | null>(null);
@@ -51,10 +60,8 @@ const OrderRow = React.memo(({ order, onStatusChange }: { order: Order; onStatus
         return { subtotal, preCouponSubtotal, shippingCost };
     }, [order.id, order.items, order.total, order.discountAmount, order.deliveryMethod]);
 
-    // Determinar tipo de pedido basándose en si tiene paymentId (MercadoPago)
-    const orderType = useMemo(() => {
-        return order.paymentId ? 'Pedido Online' : 'Compra Local';
-    }, [order.paymentId]);
+    // Determinar tipo de pedido
+    const orderType = useMemo(() => getOrderType(order), [order.paymentId, order.paymentType, order.deliveryMethod, order.pickupDni, order.status]);
 
     // Filtrar estados disponibles según el tipo de pedido
     const availableStatuses = useMemo(() => {
@@ -305,10 +312,10 @@ export function OrdersTab({ orders, isLoading, onExport, onStatusChange }: { ord
             sortableItems.sort((a, b) => {
                 const key = sortConfig.key;
 
-                // Manejo especial para orderType (calculado basándose en paymentId)
+                // Manejo especial para orderType (calculado basándose en helper getOrderType)
                 if (key === 'orderType') {
-                    const typeA = a.paymentId ? 'Pedido Online' : 'Compra Local';
-                    const typeB = b.paymentId ? 'Pedido Online' : 'Compra Local';
+                    const typeA = getOrderType(a);
+                    const typeB = getOrderType(b);
                     if (typeA < typeB) return sortConfig.direction === 'asc' ? -1 : 1;
                     if (typeA > typeB) return sortConfig.direction === 'asc' ? 1 : -1;
                     return 0;

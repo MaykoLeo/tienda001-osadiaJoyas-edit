@@ -22,7 +22,7 @@ import { MetricsTab } from './MetricsTab';
 import { ProductsTab } from './ProductsTab';
 import { CategoriesTab } from './CategoriesTab';
 import { CouponsTab } from './CouponsTab';
-import { OrdersTab } from './OrdersTab';
+import { OrdersTab, getOrderType } from './OrdersTab';
 import { ProductForm, CouponForm } from './Forms';
 import { POSOrderForm } from './POSOrderForm';
 
@@ -274,7 +274,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
                 const productName = product ? product.name.replace(/"/g, '""') : 'Producto Desconocido';
                 return `${item.quantity}x ${productName}`;
             }).join('; ');
-            const orderType = o.paymentId ? 'Pedido Online' : 'Compra Local';
+            const orderType = getOrderType(o);
             const formattedDate = format(new Date(o.createdAt), 'dd/MM/yyyy HH:mm');
             return [
                 o.id, `"${formattedDate}"`, `"${o.customerName}"`, o.customerEmail, o.total, orderType, o.paymentType || '', o.status,
