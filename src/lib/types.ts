@@ -81,6 +81,8 @@ export interface Order extends Omit<OrderData, 'items'> {
   createdAt: Date;
   items: OrderItem[]; // El JSONB de items
   paymentId?: string; // ID de la transacción de MP
+  /** Dirección compuesta guardada en la columna shipping_address de la DB */
+  shippingAddress?: string;
 }
 
 export interface Coupon {
