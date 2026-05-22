@@ -70,7 +70,8 @@ export async function updateOrderStatusAction(orderId: number, newStatus: OrderS
 
 const manualOrderSchema = z.object({
     items: z.string(), // JSON string of OrderItem[]
-    customerName: z.string().max(100).optional(),
+    customerFirstName: z.string().max(100).optional(),
+    customerLastName: z.string().max(100).optional(),
     customerEmail: z.string().optional().refine((val) => !val || z.string().email().safeParse(val).success, {
         message: "Email inválido"
     }),
@@ -83,7 +84,8 @@ const manualOrderSchema = z.object({
 export async function createManualOrderAction(formData: FormData) {
     const rawData = {
         items: formData.get('items'),
-        customerName: formData.get('customerName') || undefined,
+        customerFirstName: formData.get('customerFirstName') || undefined,
+        customerLastName: formData.get('customerLastName') || undefined,
         customerEmail: formData.get('customerEmail') || undefined,
         customerPhone: formData.get('customerPhone') || undefined,
         discountAmount: formData.get('discountAmount') || undefined,
@@ -97,7 +99,7 @@ export async function createManualOrderAction(formData: FormData) {
         return { error: 'Datos de orden inválidos.', fieldErrors: validatedFields.error.flatten().fieldErrors };
     }
 
-    const { items: itemsJson, customerName, customerEmail, customerPhone, discountAmount: discountAmountStr, paymentMethod, notes } = validatedFields.data;
+    const { items: itemsJson, customerFirstName, customerLastName, customerEmail, customerPhone, discountAmount: discountAmountStr, paymentMethod, notes } = validatedFields.data;
 
     let items;
     try {
@@ -117,17 +119,18 @@ export async function createManualOrderAction(formData: FormData) {
     const orderData: any = {
         items,
         total,
-        customerName: customerName || 'Cliente en Local',
+        customerFirstName: customerFirstName || 'Cliente',
+        customerLastName: customerLastName || 'en Local',
         customerEmail: customerEmail || 'noreply@local.store',
         customerPhone: customerPhone || '',
-        status: 'delivered', // Entregado inmediatamente
-        deliveryMethod: 'pickup', // O 'pay_in_store', pero 'pickup' encaja bien
+        status: 'delivered',
+        deliveryMethod: 'pickup',
         paymentType: paymentMethod || 'Efectivo',
         discountAmount: discountAmount > 0 ? discountAmount : undefined,
-        shippingAddress: '',
-        shippingCity: '',
+        shippingStreet: '',
+        shippingLocality: '',
         shippingPostalCode: '',
-        pickupName: customerName || 'Cliente Presencial',
+        pickupName: `${customerFirstName || 'Cliente'} ${customerLastName || 'Presencial'}`.trim(),
         pickupDni: '',
         notes: notes || '',
     };

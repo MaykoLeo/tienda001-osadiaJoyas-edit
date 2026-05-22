@@ -25,7 +25,8 @@ interface POSOrderFormProps {
 export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSOrderFormProps) {
     const [query, setQuery] = useState('');
     const [cart, setCart] = useState<OrderItem[]>([]);
-    const [customerName, setCustomerName] = useState('');
+    const [customerFirstName, setCustomerFirstName] = useState('');
+    const [customerLastName, setCustomerLastName] = useState('');
     const [customerEmail, setCustomerEmail] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -185,7 +186,8 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
         setIsSubmitting(true);
         const formData = new FormData();
         formData.append('items', JSON.stringify(cart));
-        formData.append('customerName', customerName);
+        formData.append('customerFirstName', customerFirstName);
+        formData.append('customerLastName', customerLastName);
         formData.append('customerEmail', customerEmail);
         formData.append('customerPhone', customerPhone);
 
@@ -365,17 +367,24 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                     <CardContent className="space-y-3 pt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="space-y-1">
-                                <Label htmlFor="cName">Nombre y Apellido</Label>
+                                <Label htmlFor="cFirstName">Nombre(s)</Label>
                                 <Input
-                                    id="cName"
-                                    placeholder="Juan Pérez"
-                                    value={customerName}
-                                    onChange={e => handleNameChange(e.target.value)}
-                                    maxLength={100}
+                                    id="cFirstName"
+                                    placeholder="Juan"
+                                    value={customerFirstName}
+                                    onChange={e => setCustomerFirstName(e.target.value.slice(0, 60))}
+                                    maxLength={60}
                                 />
-                                <div className="text-xs text-right text-muted-foreground">
-                                    {customerName.length}/100
-                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="cLastName">Apellido</Label>
+                                <Input
+                                    id="cLastName"
+                                    placeholder="Pérez"
+                                    value={customerLastName}
+                                    onChange={e => setCustomerLastName(e.target.value.slice(0, 60))}
+                                    maxLength={60}
+                                />
                             </div>
                             <div className="space-y-1">
                                 <Label htmlFor="cPhone">Teléfono</Label>

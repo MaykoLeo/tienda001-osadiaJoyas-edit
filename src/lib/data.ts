@@ -169,11 +169,14 @@ export async function createOrder(orderData: OrderData): Promise<{ orderId?: num
             }
         }
 
-        const { customerName, customerEmail, customerPhone, total, status, items, couponCode, discountAmount, deliveryMethod, paymentType, pickupName, pickupDni, shippingAddress, shippingCity, shippingPostalCode, notes } = orderData;
+        const { customerFirstName, customerLastName, customerEmail, customerPhone, total, status, items, couponCode, discountAmount, deliveryMethod, paymentType, pickupName, pickupDni, shippingStreet, shippingNumber, shippingFloor, shippingApartment, shippingPostalCode, shippingLocality, shippingProvince, notes } = orderData;
+        const customerName = `${customerFirstName} ${customerLastName}`.trim();
+        // Construir direccion completa para guardar en shipping_address
+        const shippingAddressFull = [shippingStreet, shippingNumber, shippingFloor ? `Piso ${shippingFloor}` : null, shippingApartment ? `Dpto ${shippingApartment}` : null].filter(Boolean).join(', ');
 
         const orderResult = await db`
             INSERT INTO orders (customer_name, customer_email, customer_phone, total, status, items, coupon_code, discount_amount, delivery_method, payment_type, pickup_name, pickup_dni, shipping_address, shipping_city, shipping_postal_code, notes, created_at)
-            VALUES (${customerName}, ${customerEmail}, ${customerPhone}, ${total}, ${status}, ${JSON.stringify(items)}::jsonb, ${couponCode}, ${discountAmount}, ${deliveryMethod}, ${paymentType}, ${pickupName}, ${pickupDni}, ${shippingAddress}, ${shippingCity}, ${shippingPostalCode}, ${notes || null}, ${new Date().toISOString()})
+            VALUES (${customerName}, ${customerEmail}, ${customerPhone}, ${total}, ${status}, ${JSON.stringify(items)}::jsonb, ${couponCode}, ${discountAmount}, ${deliveryMethod}, ${paymentType}, ${pickupName}, ${pickupDni}, ${shippingAddressFull || null}, ${shippingLocality || null}, ${shippingPostalCode || null}, ${notes || null}, ${new Date().toISOString()})
             RETURNING id;
         `;
         return { orderId: orderResult[0].id };
@@ -215,14 +218,23 @@ export async function updateOrderStatus(orderId: number, status: OrderStatus, pa
 }
 
 function mapOrderFromDb(row: any): Order {
+    const fullName: string = row.customer_name || '';
+    const nameParts = fullName.split(' ');
+    const customerLastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    const customerFirstName = nameParts[0] || fullName;
     return {
-        id: row.id, customerName: row.customer_name, customerEmail: row.customer_email,
+        id: row.id, customerFirstName, customerLastName, customerEmail: row.customer_email,
         customerPhone: row.customer_phone, total: parseFloat(row.total), status: row.status as OrderStatus,
         createdAt: new Date(row.created_at), items: row.items, couponCode: row.coupon_code,
         discountAmount: row.discount_amount ? parseFloat(row.discount_amount) : undefined,
         paymentId: row.payment_id || undefined, deliveryMethod: row.delivery_method, paymentType: row.payment_type, pickupName: row.pickup_name,
-        pickupDni: row.pickup_dni, shippingAddress: row.shipping_address, shippingCity: row.shipping_city,
-        shippingPostalCode: row.shipping_postal_code, notes: row.notes,
+        pickupDni: row.pickup_dni,
+        // Los campos de dirección se guardan en las columnas legacy de DB
+        shippingAddress: row.shipping_address,
+        shippingLocality: row.shipping_city,
+        shippingPostalCode: row.shipping_postal_code,
+        shippingProvince: row.shipping_province || undefined,
+        notes: row.notes,
     };
 }
 

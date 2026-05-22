@@ -20,11 +20,11 @@ interface NewOrderNotificationEmailProps {
   order: Order;
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL 
-  ? process.env.NEXT_PUBLIC_APP_URL 
-  : process.env.VERCEL_URL 
-    ? `https://${process.env.VERCEL_URL}` 
-    : 'http://localhost:3000';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
+  ? process.env.NEXT_PUBLIC_SITE_URL
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'http://localhost:9002';
 
 const formatPrice = (amount: number) => {
     return `$ ${amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -76,7 +76,7 @@ export const NewOrderNotificationEmail: React.FC<Readonly<NewOrderNotificationEm
 
           <Section style={box}>
               <Heading as="h3" style={h3}>Datos del Cliente</Heading>
-              <Text style={detailText}><strong>Nombre:</strong> {order.customerName}</Text>
+              <Text style={detailText}><strong>Nombre:</strong> {order.customerFirstName} {order.customerLastName}</Text>
               <Text style={detailText}><strong>Email:</strong> <Link href={`mailto:${order.customerEmail}`}>{order.customerEmail}</Link></Text>
               {order.customerPhone && <Text style={detailText}><strong>Teléfono:</strong> {order.customerPhone}</Text>}
               {order.pickupDni && <Text style={detailText}><strong>DNI:</strong> {order.pickupDni}</Text>}
@@ -86,8 +86,8 @@ export const NewOrderNotificationEmail: React.FC<Readonly<NewOrderNotificationEm
             <Section style={box}>
                 <Heading as="h3" style={h3}>Datos de Envío</Heading>
                 <Text style={detailText}><strong>Dirección:</strong> {order.shippingAddress}</Text>
-                <Text style={detailText}><strong>Ciudad:</strong> {order.shippingCity}</Text>
-                <Text style={detailText}><strong>Código Postal:</strong> {order.shippingPostalCode}</Text>
+                <Text style={detailText}><strong>Localidad:</strong> {order.shippingLocality}</Text>
+                {order.shippingProvince && <Text style={detailText}><strong>Provincia:</strong> {order.shippingProvince}</Text>}
             </Section>
           )}
 

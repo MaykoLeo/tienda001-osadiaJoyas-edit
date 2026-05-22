@@ -277,8 +277,8 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
             const orderType = getOrderType(o);
             const formattedDate = format(new Date(o.createdAt), 'dd/MM/yyyy HH:mm');
             return [
-                o.id, `"${formattedDate}"`, `"${o.customerName}"`, o.customerEmail, o.total, orderType, o.paymentType || '', o.status,
-                o.couponCode || '', o.discountAmount || 0, o.paymentId || '', `"${o.shippingAddress}, ${o.shippingCity}, ${o.shippingPostalCode}"`,
+                o.id, `"${formattedDate}"`, `"${o.customerFirstName} ${o.customerLastName}"`, o.customerEmail, o.total, orderType, o.paymentType || '', o.status,
+                o.couponCode || '', o.discountAmount || 0, o.paymentId || '', `"${o.shippingAddress || ''}, ${o.shippingLocality || ''}, ${o.shippingProvince || ''}, ${o.shippingPostalCode || ''}"`,
                 `"${productList}"`
             ].join(',');
         });

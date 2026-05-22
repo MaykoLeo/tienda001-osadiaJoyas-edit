@@ -20,6 +20,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCart } from "@/hooks/use-cart";
 import Image from "next/image";
@@ -33,18 +40,50 @@ import { Label } from "@/components/ui/label";
 import { createOrder } from "@/lib/data";
 import { DeliveryMethod, PaymentType } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
-import { ShippingCalculator } from "@/components/ShippingCalculator";
 import { useShippingStore } from "@/store/shipping-store";
 import { sendOrderEmailsAction } from "@/app/actions/email-actions";
 
+const ARGENTINA_PROVINCES = [
+  "Buenos Aires",
+  "Buenos Aires (Ciudad Autónoma)",
+  "Catamarca",
+  "Chaco",
+  "Chubut",
+  "Córdoba",
+  "Corrientes",
+  "Entre Ríos",
+  "Formosa",
+  "Jujuy",
+  "La Pampa",
+  "La Rioja",
+  "Mendoza",
+  "Misiones",
+  "Neuquén",
+  "Río Negro",
+  "Salta",
+  "San Juan",
+  "San Luis",
+  "Santa Cruz",
+  "Santa Fe",
+  "Santiago del Estero",
+  "Tierra del Fuego",
+  "Tucumán",
+];
 
 const checkoutSchema = z.object({
-  name: z.string().trim().min(2, "El nombre completo es requerido."),
+  firstName: z.string().trim().min(2, "El nombre es requerido."),
+  lastName: z.string().trim().min(2, "El apellido es requerido."),
   email: z.string().trim().email("El email ingresado no es válido."),
   phone: z.string().trim().min(10, "El teléfono debe tener al menos 10 dígitos."),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
+  // Shipping fields
+  shippingStreet: z.string().optional(),
+  shippingNumber: z.string().optional(),
+  shippingFloor: z.string().optional(),
+  shippingApartment: z.string().optional(),
+  shippingPostalCode: z.string().optional(),
+  shippingLocality: z.string().optional(),
+  shippingProvince: z.string().optional(),
+  // Pickup fields
   pickupName: z.string().optional(),
   pickupDNI: z.string().optional(),
   deliveryMethod: z.string(),
@@ -52,21 +91,26 @@ const checkoutSchema = z.object({
 })
   .superRefine((data, ctx) => {
     if (data.deliveryMethod === 'shipping') {
-      if (!data.address || data.address.trim().length < 5) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['address'], message: 'La dirección es requerida.' });
+      if (!data.shippingStreet || data.shippingStreet.trim().length < 3) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['shippingStreet'], message: 'La calle es requerida.' });
       }
-      if (!data.city || data.city.trim().length < 2) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['city'], message: 'La ciudad es requerida.' });
+      if (!data.shippingNumber || data.shippingNumber.trim().length < 1) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['shippingNumber'], message: 'El número es requerido.' });
       }
-      if (!data.postalCode || data.postalCode.trim().length < 4) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['postalCode'], message: 'El código postal es requerido.' });
+      if (!data.shippingPostalCode || data.shippingPostalCode.trim().length < 4) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['shippingPostalCode'], message: 'El código postal es requerido.' });
+      }
+      if (!data.shippingLocality || data.shippingLocality.trim().length < 2) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['shippingLocality'], message: 'La localidad es requerida.' });
+      }
+      if (!data.shippingProvince || data.shippingProvince.trim().length < 2) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['shippingProvince'], message: 'La provincia es requerida.' });
       }
     }
     if (data.deliveryMethod === 'pickup' || data.deliveryMethod === 'pay_in_store') {
       if (!data.pickupName || data.pickupName.trim().length < 3) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pickupName'], message: 'El nombre y apellido de quien retira son requeridos.' });
       }
-      // Expresión regular corregida y se eliminan espacios con trim()
       const trimmedDNI = data.pickupDNI ? data.pickupDNI.trim() : '';
       if (!/^\d{7,8}$/.test(trimmedDNI)) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pickupDNI'], message: 'El DNI debe tener entre 7 y 8 dígitos numéricos.' });
@@ -81,20 +125,17 @@ function CheckoutForm() {
   const { cartItems, subtotal, appliedCoupon, cartCount, clearCart, replaceCart } = useCart();
   const [isVerifying, setIsVerifying] = useState(true);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
-  const { shippingCost, postalCode: shippingPostalCode, setPostalCode, reset } = useShippingStore();
+  const { shippingCost, postalCode: shippingPostalCodeStore, setPostalCode, reset, setShippingCost, setError, setLoading, status, error } = useShippingStore();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showAdBlockerWarning, setShowAdBlockerWarning] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('shipping');
+  const [shippingInfo, setShippingInfo] = useState<{ productName?: string; deliveryTimeMin?: string; deliveryTimeMax?: string } | null>(null);
 
   useEffect(() => {
     const verifyPrices = async () => {
-      if (cartItems.length === 0) {
-        setIsVerifying(false);
-        return;
-      }
-
+      if (cartItems.length === 0) { setIsVerifying(false); return; }
       setIsVerifying(true);
       try {
         const itemsToVerify = cartItems.map(item => ({
@@ -102,77 +143,54 @@ function CheckoutForm() {
           quantity: item.quantity,
           priceInCart: item.product.salePrice ?? item.product.price,
         }));
-
         const result = await verifyCartPrices(itemsToVerify);
         setVerificationResult(result);
-
         if (result.hasChanges) {
           replaceCart(result.updatedCartItems);
-          toast({
-            title: "El carrito fue actualizado",
-            description: "Algunos productos cambiaron. Revisa el resumen antes de continuar.",
-            variant: "default",
-          });
+          toast({ title: "El carrito fue actualizado", description: "Algunos productos cambiaron. Revisa el resumen antes de continuar." });
         }
       } catch (error) {
-        console.error("Error al verificar los precios del carrito:", error);
-        toast({
-          title: "Error de Verificación",
-          description: "No pudimos verificar los precios de tu carrito. Inténtalo de nuevo.",
-          variant: "destructive",
-        });
+        toast({ title: "Error de Verificación", description: "No pudimos verificar los precios de tu carrito. Inténtalo de nuevo.", variant: "destructive" });
       } finally {
         setIsVerifying(false);
       }
     };
-
     verifyPrices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // El array vacío asegura que solo se ejecute una vez
-
+  }, []);
 
   const paymentType = useMemo(() => {
     return deliveryMethod === 'pay_in_store' ? 'Pago en Local' : 'QR / Tarjeta';
   }, [deliveryMethod]);
 
   const {
-    originalSubtotal,
-    productDiscount,
-    couponDiscount,
-    localPaymentDiscount,
-    finalTotalPrice,
-    totalDiscount
+    originalSubtotal, productDiscount, couponDiscount, localPaymentDiscount, finalTotalPrice, totalDiscount
   } = useMemo(() => {
     const originalSubtotal = cartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
     const productDiscount = originalSubtotal - subtotal;
-
     let couponDiscountValue = 0;
     if (appliedCoupon) {
-      if (appliedCoupon.discountType === 'percentage') {
-        couponDiscountValue = subtotal * (appliedCoupon.discountValue / 100);
-      } else {
-        couponDiscountValue = appliedCoupon.discountValue;
-      }
+      couponDiscountValue = appliedCoupon.discountType === 'percentage'
+        ? subtotal * (appliedCoupon.discountValue / 100)
+        : appliedCoupon.discountValue;
     }
-
     const subtotalAfterCoupons = subtotal - couponDiscountValue;
     const isPayInStore = deliveryMethod === 'pay_in_store';
     const localPaymentDiscountValue = isPayInStore ? subtotalAfterCoupons * 0.20 : 0;
-
     const shippingCostValue = deliveryMethod === 'shipping' ? (shippingCost ?? 0) : 0;
-
     const finalTotalPrice = subtotalAfterCoupons - localPaymentDiscountValue + shippingCostValue;
     const totalDiscount = productDiscount + couponDiscountValue + localPaymentDiscountValue;
-
-    return {
-      originalSubtotal, productDiscount, couponDiscount: couponDiscountValue,
-      localPaymentDiscount: localPaymentDiscountValue, finalTotalPrice, totalDiscount
-    };
+    return { originalSubtotal, productDiscount, couponDiscount: couponDiscountValue, localPaymentDiscount: localPaymentDiscountValue, finalTotalPrice, totalDiscount };
   }, [cartItems, subtotal, appliedCoupon, deliveryMethod, shippingCost]);
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { name: "", email: "", phone: "", address: "", city: "", postalCode: shippingPostalCode || "", pickupName: "", pickupDNI: "", deliveryMethod: 'shipping', paymentType: 'QR / Tarjeta' },
+    defaultValues: {
+      firstName: "", lastName: "", email: "", phone: "",
+      shippingStreet: "", shippingNumber: "", shippingFloor: "", shippingApartment: "",
+      shippingPostalCode: shippingPostalCodeStore || "", shippingLocality: "", shippingProvince: "",
+      pickupName: "", pickupDNI: "", deliveryMethod: 'shipping', paymentType: 'QR / Tarjeta'
+    },
   });
 
   useEffect(() => {
@@ -180,35 +198,48 @@ function CheckoutForm() {
     form.setValue('paymentType', paymentType);
     if (deliveryMethod !== 'shipping') {
       reset();
-      form.setValue('postalCode', '');
+      form.setValue('shippingPostalCode', '');
     }
   }, [deliveryMethod, form, reset, paymentType]);
 
   useEffect(() => {
-    if (shippingPostalCode) {
-      form.setValue('postalCode', shippingPostalCode);
-    }
-  }, [shippingPostalCode, form]);
-
-  const postalCodeValue = form.watch("postalCode");
-  useEffect(() => {
-    if (deliveryMethod === 'shipping' && postalCodeValue && postalCodeValue.length >= 4) {
-      setPostalCode(postalCodeValue);
-    }
-  }, [postalCodeValue, setPostalCode, deliveryMethod]);
+    if (shippingPostalCodeStore) { form.setValue('shippingPostalCode', shippingPostalCodeStore); }
+  }, [shippingPostalCodeStore, form]);
 
   useEffect(() => {
     const checkAdBlocker = async () => {
       try {
-        await fetch(new Request('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')).catch(() => {
-          setShowAdBlockerWarning(true);
-        });
-      } catch (error) {
-        setShowAdBlockerWarning(true);
-      }
+        await fetch(new Request('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js')).catch(() => { setShowAdBlockerWarning(true); });
+      } catch { setShowAdBlockerWarning(true); }
     };
     checkAdBlocker();
   }, []);
+
+  // Shipping Calculator inline
+  const handleCalculateShipping = async () => {
+    const postalCode = form.getValues('shippingPostalCode');
+    if (!postalCode || postalCode.trim().length < 4) {
+      form.setError('shippingPostalCode', { message: 'Ingresa un código postal válido para calcular el envío.' });
+      return;
+    }
+    setLoading();
+    setShippingInfo(null);
+    try {
+      const response = await fetch('/api/shipping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postalCodeDestination: postalCode.trim() }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'No se pudo calcular el envío.');
+      setShippingCost(data.shippingCost, postalCode.trim());
+      setShippingInfo({ productName: data.productName, deliveryTimeMin: data.deliveryTimeMin, deliveryTimeMax: data.deliveryTimeMax });
+      form.clearErrors('shippingPostalCode');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error inesperado.';
+      setError(errorMessage);
+    }
+  };
 
   const handleCheckoutSubmit = async (values: CheckoutFormData) => {
     setIsLoading(true);
@@ -228,7 +259,8 @@ function CheckoutForm() {
       }));
 
       const orderData = {
-        customerName: values.name,
+        customerFirstName: values.firstName,
+        customerLastName: values.lastName,
         customerEmail: values.email,
         customerPhone: values.phone,
         total: finalTotalPrice,
@@ -237,10 +269,13 @@ function CheckoutForm() {
         discountAmount: totalDiscount,
         deliveryMethod: deliveryMethod,
         paymentType: paymentType as PaymentType,
-        shippingAddress: values.address,
-        shippingCity: values.city,
-        shippingPostalCode: values.postalCode,
-        shippingCost: deliveryMethod === 'shipping' ? shippingCost : 0,
+        shippingStreet: values.shippingStreet,
+        shippingNumber: values.shippingNumber,
+        shippingFloor: values.shippingFloor,
+        shippingApartment: values.shippingApartment,
+        shippingPostalCode: values.shippingPostalCode,
+        shippingLocality: values.shippingLocality,
+        shippingProvince: values.shippingProvince,
         pickupName: values.pickupName,
         pickupDni: values.pickupDNI,
       };
@@ -323,17 +358,11 @@ function CheckoutForm() {
                 const hasSale = item.product.salePrice && item.product.salePrice < item.product.price;
                 const itemTotal = (item.product.salePrice ?? item.product.price) * item.quantity;
                 const originalItemTotal = item.product.price * item.quantity;
-
                 return (
                   <div key={item.product.id} className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
                       <div className="relative w-16 h-16 rounded-md overflow-hidden border">
-                        <Image
-                          src={item.product.images[0] ?? "https://placehold.co/100x100.png"}
-                          alt={item.product.name}
-                          fill
-                          className="object-cover"
-                        />
+                        <Image src={item.product.images[0] ?? "https://placehold.co/100x100.png"} alt={item.product.name} fill className="object-cover" />
                       </div>
                       <div>
                         <p className="font-semibold">{item.product.name}</p>
@@ -341,14 +370,8 @@ function CheckoutForm() {
                       </div>
                     </div>
                     <div className="flex flex-col items-end">
-                      <p className="font-medium">
-                        {formatCurrency(itemTotal)}
-                      </p>
-                      {hasSale && (
-                        <p className="text-sm text-muted-foreground line-through">
-                          {formatCurrency(originalItemTotal)}
-                        </p>
-                      )}
+                      <p className="font-medium">{formatCurrency(itemTotal)}</p>
+                      {hasSale && <p className="text-sm text-muted-foreground line-through">{formatCurrency(originalItemTotal)}</p>}
                     </div>
                   </div>
                 );
@@ -357,23 +380,14 @@ function CheckoutForm() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <p className="text-muted-foreground">Subtotal</p>
-                  <p className={hasProductDiscount ? "line-through text-muted-foreground" : ""}>
-                    {formatCurrency(originalSubtotal)}
-                  </p>
+                  <p className={hasProductDiscount ? "line-through text-muted-foreground" : ""}>{formatCurrency(originalSubtotal)}</p>
                 </div>
-                {hasProductDiscount && (
-                  <div className="flex justify-between">
-                    <p className="text-muted-foreground">Subtotal c/ Dtos.</p>
-                    <p>{formatCurrency(subtotal)}</p>
-                  </div>
-                )}
+                {hasProductDiscount && (<div className="flex justify-between"><p className="text-muted-foreground">Subtotal c/ Dtos.</p><p>{formatCurrency(subtotal)}</p></div>)}
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-primary">
                     <div className="flex items-center gap-2">
                       <span>Descuento Cupón</span>
-                      {appliedCoupon && (
-                        <span className='text-xs font-medium'>({appliedCoupon.code})</span>
-                      )}
+                      {appliedCoupon && <span className='text-xs font-medium'>({appliedCoupon.code})</span>}
                     </div>
                     <span>-{formatCurrency(couponDiscount)}</span>
                   </div>
@@ -386,11 +400,7 @@ function CheckoutForm() {
                 )}
                 <div className="flex justify-between">
                   <p className="text-muted-foreground">Envío</p>
-                  <p>
-                    {showShipping
-                      ? (shippingCost !== null ? formatCurrency(shippingCost) : "Calcula tu envío")
-                      : "No aplica"}
-                  </p>
+                  <p>{showShipping ? (shippingCost !== null ? formatCurrency(shippingCost) : "Calcula tu envío") : "No aplica"}</p>
                 </div>
                 <Separator className="my-4" />
                 <div className="flex justify-between font-bold text-xl"><p>Total</p><p>{formatCurrency(finalTotalPrice)}</p></div>
@@ -412,7 +422,7 @@ function CheckoutForm() {
     if (isLoading) return <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Procesando...</>;
     if (paymentType === 'Pago en Local') return "Generar Pedido";
     return "Continuar y Pagar con Mercado Pago";
-  }
+  };
 
   return (
     <div className="grid lg:grid-cols-3 gap-12 max-w-7xl mx-auto py-8">
@@ -450,21 +460,157 @@ function CheckoutForm() {
           ) : (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleCheckoutSubmit)} className="space-y-6">
+                {/* --- DATOS DE CONTACTO --- */}
                 <Card>
                   <CardHeader><CardTitle>2. Completa tus datos de contacto</CardTitle></CardHeader>
                   <CardContent className="space-y-4">
-                    <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Nombre Completo</FormLabel><FormControl><Input {...field} placeholder="Juan Pérez" /></FormControl><FormMessage /></FormItem>)} />
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} placeholder="juan@email.com" /></FormControl><FormMessage /></FormItem>)} />
-                      <FormField control={form.control} name="phone" render={({ field }) => (<FormItem><FormLabel>Teléfono</FormLabel><FormControl><Input type="tel" {...field} placeholder="1122334455" /></FormControl><FormMessage /></FormItem>)} />
+                      <FormField control={form.control} name="firstName" render={({ field }) => (
+                        <FormItem><FormLabel>Nombre(s)</FormLabel><FormControl><Input {...field} placeholder="María" /></FormControl><FormMessage /></FormItem>
+                      )} />
+                      <FormField control={form.control} name="lastName" render={({ field }) => (
+                        <FormItem><FormLabel>Apellido</FormLabel><FormControl><Input {...field} placeholder="García" /></FormControl><FormMessage /></FormItem>
+                      )} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField control={form.control} name="email" render={({ field }) => (
+                        <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} placeholder="maria@email.com" /></FormControl><FormMessage /></FormItem>
+                      )} />
+                      <FormField control={form.control} name="phone" render={({ field }) => (
+                        <FormItem><FormLabel>Teléfono</FormLabel><FormControl><Input type="tel" {...field} placeholder="1122334455" /></FormControl><FormMessage /></FormItem>
+                      )} />
                     </div>
                   </CardContent>
                 </Card>
 
-                {deliveryMethod === 'shipping' && (<Card><CardHeader><CardTitle>3. Información de Envío</CardTitle></CardHeader><CardContent className="space-y-4"><FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>Dirección</FormLabel><FormControl><Input {...field} placeholder="Av. Corrientes 1234" /></FormControl><FormMessage /></FormItem>)} /><div className="grid grid-cols-2 gap-4"><FormField control={form.control} name="city" render={({ field }) => (<FormItem><FormLabel>Ciudad</FormLabel><FormControl><Input {...field} placeholder="Buenos Aires" /></FormControl><FormMessage /></FormItem>)} /><FormField control={form.control} name="postalCode" render={({ field }) => (<FormItem><FormLabel>Código Postal</FormLabel><FormControl><Input {...field} placeholder="1001" /></FormControl><FormMessage /></FormItem>)} /></div><ShippingCalculator /></CardContent></Card>)}
-                {(deliveryMethod === 'pickup' || deliveryMethod === 'pay_in_store') && (<Card><CardHeader><CardTitle>3. Información de Retiro</CardTitle></CardHeader><CardContent className="space-y-4"><p className="text-sm text-muted-foreground">Por favor, completa los datos de la persona que va a retirar el pedido. El DNI será solicitado al momento de la entrega.</p><FormField control={form.control} name="pickupName" render={({ field }) => (<FormItem><FormLabel>Nombre y Apellido de Quien Retira</FormLabel><FormControl><Input {...field} placeholder="El nombre que figura en el DNI" /></FormControl><FormMessage /></FormItem>)} /><FormField control={form.control} name="pickupDNI" render={({ field }) => (<FormItem><FormLabel>DNI de Quien Retira</FormLabel><FormControl><Input {...field} placeholder="Sin puntos ni espacios" maxLength={8} inputMode="numeric" onChange={(e) => { const value = e.target.value; if (/^\d*$/.test(value)) { field.onChange(value); } }} /></FormControl><FormMessage /></FormItem>)} /></CardContent></Card>)}
+                {/* --- INFORMACIÓN DE ENVÍO --- */}
+                {deliveryMethod === 'shipping' && (
+                  <Card>
+                    <CardHeader><CardTitle>3. Información de Envío</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-2">
+                          <FormField control={form.control} name="shippingStreet" render={({ field }) => (
+                            <FormItem><FormLabel>Calle</FormLabel><FormControl><Input {...field} placeholder="Av. Corrientes" /></FormControl><FormMessage /></FormItem>
+                          )} />
+                        </div>
+                        <FormField control={form.control} name="shippingNumber" render={({ field }) => (
+                          <FormItem><FormLabel>Número</FormLabel><FormControl><Input {...field} placeholder="1234" /></FormControl><FormMessage /></FormItem>
+                        )} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField control={form.control} name="shippingFloor" render={({ field }) => (
+                          <FormItem><FormLabel>Piso <span className="text-muted-foreground text-xs">(opcional)</span></FormLabel><FormControl><Input {...field} placeholder="3" /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="shippingApartment" render={({ field }) => (
+                          <FormItem><FormLabel>Departamento <span className="text-muted-foreground text-xs">(opcional)</span></FormLabel><FormControl><Input {...field} placeholder="B" /></FormControl><FormMessage /></FormItem>
+                        )} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField control={form.control} name="shippingLocality" render={({ field }) => (
+                          <FormItem><FormLabel>Localidad</FormLabel><FormControl><Input {...field} placeholder="Buenos Aires" /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="shippingProvince" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Provincia</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {ARGENTINA_PROVINCES.map(p => (
+                                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                      {/* Código Postal + Calcular en una sola fila */}
+                      <div>
+                        <FormField control={form.control} name="shippingPostalCode" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Código Postal</FormLabel>
+                            <div className="flex items-start gap-2">
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="1001"
+                                  className="max-w-xs"
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    if (e.target.value.length >= 4) {
+                                      setPostalCode(e.target.value);
+                                    }
+                                  }}
+                                />
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                className="h-10 shrink-0"
+                                onClick={handleCalculateShipping}
+                                disabled={status === 'loading'}
+                              >
+                                {status === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Calcular envío'}
+                              </Button>
+                            </div>
+                            <FormMessage />
+                            {/* Resultado del cálculo */}
+                            {status === 'error' && error && (
+                              <p className="text-sm text-destructive mt-1">{error}</p>
+                            )}
+                            {status === 'success' && shippingCost !== null && (
+                              <div className="mt-2 text-sm text-green-600">
+                                <span>✓ Costo de envío: <strong>{formatCurrency(shippingCost)}</strong></span>
+                                {shippingInfo?.productName && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {shippingInfo.productName}
+                                    {shippingInfo.deliveryTimeMin && shippingInfo.deliveryTimeMax && ` · ${shippingInfo.deliveryTimeMin} a ${shippingInfo.deliveryTimeMax} días hábiles`}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </FormItem>
+                        )} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
-                <Button type="submit" size="lg" className="w-full" disabled={isLoading || (deliveryMethod === 'shipping' && shippingCost === null)}>{getButtonText()}</Button>
+                {/* --- INFORMACIÓN DE RETIRO --- */}
+                {(deliveryMethod === 'pickup' || deliveryMethod === 'pay_in_store') && (
+                  <Card>
+                    <CardHeader><CardTitle>3. Información de Retiro</CardTitle></CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-sm text-muted-foreground">Por favor, completa los datos de la persona que va a retirar el pedido. El DNI será solicitado al momento de la entrega.</p>
+                      <FormField control={form.control} name="pickupName" render={({ field }) => (
+                        <FormItem><FormLabel>Nombre y Apellido de Quien Retira</FormLabel><FormControl><Input {...field} placeholder="El nombre que figura en el DNI" /></FormControl><FormMessage /></FormItem>
+                      )} />
+                      <FormField control={form.control} name="pickupDNI" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>DNI de Quien Retira</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Sin puntos ni espacios"
+                              maxLength={8}
+                              inputMode="numeric"
+                              onChange={(e) => { const value = e.target.value; if (/^\d*$/.test(value)) { field.onChange(value); } }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Button type="submit" size="lg" className="w-full" disabled={isLoading || (deliveryMethod === 'shipping' && shippingCost === null)}>
+                  {getButtonText()}
+                </Button>
               </form>
             </Form>
           )}

@@ -119,7 +119,7 @@ const OrderRow = React.memo(({ order, onStatusChange }: { order: Order; onStatus
 
             <TableRow className="hover:bg-muted/50 data-[state=open]:bg-muted/50" data-state={isOpen ? 'open' : 'closed'}>
                 <TableCell className="font-mono text-sm cursor-pointer" onClick={() => setIsOpen(!isOpen)}>#{order.id}</TableCell>
-                <TableCell className="font-medium cursor-pointer" onClick={() => setIsOpen(!isOpen)}>{order.customerName}</TableCell>
+                <TableCell className="font-medium cursor-pointer" onClick={() => setIsOpen(!isOpen)}>{order.customerFirstName} {order.customerLastName}</TableCell>
                 <TableCell className="cursor-pointer" onClick={() => setIsOpen(!isOpen)}>{format(new Date(order.createdAt), "dd MMM yyyy, HH:mm", { locale: es })}</TableCell>
                 <TableCell className="font-semibold cursor-pointer text-center" onClick={() => setIsOpen(!isOpen)}>${order.total.toLocaleString('es-AR')}</TableCell>
                 <TableCell className="cursor-pointer text-center" onClick={() => setIsOpen(!isOpen)}>
@@ -210,7 +210,7 @@ const OrderRow = React.memo(({ order, onStatusChange }: { order: Order; onStatus
                                 <div className="space-y-4">
                                     <h4 className="font-semibold text-lg">Información del Cliente</h4>
                                     <div className="space-y-2 text-sm">
-                                        <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> <span>{order.customerName}</span></div>
+                                        <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> <span>{order.customerFirstName} {order.customerLastName}</span></div>
                                         <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> <a href={`mailto:${order.customerEmail}`} className="text-primary hover:underline">{order.customerEmail}</a></div>
                                         <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> <span>{order.customerPhone || 'No disponible'}</span></div>
                                     </div>
@@ -230,7 +230,7 @@ const OrderRow = React.memo(({ order, onStatusChange }: { order: Order; onStatus
                                     {order.deliveryMethod === 'shipping' && (
                                         <div className="space-y-2 text-sm border-l-2 pl-3">
                                             <p className='font-medium'>Dirección:</p>
-                                            <div className="flex items-start gap-2"><HomeIcon className="h-4 w-4 text-muted-foreground mt-1" /><span>{order.shippingAddress}, {order.shippingCity}, {order.shippingPostalCode}</span></div>
+                                            <div className="flex items-start gap-2"><HomeIcon className="h-4 w-4 text-muted-foreground mt-1" /><span>{order.shippingAddress}, {order.shippingLocality}, {order.shippingPostalCode}{order.shippingProvince ? `, ${order.shippingProvince}` : ''}</span></div>
                                         </div>
                                     )}
 
@@ -284,9 +284,9 @@ export function OrdersTab({ orders, isLoading, onExport, onStatusChange }: { ord
 
         return orders.filter(order => {
             const fieldsToSearch = [
-                order.id.toString(), order.customerName, order.customerEmail, order.customerPhone || '',
+                order.id.toString(), `${order.customerFirstName} ${order.customerLastName}`, order.customerEmail, order.customerPhone || '',
                 order.total.toString(), format(new Date(order.createdAt), "dd MMM yyyy, HH:mm", { locale: es }),
-                order.deliveryMethod, order.shippingAddress || '', order.shippingCity || '',
+                order.deliveryMethod, order.shippingAddress || '', order.shippingLocality || '',
                 order.shippingPostalCode || '', order.paymentId || '', order.couponCode || '',
                 order.pickupName || '', order.pickupDni || '',
                 order.paymentType || '',

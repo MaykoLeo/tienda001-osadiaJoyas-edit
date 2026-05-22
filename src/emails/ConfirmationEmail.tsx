@@ -20,8 +20,8 @@ interface ConfirmationEmailProps {
   order: Order;
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL 
-  ? process.env.NEXT_PUBLIC_APP_URL 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL 
+  ? process.env.NEXT_PUBLIC_SITE_URL 
   : process.env.VERCEL_URL 
     ? `https://${process.env.VERCEL_URL}` 
     : 'http://localhost:3000';
@@ -32,10 +32,10 @@ const formatPrice = (amount: number) => {
 
 const getDeliveryInstructions = (order: Order) => {
     if (order.deliveryMethod === 'shipping') {
-        return `Estamos preparando tu pedido para enviarlo a ${order.shippingAddress}, ${order.shippingCity}. Te notificaremos cuando esté en camino.`;
+        return `Estamos preparando tu pedido para enviarlo a ${order.shippingAddress}, ${order.shippingLocality}. Te notificaremos cuando esté en camino.`;
     }
     if (order.deliveryMethod === 'pay_in_store') {
-        return `Tu pedido está reservado. Te esperamos en nuestro local para que realices el pago y retires tus joyas. Recuerda indicar tu nombre (${order.customerName}).`;
+        return `Tu pedido está reservado. Te esperamos en nuestro local para que realices el pago y retires tus joyas. Recuerda indicar tu nombre (${order.customerFirstName} ${order.customerLastName}).`;
     }
     return `Tu pedido ya está pago y listo. Te esperamos en nuestro local para que retires tus joyas. Por favor ven con tu DNI (${order.pickupDni}).`;
 };
@@ -61,7 +61,7 @@ export const ConfirmationEmail: React.FC<Readonly<ConfirmationEmailProps>> = ({
               style={{ margin: '0 auto' }}
             />
           </Section>
-          <Heading style={h1}>¡Gracias por tu compra, {order.customerName}!</Heading>
+          <Heading style={h1}>¡Gracias por tu compra, {order.customerFirstName}!</Heading>
           <Text style={paragraph}>
             Hemos registrado tu pedido <strong>#{order.id}</strong> correctamente. 
             {getDeliveryInstructions(order)}

@@ -53,7 +53,8 @@ export type PaymentType = 'Efectivo' | 'Transferencia' | 'QR / Tarjeta';
 export interface OrderData {
   items: OrderItem[];
   total: number;
-  customerName: string;
+  customerFirstName: string;
+  customerLastName: string;
   customerEmail: string;
   customerPhone: string;
   status: OrderStatus;
@@ -63,9 +64,13 @@ export interface OrderData {
   discountAmount?: number;
   pickupName?: string;
   pickupDni?: string;
-  shippingAddress?: string;
-  shippingCity?: string;
+  shippingStreet?: string;
+  shippingNumber?: string;
+  shippingFloor?: string;
+  shippingApartment?: string;
   shippingPostalCode?: string;
+  shippingLocality?: string;
+  shippingProvince?: string;
   notes?: string;
 }
 
