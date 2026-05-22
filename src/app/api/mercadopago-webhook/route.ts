@@ -60,10 +60,7 @@ export async function POST(request: NextRequest) {
                             to: [order.customerEmail],
                             subject: `Confirmación de tu pedido #${orderId}`,
                             react: ConfirmationEmail({
-                                customerName: order.customerName || 'Valiosa clienta',
-                                orderId: orderId.toString(),
-                                totalAmount: order.total,
-                                orderItems: order.items,
+                                order: order
                             }),
                         });
                         console.log(`[WEBHOOK] Confirmation email sent to ${order.customerEmail}.`);
@@ -79,11 +76,7 @@ export async function POST(request: NextRequest) {
                             to: [SELLER_EMAIL],
                             subject: `¡Nuevo Pedido! #${orderId}`,
                             react: NewOrderNotificationEmail({
-                                orderId: orderId.toString(),
-                                customerName: order.customerName || 'N/A',
-                                customerEmail: order.customerEmail,
-                                totalAmount: order.total,
-                                orderItems: order.items,
+                                order: order
                             }),
                         });
                         console.log(`[WEBHOOK] New order notification sent to ${SELLER_EMAIL}.`);

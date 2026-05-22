@@ -1,5 +1,4 @@
-
-import { OrderItem } from '@/lib/types';
+import { Order } from '@/lib/types';
 import { 
   Body, 
   Container, 
@@ -12,47 +11,40 @@ import {
   Section, 
   Text,
   Row,
-  Column
+  Column,
+  Link
 } from '@react-email/components';
 import * as React from 'react';
 
 interface ConfirmationEmailProps {
-  customerName: string;
-  orderId: string;
-  totalAmount: number;
-  orderItems: OrderItem[];
+  order: Order;
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL 
+  ? process.env.NEXT_PUBLIC_APP_URL 
+  : process.env.VERCEL_URL 
+    ? `https://${process.env.VERCEL_URL}` 
+    : 'http://localhost:3000';
 
-// --- Función para formatear precios ---
 const formatPrice = (amount: number) => {
-  // Usamos el locale 'de-DE' que formatea los números como 1.234,56
-  const formatted = new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'USD', // Puedes cambiarlo a tu moneda si es necesario
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-
-  // Reemplazamos el símbolo de la moneda si es necesario, o lo dejamos
-  // En este caso, lo dejamos como está, ya que Intl.NumberFormat es bastante bueno.
-  // Si se quisiera un formato exacto como "$ 1.234,56", se necesitarían más ajustes.
-  // Por ahora, el formato será "1.234,56 $" que es claro y correcto.
   return `$ ${amount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
+const getDeliveryInstructions = (order: Order) => {
+    if (order.deliveryMethod === 'shipping') {
+        return `Estamos preparando tu pedido para enviarlo a ${order.shippingAddress}, ${order.shippingCity}. Te notificaremos cuando esté en camino.`;
+    }
+    if (order.deliveryMethod === 'pay_in_store') {
+        return `Tu pedido está reservado. Te esperamos en nuestro local para que realices el pago y retires tus joyas. Recuerda indicar tu nombre (${order.customerName}).`;
+    }
+    return `Tu pedido ya está pago y listo. Te esperamos en nuestro local para que retires tus joyas. Por favor ven con tu DNI (${order.pickupDni}).`;
+};
 
 export const ConfirmationEmail: React.FC<Readonly<ConfirmationEmailProps>> = ({ 
-  customerName,
-  orderId,
-  totalAmount,
-  orderItems,
+  order,
 }) => {
-
-  // --- Cálculos de totales ---
-  const subtotal = orderItems.reduce((acc, item) => acc + (item.priceAtPurchase * item.quantity), 0);
-  const discount = subtotal - totalAmount;
+  const subtotal = order.items.reduce((acc, item) => acc + (item.priceAtPurchase * item.quantity), 0);
+  const discount = subtotal - order.total;
 
   return (
     <Html>
@@ -63,28 +55,29 @@ export const ConfirmationEmail: React.FC<Readonly<ConfirmationEmailProps>> = ({
           <Section style={logoContainer}>
             <Img
               src={`${baseUrl}/osadia-logo-completo.jpg`}
-              width="200" // Ajustado para un logo más rectangular
+              width="200"
               height="55"
               alt="Osadía Joyas Logo"
+              style={{ margin: '0 auto' }}
             />
           </Section>
-          <Heading style={h1}>¡Gracias por tu compra, {customerName}!</Heading>
+          <Heading style={h1}>¡Gracias por tu compra, {order.customerName}!</Heading>
           <Text style={paragraph}>
-            Hemos recibido la confirmación de tu pago para el pedido <strong>#{orderId}</strong>. 
-            Ya estamos preparando todo para que lo recibas lo antes posible. 
-            Cualquier consulta no dudes en escribirnos a nuestro Whatsapp.
+            Hemos registrado tu pedido <strong>#{order.id}</strong> correctamente. 
+            {getDeliveryInstructions(order)}
+            Cualquier consulta no dudes en escribirnos a nuestro Whatsapp o a este mismo correo.
           </Text>
           
           <Hr style={hr} />
 
           <Heading style={h2}>Resumen de tu compra</Heading>
           
-          {orderItems.map((item) => (
+          {order.items.map((item) => (
             <Section key={item.productId} style={itemSection}>
               <Row>
                 <Column style={{ width: '80px' }}>
                   <Img 
-                    src={item.image} 
+                    src={item.image.startsWith('http') ? item.image : `${baseUrl}${item.image}`} 
                     alt={item.name} 
                     width="70" 
                     height="70" 
@@ -94,6 +87,7 @@ export const ConfirmationEmail: React.FC<Readonly<ConfirmationEmailProps>> = ({
                 <Column>
                   <Text style={productName}>{item.name}</Text>
                   <Text style={productDetails}>Cantidad: {item.quantity}</Text>
+                  <Text style={productDetails}>Precio unitario: {formatPrice(item.priceAtPurchase)}</Text>
                 </Column>
                 <Column style={priceColumn}>
                   <Text style={price}>{formatPrice(item.priceAtPurchase * item.quantity)}</Text>
@@ -106,13 +100,11 @@ export const ConfirmationEmail: React.FC<Readonly<ConfirmationEmailProps>> = ({
           <Hr style={hr} />
           
           <Section style={totalsSection}>
-            {/* --- Subtotal --*/}
             <Row>
               <Column style={totalsLabelColumn}><Text style={totalsText}>Subtotal</Text></Column>
               <Column style={totalsValueColumn}><Text style={totalsText}>{formatPrice(subtotal)}</Text></Column>
             </Row>
             
-            {/* --- Descuento (si aplica) --*/}
             {discount > 0 && (
               <Row>
                 <Column style={totalsLabelColumn}><Text style={totalsText}>Descuento Aplicado</Text></Column>
@@ -120,10 +112,9 @@ export const ConfirmationEmail: React.FC<Readonly<ConfirmationEmailProps>> = ({
               </Row>
             )}
 
-            {/* --- Total General --*/}
             <Row style={{ marginTop: '10px' }}>
               <Column style={totalsLabelColumn}><Text style={{...totalsText, ...totalRow}}><strong>Total General</strong></Text></Column>
-              <Column style={totalsValueColumn}><Text style={{...price, ...totalRow}}><strong>{formatPrice(totalAmount)}</strong></Text></Column>
+              <Column style={totalsValueColumn}><Text style={{...price, ...totalRow}}><strong>{formatPrice(order.total)}</strong></Text></Column>
             </Row>
           </Section>
 
@@ -143,8 +134,6 @@ export const ConfirmationEmail: React.FC<Readonly<ConfirmationEmailProps>> = ({
 
 export default ConfirmationEmail;
 
-// --- Estilos ---
-
 const main = {
   backgroundColor: '#f6f9fc',
   fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
@@ -157,6 +146,8 @@ const container = {
   marginBottom: '64px',
   border: '1px solid #f0f0f0',
   borderRadius: '4px',
+  width: '600px',
+  maxWidth: '100%',
 };
 
 const logoContainer = {
@@ -179,7 +170,7 @@ const h2 = {
   fontWeight: 'bold',
   margin: '0 0 20px',
   padding: '0 20px',
-}
+};
 
 const paragraph = {
   fontSize: '16px',
@@ -196,7 +187,7 @@ const hr = {
 const itemHr = {
   borderColor: '#eaeaea',
   margin: '10px 20px 0',
-}
+};
 
 const itemSection = {
   padding: '0 20px',
@@ -234,7 +225,10 @@ const price = {
 };
 
 const totalsSection = {
-  padding: '0 20px',
+  padding: '20px',
+  backgroundColor: '#fafafa',
+  borderTop: '1px solid #eaeaea',
+  borderBottom: '1px solid #eaeaea',
 };
 
 const totalsLabelColumn = {
@@ -254,12 +248,13 @@ const totalsText = {
 const totalRow = {
   fontSize: '18px',
   fontWeight: 'bold',
+  color: '#111',
 };
-
 
 const footer = {
   color: '#888888',
   fontSize: '12px',
   lineHeight: '16px',
   padding: '0 20px',
+  textAlign: 'center' as const,
 };
