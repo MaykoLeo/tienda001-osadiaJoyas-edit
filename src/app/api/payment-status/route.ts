@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { updateOrderStatus, deductStockForOrder, getOrderById } from '@/lib/data';
+import { updateOrderStatus, deductStockForOrder, getOrderById, getProductById } from '@/lib/data';
 import type { OrderStatus } from '@/lib/types';
 
 const MERCADOPAGO_ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
@@ -100,10 +100,17 @@ export async function POST(request: NextRequest) {
         let restorableCartItems = null;
         if (order && order.items) {
           console.log(`Preparing ${order.items.length} item(s) for cart restoration for order ${orderId}.`);
-          restorableCartItems = order.items.map(item => ({
-            ...item.product,
-            quantity: item.quantity,
-          }));
+          const itemsWithProduct = await Promise.all(
+            order.items.map(async (item) => {
+              const productDetails = await getProductById(item.productId);
+              if (!productDetails) return null;
+              return {
+                product: productDetails,
+                quantity: item.quantity,
+              };
+            })
+          );
+          restorableCartItems = itemsWithProduct.filter(item => item !== null);
         } else {
           console.warn(`Could not find items for order ${orderId} to restore cart.`);
         }

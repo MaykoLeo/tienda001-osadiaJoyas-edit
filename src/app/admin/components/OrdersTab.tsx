@@ -321,7 +321,15 @@ export function OrdersTab({ orders, isLoading, onExport, onStatusChange }: { ord
                     return 0;
                 }
 
-                const valA = a[key], valB = b[key];
+                if (key === 'customerName') {
+                    const nameA = `${a.customerFirstName} ${a.customerLastName}`.toLowerCase();
+                    const nameB = `${b.customerFirstName} ${b.customerLastName}`.toLowerCase();
+                    if (nameA < nameB) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (nameA > nameB) return sortConfig.direction === 'asc' ? 1 : -1;
+                    return 0;
+                }
+
+                const valA = (a as any)[key], valB = (b as any)[key];
                 if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;

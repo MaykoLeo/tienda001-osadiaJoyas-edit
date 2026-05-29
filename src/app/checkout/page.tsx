@@ -466,18 +466,18 @@ function CheckoutForm() {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <FormField control={form.control} name="firstName" render={({ field }) => (
-                        <FormItem><FormLabel>Nombre(s)</FormLabel><FormControl><Input {...field} placeholder="María" /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>Nombre(s)</FormLabel><FormControl><Input {...field} placeholder="Ejemplo: María" /></FormControl><FormMessage /></FormItem>
                       )} />
                       <FormField control={form.control} name="lastName" render={({ field }) => (
-                        <FormItem><FormLabel>Apellido</FormLabel><FormControl><Input {...field} placeholder="García" /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>Apellido</FormLabel><FormControl><Input {...field} placeholder="Ejemplo: García" /></FormControl><FormMessage /></FormItem>
                       )} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <FormField control={form.control} name="email" render={({ field }) => (
-                        <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} placeholder="maria@email.com" /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} placeholder="Ejemplo: maria@email.com" /></FormControl><FormMessage /></FormItem>
                       )} />
                       <FormField control={form.control} name="phone" render={({ field }) => (
-                        <FormItem><FormLabel>Teléfono</FormLabel><FormControl><Input type="tel" {...field} placeholder="1122334455" /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>Teléfono</FormLabel><FormControl><Input type="tel" {...field} placeholder="Ejemplo: 1122334455" /></FormControl><FormMessage /></FormItem>
                       )} />
                     </div>
                   </CardContent>
@@ -491,24 +491,24 @@ function CheckoutForm() {
                       <div className="grid grid-cols-3 gap-4">
                         <div className="col-span-2">
                           <FormField control={form.control} name="shippingStreet" render={({ field }) => (
-                            <FormItem><FormLabel>Calle</FormLabel><FormControl><Input {...field} placeholder="Av. Corrientes" /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Calle</FormLabel><FormControl><Input {...field} placeholder="Ejemplo: Av. Corrientes" /></FormControl><FormMessage /></FormItem>
                           )} />
                         </div>
                         <FormField control={form.control} name="shippingNumber" render={({ field }) => (
-                          <FormItem><FormLabel>Número</FormLabel><FormControl><Input {...field} placeholder="1234" /></FormControl><FormMessage /></FormItem>
+                          <FormItem><FormLabel>Número</FormLabel><FormControl><Input {...field} placeholder="Ejemplo: 1234" /></FormControl><FormMessage /></FormItem>
                         )} />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <FormField control={form.control} name="shippingFloor" render={({ field }) => (
-                          <FormItem><FormLabel>Piso <span className="text-muted-foreground text-xs">(opcional)</span></FormLabel><FormControl><Input {...field} placeholder="3" /></FormControl><FormMessage /></FormItem>
+                          <FormItem><FormLabel>Piso <span className="text-muted-foreground text-xs">(opcional)</span></FormLabel><FormControl><Input {...field} placeholder="Ejemplo: 3" /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="shippingApartment" render={({ field }) => (
-                          <FormItem><FormLabel>Departamento <span className="text-muted-foreground text-xs">(opcional)</span></FormLabel><FormControl><Input {...field} placeholder="B" /></FormControl><FormMessage /></FormItem>
+                          <FormItem><FormLabel>Departamento <span className="text-muted-foreground text-xs">(opcional)</span></FormLabel><FormControl><Input {...field} placeholder="Ejemplo: B" /></FormControl><FormMessage /></FormItem>
                         )} />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <FormField control={form.control} name="shippingLocality" render={({ field }) => (
-                          <FormItem><FormLabel>Localidad</FormLabel><FormControl><Input {...field} placeholder="Buenos Aires" /></FormControl><FormMessage /></FormItem>
+                          <FormItem><FormLabel>Localidad</FormLabel><FormControl><Input {...field} placeholder="Ejemplo: Buenos Aires" /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="shippingProvince" render={({ field }) => (
                           <FormItem>
@@ -536,7 +536,7 @@ function CheckoutForm() {
                               <FormControl>
                                 <Input
                                   {...field}
-                                  placeholder="1001"
+                                  placeholder="Ejemplo: 1001"
                                   className="max-w-xs"
                                   onChange={(e) => {
                                     field.onChange(e);
@@ -587,7 +587,7 @@ function CheckoutForm() {
                     <CardContent className="space-y-4">
                       <p className="text-sm text-muted-foreground">Por favor, completa los datos de la persona que va a retirar el pedido. El DNI será solicitado al momento de la entrega.</p>
                       <FormField control={form.control} name="pickupName" render={({ field }) => (
-                        <FormItem><FormLabel>Nombre y Apellido de Quien Retira</FormLabel><FormControl><Input {...field} placeholder="El nombre que figura en el DNI" /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>Nombre y Apellido de Quien Retira</FormLabel><FormControl><Input {...field} placeholder="Ejemplo: Juan Pérez" /></FormControl><FormMessage /></FormItem>
                       )} />
                       <FormField control={form.control} name="pickupDNI" render={({ field }) => (
                         <FormItem>
@@ -595,7 +595,7 @@ function CheckoutForm() {
                           <FormControl>
                             <Input
                               {...field}
-                              placeholder="Sin puntos ni espacios"
+                              placeholder="Ejemplo: 12345678"
                               maxLength={8}
                               inputMode="numeric"
                               onChange={(e) => { const value = e.target.value; if (/^\d*$/.test(value)) { field.onChange(value); } }}

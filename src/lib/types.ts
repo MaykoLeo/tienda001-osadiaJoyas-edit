@@ -91,7 +91,7 @@ export interface Coupon {
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   minPurchaseAmount?: number | null;
-  expiryDate?: Date;
+  expiryDate?: Date | null;
   isActive: boolean;
 }
 

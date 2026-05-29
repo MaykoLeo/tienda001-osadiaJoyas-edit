@@ -57,7 +57,7 @@ export default function AdminPage({ dbConnected }: { dbConnected: boolean }) {
                     <form action={dispatch} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor='email'>Email</Label>
-                            <Input id="email" name="email" type="email" placeholder="email@ejemplo.com" required />
+                            <Input id="email" name="email" type="email" placeholder="Ejemplo: email@ejemplo.com" required />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor='password'>Contraseña</Label>

@@ -164,12 +164,6 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
         setCustomerPhone(cleanValue);
     };
 
-    const handleNameChange = (value: string) => {
-        // Limitar a 100 caracteres
-        if (value.length <= 100) {
-            setCustomerName(value);
-        }
-    };
 
     const handleSubmit = async () => {
         if (cart.length === 0) {
@@ -370,7 +364,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                 <Label htmlFor="cFirstName">Nombre(s)</Label>
                                 <Input
                                     id="cFirstName"
-                                    placeholder="Juan"
+                                    placeholder="Ejemplo: Juan"
                                     value={customerFirstName}
                                     onChange={e => setCustomerFirstName(e.target.value.slice(0, 60))}
                                     maxLength={60}
@@ -380,7 +374,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                 <Label htmlFor="cLastName">Apellido</Label>
                                 <Input
                                     id="cLastName"
-                                    placeholder="Pérez"
+                                    placeholder="Ejemplo: Pérez"
                                     value={customerLastName}
                                     onChange={e => setCustomerLastName(e.target.value.slice(0, 60))}
                                     maxLength={60}
@@ -390,7 +384,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                 <Label htmlFor="cPhone">Teléfono</Label>
                                 <Input
                                     id="cPhone"
-                                    placeholder="+54 11 1234 5678"
+                                    placeholder="Ejemplo: +54 11 1234 5678"
                                     value={customerPhone}
                                     onChange={e => handlePhoneChange(e.target.value)}
                                     maxLength={20}
@@ -401,7 +395,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                 <Input
                                     id="cEmail"
                                     type="email"
-                                    placeholder="juan@ejemplo.com"
+                                    placeholder="Ejemplo: juan@ejemplo.com"
                                     value={customerEmail}
                                     onChange={e => handleEmailChange(e.target.value)}
                                     className={emailError ? 'border-destructive' : ''}
@@ -482,7 +476,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                                 min="0"
                                                 max="100"
                                                 className="text-right pr-6"
-                                                placeholder="0"
+                                                placeholder="Ejemplo: 0"
                                                 value={discountPercentage}
                                                 onChange={(e) => handleDiscountChange(e.target.value)}
                                                 onKeyDown={(e) => { if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault(); }}

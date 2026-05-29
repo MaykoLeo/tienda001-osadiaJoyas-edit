@@ -240,7 +240,8 @@ export function ProductForm({
             <div><Label htmlFor="description">Descripción Completa *</Label><Textarea id="description" name="description" defaultValue={product?.description} className={cn("border-2", errors.description && "border-destructive")} /><FormError message={errors.description?.[0]} /></div>
             <div className="grid grid-cols-2 gap-4">
                 <div><Label htmlFor="price">Precio *</Label><Input id="price" name="price" type="number" step="0.01" min="0" defaultValue={product?.price} onKeyDown={handleDecimalKeyDown} className={cn("border-2", errors.price && "border-destructive")} /><FormError message={errors.price?.[0]} /></div>
-                <div><Label htmlFor="discountPercentage">Descuento (%)</Label><Input id="discountPercentage" name="discountPercentage" type="number" step="1" min="0" max="100" defaultValue={product?.discountPercentage ?? ''} onKeyDown={handleIntegerKeyDown} placeholder="Ej: 15" className={cn("border-2", errors.discountPercentage && "border-destructive")} /><FormError message={errors.discountPercentage?.[0]} /></div>
+                ...
+                <div><Label htmlFor="discountPercentage">Descuento (%)</Label><Input id="discountPercentage" name="discountPercentage" type="number" step="1" min="0" max="100" defaultValue={product?.discountPercentage ?? ''} onKeyDown={handleIntegerKeyDown} placeholder="Ejemplo: 15" className={cn("border-2", errors.discountPercentage && "border-destructive")} /><FormError message={errors.discountPercentage?.[0]} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -359,7 +360,7 @@ export function ProductForm({
                 </div>
                 <div>
                     <Label htmlFor="sku">SKU (Stock Keeping Unit)</Label>
-                    <Input id="sku" name="sku" defaultValue={product?.sku} placeholder="Ej: REM-NEG-S" className={cn("border-2", errors.sku && "border-destructive")} />
+                    <Input id="sku" name="sku" defaultValue={product?.sku} placeholder="Ejemplo: REM-NEG-S" className={cn("border-2", errors.sku && "border-destructive")} />
                     <FormError message={errors.sku?.[0]} />
                 </div>
             </div>
@@ -388,7 +389,7 @@ export function CouponForm({ coupon, formId, errors }: { coupon?: Coupon, formId
     return (
         <form id={formId} className="space-y-4">
             <HiddenDateInputs />
-            <div><Label htmlFor="code">Código del Cupón *</Label><Input id="code" name="code" defaultValue={coupon?.code} placeholder="VERANO20" className={cn("border-2", errors.code && "border-destructive")} /><FormError message={errors.code?.[0]} /></div>
+            <div><Label htmlFor="code">Código del Cupón *</Label><Input id="code" name="code" defaultValue={coupon?.code} placeholder="Ejemplo: VERANO20" className={cn("border-2", errors.code && "border-destructive")} /><FormError message={errors.code?.[0]} /></div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <Label htmlFor="discountType">Tipo de Descuento *</Label>
@@ -403,13 +404,13 @@ export function CouponForm({ coupon, formId, errors }: { coupon?: Coupon, formId
                 </div>
                 <div>
                     <Label htmlFor="discountValue">Valor *</Label>
-                    <Input id="discountValue" name="discountValue" type="number" step="0.01" min="0" defaultValue={coupon?.discountValue} onKeyDown={handleDecimalKeyDown} placeholder="Ej: 20" className={cn("border-2", errors.discountValue && "border-destructive")} />
+                    <Input id="discountValue" name="discountValue" type="number" step="0.01" min="0" defaultValue={coupon?.discountValue} onKeyDown={handleDecimalKeyDown} placeholder="Ejemplo: 20" className={cn("border-2", errors.discountValue && "border-destructive")} />
                     <FormError message={errors.discountValue?.[0]} />
                 </div>
             </div>
             <div>
                 <Label htmlFor="minPurchaseAmount">Compra Mínima (Opcional)</Label>
-                <Input id="minPurchaseAmount" name="minPurchaseAmount" type="number" step="0.01" min="0" defaultValue={coupon?.minPurchaseAmount ?? ''} onKeyDown={handleDecimalKeyDown} placeholder="Ej: 5000" className={cn("border-2", errors.minPurchaseAmount && "border-destructive")} />
+                <Input id="minPurchaseAmount" name="minPurchaseAmount" type="number" step="0.01" min="0" defaultValue={coupon?.minPurchaseAmount ?? ''} onKeyDown={handleDecimalKeyDown} placeholder="Ejemplo: 5000" className={cn("border-2", errors.minPurchaseAmount && "border-destructive")} />
                 <FormError message={errors.minPurchaseAmount?.[0]} />
             </div>
             <div>

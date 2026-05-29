@@ -50,7 +50,7 @@ export const NewOrderNotificationEmail: React.FC<Readonly<NewOrderNotificationEm
   return (
     <Html>
       <Head />
-      <Preview>¡Nueva orden! Prepara el pedido #{order.id}</Preview>
+      <Preview>{`¡Nueva orden! Prepara el pedido #${order.id}`}</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={logoContainer}>
