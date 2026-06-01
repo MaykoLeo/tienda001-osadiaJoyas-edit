@@ -137,11 +137,11 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
                     <div className="flex items-baseline gap-3">
                         {product.salePrice ? (
                             <>
-                                <p className="text-3xl lg:text-4xl font-bold text-primary tracking-tight">${product.salePrice.toLocaleString('es-AR')}</p>
+                                <p className="text-3xl lg:text-4xl font-bold text-price-sale tracking-tight">${product.salePrice.toLocaleString('es-AR')}</p>
                                 <p className="text-xl text-muted-foreground line-through">${product.price.toLocaleString('es-AR')}</p>
                             </>
                         ) : (
-                            <p className="text-3xl lg:text-4xl font-bold text-primary tracking-tight">${product.price.toLocaleString('es-AR')}</p>
+                            <p className="text-3xl lg:text-4xl font-bold text-price tracking-tight">${product.price.toLocaleString('es-AR')}</p>
                         )}
                     </div>
 
@@ -165,9 +165,15 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
                         )}
                     </div>
 
-                    {(product.shortDescription || product.description) && (
+                    {product.shortDescription && (
                         <p className="text-base text-muted-foreground font-sans leading-relaxed">
-                            {product.shortDescription || product.description}
+                            {product.shortDescription}
+                        </p>
+                    )}
+
+                    {product.description && product.description.trim() && (
+                        <p className="text-sm text-muted-foreground/80 font-sans leading-relaxed whitespace-pre-line border-l-2 border-primary/30 pl-4">
+                            {product.description}
                         </p>
                     )}
 
@@ -209,6 +215,7 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
 
                 </div>
             </div>
+
 
             {relatedProducts.length > 0 && (
                 <section className="space-y-8 pt-8">

@@ -34,10 +34,18 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-        setIsScrolled(window.scrollY > 10);
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > 80) {
+        setIsScrolled(true);
+      } else if (currentScrollY < 20) {
+        setIsScrolled(false);
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    // Run once initially to set correct state in case page is loaded scrolled
+    handleScroll();
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -57,8 +65,7 @@ export default function Header() {
 
   return (
     <header className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300",
-        isScrolled ? "translate-y-0" : "translate-y-0"
+        "sticky top-0 z-50 w-full h-24 sm:h-[124px] transition-all duration-300"
     )}>
       {/* Informative Address Bar with Blur */}
       <div className="w-full bg-background/60 backdrop-blur-md border-b border-border/10 py-1.5 hidden sm:block">
@@ -71,12 +78,11 @@ export default function Header() {
 
       <div className={cn(
         // DS Glassmorphism:
-        "w-full border-b border-border/40 transition-all duration-300",
-        "bg-[hsl(40,33%,97%)]/90 backdrop-blur-md",
-        "dark:bg-[rgba(15,15,15,0.8)] dark:backdrop-blur-[12px]",
-        isScrolled ? 'h-16' : 'h-24'
+        "w-full border-b border-border/40 transition-[height,background-color,border-color,box-shadow] duration-300 ease-in-out absolute top-0 sm:top-[28px] left-0",
+        "bg-[hsl(var(--header-bg))]/90 backdrop-blur-md",
+        isScrolled ? 'h-16 shadow-md border-border/60' : 'h-24 border-border/40'
       )}>
-        <div className="container h-full flex items-center justify-between">
+        <div className="container h-full flex items-center justify-between relative">
           
           {/* LEFT: Navigation Links */}
           <nav className="flex-1 hidden lg:flex items-center gap-6 xl:gap-8 justify-start">
@@ -190,13 +196,13 @@ export default function Header() {
             </Sheet>
           </div>
 
-          {/* CENTER: Logo */}
-          <div className="static lg:absolute lg:left-1/2 lg:-translate-x-1/2 flex justify-center">
-              <Link href="/" className="group flex items-center outline-none transition-transform hover:scale-105 duration-300">
+          {/* CENTER: Logo con Centrado Absoluto Matemático */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex justify-center z-10 pointer-events-none">
+              <Link href="/" className="group flex items-center outline-none transition-transform hover:scale-105 duration-300 pointer-events-auto">
                 <div 
                   className={cn(
                       "transition-all duration-300 bg-foreground group-hover:bg-primary",
-                      isScrolled ? "w-[120px] h-[45px]" : "w-[150px] h-[55px]"
+                      isScrolled ? "w-[110px] h-[40px]" : "w-[140px] h-[52px]"
                   )}
                   style={{
                     maskImage: 'url(https://i.imgur.com/iYTQ6pp.png)',

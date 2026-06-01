@@ -82,7 +82,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
 
         {product.salePrice ? (
             <div className='flex items-baseline gap-2 mt-2'>
-                <p className="text-2xl font-bold text-primary">
+                <p className="text-2xl font-bold text-price-sale">
                     ${product.salePrice.toLocaleString('es-AR')}
                 </p>
                 <p className="text-lg font-medium text-muted-foreground line-through">
@@ -90,7 +90,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                 </p>
             </div>
         ) : (
-            <p className="mt-2 text-2xl font-bold text-foreground">
+            <p className="mt-2 text-2xl font-bold text-price">
                 ${product.price.toLocaleString('es-AR')}
             </p>
         )}

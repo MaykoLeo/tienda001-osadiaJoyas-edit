@@ -12,73 +12,79 @@ body {
 @layer base {
   :root {
     /* Layout */
-    --background: 40 33% 97%;      /* #F9F7F2 — Champagne Cream */
+    --background: 0 0% 94%;        /* #F0F0F0 — Elegant Soft Grey */
+    --header-bg: 0 0% 100%;        /* #FFFFFF — Pure White Header */
     --foreground: 0 0% 10%;        /* #1A1A1A — Carbon Black */
     --card: 0 0% 100%;             /* #FFFFFF — Pure White surface */
     --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    /* Brand: Champagne Gold */
-    --primary: 43 62% 52%;         /* #D4AF37 — Champagne Gold */
+    /* Brand: Olive Sage Green */
+    --primary: 75 7% 52%;          /* #878B7B — Olive Sage Green */
     --primary-foreground: 0 0% 100%;
+    --price: 75 12% 17%;           /* #2A2E24 — Luxurious Dark Olive-Charcoal */
+    --price-sale: 18 56% 43%;      /* #AD5530 — Terracotta Bronze Offer */
 
-    /* Muted Gold for secondary actions */
-    --secondary: 37 40% 50%;       /* #B5964B — Muted Gold */
+    /* Muted Olive Sage Green for secondary actions */
+    --secondary: 75 7% 42%;        /* Muted darker Sage Green */
     --secondary-foreground: 0 0% 100%;
 
     /* Neutral tones */
-    --muted: 40 20% 92%;           /* Soft cream tint */
+    --muted: 0 0% 90%;             /* Soft grey tint */
     --muted-foreground: 0 0% 34%;  /* #575757 — Dark grey */
-    --accent: 43 62% 52%;
+    --accent: 75 7% 52%;
     --accent-foreground: 0 0% 100%;
 
     /* Utility */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-    --border: 30 20% 88%;          /* #E5E1D8 */
-    --input: 30 20% 88%;
-    --ring: 43 62% 52%;
+    --border: 0 0% 88%;            /* #E0E0E0 */
+    --input: 0 0% 88%;
+    --ring: 75 7% 52%;
     --radius: 0.5rem;
 
-    /* Skeleton color (Cream tint) */
-    --skeleton-base: 40 30% 91%;
-    --skeleton-shine: 40 30% 96%;
+    /* Skeleton color (Soft Grey tint) */
+    --skeleton-base: 0 0% 90%;
+    --skeleton-shine: 0 0% 95%;
   }
  
   /* Dark Mode: Technological Luxury (Carbon + Turquoise) */
   .dark {
-    --background: 0 0% 7%;         /* #121212 — Deep Carbon */
+    --background: 0 0% 17.6%;      /* #2D2D2D — Deep Charcoal */
+    --header-bg: 0 0% 13%;         /* #212121 — Darker Charcoal Header */
     --foreground: 0 0% 96%;        /* #F5F5F5 — Off-White */
-    --card: 0 0% 11%;              /* #1C1C1C — Surface Carbon */
+    --card: 0 0% 22%;              /* #383838 — Surface Charcoal */
     --card-foreground: 0 0% 96%;
-    --popover: 0 0% 11%;
+    --popover: 0 0% 22%;
     --popover-foreground: 0 0% 96%;
 
-    /* Brand: Turquoise Glow */
-    --primary: 168 100% 45%;       /* #00E5BC — Turquoise */
-    --primary-foreground: 0 0% 7%;
+    /* Brand: Earthy Taupe */
+    --primary: 29 9% 42%;          /* #746A61 — Earthy Taupe / Brown */
+    --primary-foreground: 0 0% 100%;
+    --price: 32 28% 85%;           /* #E5DACF — Champagne Gold */
+    --price-sale: 38 72% 69%;      /* #E8C078 — Glowing Amber Gold */
 
     /* Muted secondary */
-    --secondary: 0 0% 17%;
+    --secondary: 0 0% 24%;
     --secondary-foreground: 0 0% 96%;
 
     /* Neutral Carbon tones */
-    --muted: 0 0% 18%;             /* #2D2D2D */
+    --muted: 0 0% 24%;             /* #3D3D3D */
     --muted-foreground: 0 0% 63%;  /* #A0A0A0 */
-    --accent: 168 100% 45%;
-    --accent-foreground: 0 0% 7%;
+    --accent: 29 9% 42%;
+    --accent-foreground: 0 0% 100%;
 
     /* Utility */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 18%;            /* #2D2D2D */
-    --input: 0 0% 18%;
-    --ring: 168 100% 45%;
+    --border: 0 0% 26%;            /* #424242 */
+    --input: 0 0% 26%;
+    --ring: 29 9% 42%;
 
-    /* Skeleton color (Dark Carbon shimmer) */
-    --skeleton-base: 0 0% 16%;
-    --skeleton-shine: 0 0% 22%;
+    /* Skeleton color (Dark Charcoal shimmer) */
+    --skeleton-base: 0 0% 22%;
+    --skeleton-shine: 0 0% 28%;
   }
 }
 
@@ -122,7 +128,7 @@ body {
 
 /* Hover para modo oscuro */
 .dark ::-webkit-scrollbar-thumb:hover {
-  background-color: #14b8a6; /* Teal-500 */
+  background-color: hsl(var(--primary));
 }
 
 /* Hover para modo claro */
