@@ -41,7 +41,6 @@ import { createOrder } from "@/lib/data";
 import { DeliveryMethod, PaymentType } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useShippingStore } from "@/store/shipping-store";
-import { sendOrderEmailsAction } from "@/app/actions/email-actions";
 
 const ARGENTINA_PROVINCES = [
   "Buenos Aires",
@@ -163,8 +162,10 @@ function CheckoutForm() {
     return deliveryMethod === 'pay_in_store' ? 'Pago en Local' : 'QR / Tarjeta';
   }, [deliveryMethod]);
 
+  const DEPOSIT_PERCENTAGE = 0.30;
+
   const {
-    originalSubtotal, productDiscount, couponDiscount, localPaymentDiscount, finalTotalPrice, totalDiscount
+    originalSubtotal, productDiscount, couponDiscount, localPaymentDiscount, finalTotalPrice, totalDiscount, depositAmount, remainingAmount
   } = useMemo(() => {
     const originalSubtotal = cartItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
     const productDiscount = originalSubtotal - subtotal;
@@ -180,8 +181,10 @@ function CheckoutForm() {
     const shippingCostValue = deliveryMethod === 'shipping' ? (shippingCost ?? 0) : 0;
     const finalTotalPrice = subtotalAfterCoupons - localPaymentDiscountValue + shippingCostValue;
     const totalDiscount = productDiscount + couponDiscountValue + localPaymentDiscountValue;
-    return { originalSubtotal, productDiscount, couponDiscount: couponDiscountValue, localPaymentDiscount: localPaymentDiscountValue, finalTotalPrice, totalDiscount };
-  }, [cartItems, subtotal, appliedCoupon, deliveryMethod, shippingCost]);
+    const depositAmount = isPayInStore ? Math.round(finalTotalPrice * DEPOSIT_PERCENTAGE * 100) / 100 : 0;
+    const remainingAmount = isPayInStore ? Math.round((finalTotalPrice - depositAmount) * 100) / 100 : 0;
+    return { originalSubtotal, productDiscount, couponDiscount: couponDiscountValue, localPaymentDiscount: localPaymentDiscountValue, finalTotalPrice, totalDiscount, depositAmount, remainingAmount };
+  }, [cartItems, subtotal, appliedCoupon, deliveryMethod, shippingCost, DEPOSIT_PERCENTAGE]);
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -280,15 +283,36 @@ function CheckoutForm() {
         pickupDni: values.pickupDNI,
       };
 
-      if (paymentType === "Pago en Local") {
-        const orderResponse = await createOrder({ ...orderData, status: 'awaiting_payment_in_store' });
-        if (orderResponse.error || !orderResponse.orderId) throw new Error(orderResponse.error || "No se pudo generar el pedido.");
-        
-        // Enviar email de notificación para Pago en Local
-        await sendOrderEmailsAction(orderResponse.orderId);
+      if (paymentType === 'Pago en Local') {
+        // Crear orden con status pending_deposit
+        const depositAmountCalc = Math.round(finalTotalPrice * DEPOSIT_PERCENTAGE * 100) / 100;
+        const remainingAmountCalc = Math.round((finalTotalPrice - depositAmountCalc) * 100) / 100;
+
+        const orderResponse = await createOrder({
+          ...orderData,
+          status: 'pending_deposit',
+          depositAmount: depositAmountCalc,
+          remainingAmount: remainingAmountCalc,
+        });
+        if (orderResponse.error || !orderResponse.orderId) throw new Error(orderResponse.error || 'No se pudo generar el pedido.');
+
+        // Llamar al endpoint seguro de seña — solo enviamos orderId, el servidor calcula el monto
+        const depositResponse = await fetch('/api/create-deposit-preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: orderResponse.orderId }),
+        });
+
+        if (!depositResponse.ok) {
+          const errorData = await depositResponse.json().catch(() => ({}));
+          throw new Error(errorData.error || `Error del servidor: ${depositResponse.status}`);
+        }
+
+        const depositData = await depositResponse.json();
+        if (!depositData.init_point) throw new Error('No se pudo obtener el link de pago de la seña.');
 
         clearCart();
-        router.push(`/checkout/success?orderId=${orderResponse.orderId}&type=store_payment`);
+        window.location.href = depositData.init_point;
       } else {
         const orderResponse = await createOrder({ ...orderData, status: 'pending_payment' });
         if (orderResponse.error || !orderResponse.orderId) throw new Error(orderResponse.error || "No se pudo crear la orden.");
@@ -404,6 +428,22 @@ function CheckoutForm() {
                 </div>
                 <Separator className="my-4" />
                 <div className="flex justify-between font-bold text-xl"><p>Total</p><p>{formatCurrency(finalTotalPrice)}</p></div>
+                {isPayInStore && (
+                  <>
+                    <Separator className="my-2" />
+                    <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 space-y-2">
+                      <p className="text-sm font-semibold text-primary">Desglose de pago:</p>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Seña ahora (30% online):</span>
+                        <span className="font-bold text-primary">{formatCurrency(depositAmount)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Saldo al retirar (70%):</span>
+                        <span className="font-medium">{formatCurrency(remainingAmount)}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -420,7 +460,7 @@ function CheckoutForm() {
 
   const getButtonText = () => {
     if (isLoading) return <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Procesando...</>;
-    if (paymentType === 'Pago en Local') return "Generar Pedido";
+    if (paymentType === 'Pago en Local') return "Pagar Seña (30%) con Mercado Pago";
     return "Continuar y Pagar con Mercado Pago";
   };
 

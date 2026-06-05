@@ -37,8 +37,15 @@ export async function POST(request: NextRequest) {
             if (payment.status === 'approved') {
                 console.log(`[WEBHOOK] Payment for order ${orderIdNumber} is approved.`);
 
-                await updateOrderStatus(orderIdNumber, 'paid', paymentId);
-                console.log(`[WEBHOOK] Order status updated to \'paid\'.`);
+                // Obtener la orden para saber en qué estado estaba ANTES del pago
+                const orderBeforeUpdate = await getOrderById(orderIdNumber);
+
+                // Determinar nuevo estado según el estado previo de la orden
+                const isDepositPayment = orderBeforeUpdate?.status === 'pending_deposit';
+                const newStatus: OrderStatus = isDepositPayment ? 'deposit_paid' : 'paid';
+
+                await updateOrderStatus(orderIdNumber, newStatus, paymentId);
+                console.log(`[WEBHOOK] Order status updated to '${newStatus}'.`);
 
                 try {
                     await deductStockForOrder(orderIdNumber);
@@ -54,14 +61,15 @@ export async function POST(request: NextRequest) {
                 } else {
                     // Enviar email de confirmación al cliente
                     try {
+                        const subject = isDepositPayment
+                            ? `¡Seña recibida! Tu pedido #${orderId} está reservado`
+                            : `Confirmación de tu pedido #${orderId}`;
                         console.log(`[WEBHOOK] Sending confirmation email to customer for order ${orderIdNumber}.`);
                         await resend.emails.send({
                             from: 'Osadia Joyas <onboarding@resend.dev>',
                             to: [order.customerEmail],
-                            subject: `Confirmación de tu pedido #${orderId}`,
-                            react: ConfirmationEmail({
-                                order: order
-                            }),
+                            subject,
+                            react: ConfirmationEmail({ order }),
                         });
                         console.log(`[WEBHOOK] Confirmation email sent to ${order.customerEmail}.`);
                     } catch (emailError: any) {
@@ -70,14 +78,15 @@ export async function POST(request: NextRequest) {
 
                     // Enviar email de notificación al vendedor
                     try {
+                        const sellerSubject = isDepositPayment
+                            ? `¡Seña Recibida! Pedido #${orderId} reservado con seña`
+                            : `¡Nuevo Pedido! #${orderId}`;
                         console.log(`[WEBHOOK] Sending new order notification to seller for order ${orderIdNumber}.`);
                         await resend.emails.send({
                             from: 'Sistema Osadia <onboarding@resend.dev>',
                             to: [SELLER_EMAIL],
-                            subject: `¡Nuevo Pedido! #${orderId}`,
-                            react: NewOrderNotificationEmail({
-                                order: order
-                            }),
+                            subject: sellerSubject,
+                            react: NewOrderNotificationEmail({ order }),
                         });
                         console.log(`[WEBHOOK] New order notification sent to ${SELLER_EMAIL}.`);
                     } catch (emailError: any) {
@@ -85,7 +94,7 @@ export async function POST(request: NextRequest) {
                     }
                 }
 
-                console.log(`[WEBHOOK] ✅ Order ${orderIdNumber} processed successfully.`);
+                console.log(`[WEBHOOK] ✅ Order ${orderIdNumber} processed successfully as ${newStatus}.`);
                 return NextResponse.json({ success: true, orderId: orderIdNumber });
 
             } else {

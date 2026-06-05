@@ -169,14 +169,14 @@ export async function createOrder(orderData: OrderData): Promise<{ orderId?: num
             }
         }
 
-        const { customerFirstName, customerLastName, customerEmail, customerPhone, total, status, items, couponCode, discountAmount, deliveryMethod, paymentType, pickupName, pickupDni, shippingStreet, shippingNumber, shippingFloor, shippingApartment, shippingPostalCode, shippingLocality, shippingProvince, notes } = orderData;
+        const { customerFirstName, customerLastName, customerEmail, customerPhone, total, status, items, couponCode, discountAmount, deliveryMethod, paymentType, pickupName, pickupDni, shippingStreet, shippingNumber, shippingFloor, shippingApartment, shippingPostalCode, shippingLocality, shippingProvince, notes, depositAmount, remainingAmount } = orderData;
         const customerName = `${customerFirstName} ${customerLastName}`.trim();
         // Construir direccion completa para guardar en shipping_address
         const shippingAddressFull = [shippingStreet, shippingNumber, shippingFloor ? `Piso ${shippingFloor}` : null, shippingApartment ? `Dpto ${shippingApartment}` : null].filter(Boolean).join(', ');
 
         const orderResult = await db`
-            INSERT INTO orders (customer_name, customer_email, customer_phone, total, status, items, coupon_code, discount_amount, delivery_method, payment_type, pickup_name, pickup_dni, shipping_address, shipping_city, shipping_postal_code, notes, created_at)
-            VALUES (${customerName}, ${customerEmail}, ${customerPhone}, ${total}, ${status}, ${JSON.stringify(items)}::jsonb, ${couponCode}, ${discountAmount}, ${deliveryMethod}, ${paymentType}, ${pickupName}, ${pickupDni}, ${shippingAddressFull || null}, ${shippingLocality || null}, ${shippingPostalCode || null}, ${notes || null}, ${new Date().toISOString()})
+            INSERT INTO orders (customer_name, customer_email, customer_phone, total, status, items, coupon_code, discount_amount, delivery_method, payment_type, pickup_name, pickup_dni, shipping_address, shipping_city, shipping_postal_code, notes, deposit_amount, remaining_amount, created_at)
+            VALUES (${customerName}, ${customerEmail}, ${customerPhone}, ${total}, ${status}, ${JSON.stringify(items)}::jsonb, ${couponCode}, ${discountAmount}, ${deliveryMethod}, ${paymentType}, ${pickupName}, ${pickupDni}, ${shippingAddressFull || null}, ${shippingLocality || null}, ${shippingPostalCode || null}, ${notes || null}, ${depositAmount ?? null}, ${remainingAmount ?? null}, ${new Date().toISOString()})
             RETURNING id;
         `;
         return { orderId: orderResult[0].id };
@@ -235,6 +235,8 @@ function mapOrderFromDb(row: any): Order {
         shippingPostalCode: row.shipping_postal_code,
         shippingProvince: row.shipping_province || undefined,
         notes: row.notes,
+        depositAmount: row.deposit_amount ? parseFloat(row.deposit_amount) : undefined,
+        remainingAmount: row.remaining_amount ? parseFloat(row.remaining_amount) : undefined,
     };
 }
 

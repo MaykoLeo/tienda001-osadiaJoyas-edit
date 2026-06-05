@@ -31,6 +31,10 @@ const formatPrice = (amount: number) => {
 };
 
 const getDeliveryInstructions = (order: Order) => {
+    if (order.status === 'deposit_paid') {
+        const remaining = order.remainingAmount ?? (order.total * 0.70);
+        return `¡Tu seña fue acreditada! Tu pedido #${order.id} está reservado. Cuando vengas al local a retirar tus joyas, solo te queda abonar el saldo restante de $ ${remaining.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Recuerda indicar tu número de pedido y presentar tu DNI (${order.pickupDni}).`;
+    }
     if (order.deliveryMethod === 'shipping') {
         return `Estamos preparando tu pedido para enviarlo a ${order.shippingAddress}, ${order.shippingLocality}. Te notificaremos cuando esté en camino.`;
     }
@@ -44,12 +48,15 @@ export const ConfirmationEmail: React.FC<Readonly<ConfirmationEmailProps>> = ({
   order,
 }) => {
   const subtotal = order.items.reduce((acc, item) => acc + (item.priceAtPurchase * item.quantity), 0);
+  const isDepositOrder = order.status === 'deposit_paid';
+  const depositAmount = order.depositAmount ?? (isDepositOrder ? order.total * 0.30 : null);
+  const remainingAmount = order.remainingAmount ?? (isDepositOrder ? order.total * 0.70 : null);
   const discount = subtotal - order.total;
 
   return (
     <Html>
       <Head />
-      <Preview>Confirmación de tu pedido en Osadía Joyas</Preview>
+      <Preview>{isDepositOrder ? `¡Seña recibida! Tu pedido #${order.id} en Osadía Joyas está reservado` : 'Confirmación de tu pedido en Osadía Joyas'}</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={logoContainer}>
@@ -61,7 +68,7 @@ export const ConfirmationEmail: React.FC<Readonly<ConfirmationEmailProps>> = ({
               style={{ margin: '0 auto' }}
             />
           </Section>
-          <Heading style={h1}>¡Gracias por tu compra, {order.customerFirstName}!</Heading>
+        <Heading style={h1}>{isDepositOrder ? `¡Seña recibida, ${order.customerFirstName}!` : `¡Gracias por tu compra, ${order.customerFirstName}!`}</Heading>
           <Text style={paragraph}>
             Hemos registrado tu pedido <strong>#{order.id}</strong> correctamente. 
             {getDeliveryInstructions(order)}
@@ -119,6 +126,20 @@ export const ConfirmationEmail: React.FC<Readonly<ConfirmationEmailProps>> = ({
           </Section>
 
           <Hr style={hr} />
+
+          {isDepositOrder && depositAmount !== null && remainingAmount !== null && (
+            <Section style={{ ...totalsSection, backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', marginBottom: '20px' }}>
+              <Text style={{ ...productName, color: '#15803d', textAlign: 'center' as const }}>✅ Seña acreditada exitosamente</Text>
+              <Row>
+                <Column style={totalsLabelColumn}><Text style={totalsText}>Seña abonada (30%):</Text></Column>
+                <Column style={totalsValueColumn}><Text style={{ ...totalsText, fontWeight: 'bold', color: '#15803d' }}>{formatPrice(depositAmount)}</Text></Column>
+              </Row>
+              <Row>
+                <Column style={totalsLabelColumn}><Text style={totalsText}>Saldo a pagar en local (70%):</Text></Column>
+                <Column style={totalsValueColumn}><Text style={{ ...totalsText, fontWeight: 'bold' }}>{formatPrice(remainingAmount)}</Text></Column>
+              </Row>
+            </Section>
+          )}
 
           <Text style={paragraph}>
             Gracias por confiar en nosotros para ser parte de tu brillo.

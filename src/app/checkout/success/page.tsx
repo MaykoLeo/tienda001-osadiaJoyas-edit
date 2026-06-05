@@ -5,13 +5,63 @@ import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle, Package, Store, Info } from 'lucide-react';
+import { CheckCircle, Package, Store, Info, HandCoins } from 'lucide-react';
 
 function SuccessContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const orderId = searchParams.get('orderId');
     const type = searchParams.get('type');
+
+    if (type === 'deposit_paid') {
+        return (
+            <Card className="w-full max-w-lg">
+                <CardHeader>
+                    <div className="flex flex-col items-center text-center">
+                        <div className="relative mb-4">
+                            <CheckCircle className="h-12 w-12 text-green-500" />
+                            <HandCoins className="h-5 w-5 text-primary absolute -bottom-1 -right-1 bg-background rounded-full" />
+                        </div>
+                        <CardTitle className="text-2xl font-bold">¡Seña recibida!</CardTitle>
+                        <CardDescription className="mt-2 text-muted-foreground">
+                            Tu pedido está reservado. Gracias por tu pago.
+                        </CardDescription>
+                    </div>
+                </CardHeader>
+                <CardContent className="text-center">
+                    <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
+                        <p className="text-lg font-semibold text-primary">Número de Pedido:</p>
+                        <p className="text-3xl font-bold tracking-wider font-mono">{orderId}</p>
+                    </div>
+                    <div className="text-left space-y-4 text-muted-foreground">
+                        <div className="flex items-start gap-3">
+                            <CheckCircle className="h-5 w-5 mt-1 flex-shrink-0 text-green-500" />
+                            <p>
+                                <strong>Seña acreditada.</strong> Recibimos tu pago del 30% para reservar tu pedido.
+                                El stock ya está apartado para vos.
+                            </p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <Store className="h-5 w-5 mt-1 flex-shrink-0" />
+                            <p>
+                                <strong>Saldo restante:</strong> El 70% del total se abona al momento de retirar en el local.
+                                No olvides mencionar tu número de pedido.
+                            </p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <Info className="h-5 w-5 mt-1 flex-shrink-0" />
+                            <p>
+                                Recibirás un email con el resumen de tu pedido y el detalle del saldo a pagar.
+                            </p>
+                        </div>
+                    </div>
+                    <Button onClick={() => router.push('/tienda')} className="w-full mt-8">
+                        Seguir Comprando
+                    </Button>
+                </CardContent>
+            </Card>
+        );
+    }
 
     if (type === 'store_payment') {
         return (

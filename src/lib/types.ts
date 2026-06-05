@@ -32,7 +32,7 @@ export interface CartItem {
 
 // --- TIPOS DE ORDEN MEJORADOS ---
 
-export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'awaiting_payment_in_store' | 'pending_payment' | 'failed' | 'refunded';
+export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'awaiting_payment_in_store' | 'pending_payment' | 'failed' | 'refunded' | 'pending_deposit' | 'deposit_paid';
 
 // Representa un item DENTRO de una orden ya creada.
 export interface OrderItem {
@@ -46,7 +46,7 @@ export interface OrderItem {
 
 export type DeliveryMethod = 'pickup' | 'shipping' | 'pay_in_store';
 
-export type PaymentType = 'Efectivo' | 'Transferencia' | 'QR / Tarjeta';
+export type PaymentType = 'Efectivo' | 'Transferencia' | 'QR / Tarjeta' | 'Pago en Local';
 
 
 // Datos necesarios para CREAR una nueva orden.
@@ -72,6 +72,8 @@ export interface OrderData {
   shippingLocality?: string;
   shippingProvince?: string;
   notes?: string;
+  depositAmount?: number;
+  remainingAmount?: number;
 }
 
 
@@ -83,6 +85,8 @@ export interface Order extends Omit<OrderData, 'items'> {
   paymentId?: string; // ID de la transacción de MP
   /** Dirección compuesta guardada en la columna shipping_address de la DB */
   shippingAddress?: string;
+  depositAmount?: number;
+  remainingAmount?: number;
 }
 
 export interface Coupon {

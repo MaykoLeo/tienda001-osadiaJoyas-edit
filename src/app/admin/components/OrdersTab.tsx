@@ -19,9 +19,11 @@ import { Pagination } from './Pagination';
 
 const ITEMS_PER_PAGE = 15;
 
-const orderStatuses: OrderStatus[] = ['pending_payment', 'awaiting_payment_in_store', 'paid', 'shipped', 'delivered', 'cancelled', 'failed', 'refunded'];
+const orderStatuses: OrderStatus[] = ['pending_deposit', 'pending_payment', 'deposit_paid', 'awaiting_payment_in_store', 'paid', 'shipped', 'delivered', 'cancelled', 'failed', 'refunded'];
 
 const statusLabels: Record<OrderStatus, string> = {
+    pending_deposit: 'Seña Pendiente',
+    deposit_paid: 'Seña Pagada',
     pending_payment: 'Pago Pendiente',
     awaiting_payment_in_store: 'Esperando Pago en Local',
     paid: 'Abonado',
@@ -78,6 +80,8 @@ const OrderRow = React.memo(({ order, onStatusChange }: { order: Order; onStatus
     const getStatusClasses = (status: Order['status']) => {
         switch (status) {
             case 'delivered': return "bg-green-100 text-green-800 border-green-200";
+            case 'deposit_paid': return "bg-teal-100 text-teal-800 border-teal-200";
+            case 'pending_deposit':
             case 'pending_payment':
             case 'awaiting_payment_in_store': return "bg-yellow-100 text-yellow-800 border-yellow-200";
             case 'failed':
@@ -238,6 +242,19 @@ const OrderRow = React.memo(({ order, onStatusChange }: { order: Order; onStatus
                                     <div className="space-y-2 text-sm">
                                         <div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-muted-foreground" /><span>ID de Pago: <span className="font-mono">{order.paymentId || 'N/A'}</span></span></div>
                                         {order.couponCode && <div className="flex items-center gap-2"><Ticket className="h-4 w-4 text-muted-foreground" /><span>Cupón: <span className="font-semibold">{order.couponCode}</span> (-${order.discountAmount?.toLocaleString('es-AR')})</span></div>}
+                                        {(order.status === 'deposit_paid' || order.depositAmount) && (
+                                            <div className="mt-2 p-3 bg-teal-50 border border-teal-200 rounded-md space-y-1">
+                                                <p className="font-semibold text-teal-800 text-xs uppercase tracking-wide">Desglose de Seña</p>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Seña pagada (30%):</span>
+                                                    <span className="font-bold text-teal-700">${(order.depositAmount ?? order.total * 0.30).toLocaleString('es-AR')}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Saldo a cobrar en local (70%):</span>
+                                                    <span className="font-bold">${(order.remainingAmount ?? order.total * 0.70).toLocaleString('es-AR')}</span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {order.notes && (
