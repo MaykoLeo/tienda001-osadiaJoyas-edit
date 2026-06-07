@@ -30,7 +30,7 @@ function SuccessContent() {
                 </CardHeader>
                 <CardContent className="text-center">
                     <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
-                        <p className="text-lg font-semibold text-primary">Número de Pedido:</p>
+                        <p className="text-lg font-semibold text-accent">Número de Pedido:</p>
                         <p className="text-3xl font-bold tracking-wider font-mono">{orderId}</p>
                     </div>
                     <div className="text-left space-y-4 text-muted-foreground">
@@ -77,7 +77,7 @@ function SuccessContent() {
                 </CardHeader>
                 <CardContent className="text-center">
                     <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
-                        <p className="text-lg font-semibold text-primary">Número de Pedido:</p>
+                        <p className="text-lg font-semibold text-accent">Número de Pedido:</p>
                         <p className="text-3xl font-bold tracking-wider font-mono">{orderId}</p>
                     </div>
                     <div className="text-left space-y-4 text-muted-foreground">

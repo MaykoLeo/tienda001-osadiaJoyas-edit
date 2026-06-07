@@ -197,9 +197,9 @@ export function CartClient() {
                     />
                 </div>
                 <div className="flex-1 ml-3">
-                  <Link href={`/products/${product.id}`} className="font-semibold hover:text-primary text-base leading-tight">{product.name}</Link>
+                  <Link href={`/products/${product.id}`} className="font-semibold hover:text-accent text-base leading-tight">{product.name}</Link>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <p className="font-semibold text-primary">{formatCurrency(product.salePrice ?? product.price)}</p>
+                    <p className="font-semibold text-accent">{formatCurrency(product.salePrice ?? product.price)}</p>
                     {product.salePrice && product.salePrice < product.price && (
                       <p className="text-sm text-muted-foreground line-through">
                         {formatCurrency(product.price)}
@@ -258,14 +258,14 @@ export function CartClient() {
                 </div>
                 
                 {offerDiscount > 0 && (
-                  <div className="flex justify-between items-center text-primary">
+                  <div className="flex justify-between items-center text-accent">
                       <span>Descuentos</span>
                       <span>-{formatCurrency(offerDiscount)}</span>
                   </div>
                 )}
 
                 {couponDiscount > 0 && (
-                  <div className="flex justify-between items-center text-primary">
+                  <div className="flex justify-between items-center text-accent">
                       <div className="flex items-center gap-2">
                           <span>Descuento</span>
                           {appliedCoupon && (

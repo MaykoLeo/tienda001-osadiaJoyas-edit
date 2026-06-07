@@ -52,7 +52,7 @@ export function OurStore() {
                 {/* Bloque de Texto (Título + Descripción) */}
                 <div className="space-y-10 order-1">
                     <div className="space-y-3">
-                        <span className="text-primary uppercase tracking-[0.4em] text-[12px] font-headline font-bold block">
+                        <span className="text-accent uppercase tracking-[0.4em] text-[12px] font-headline font-bold block">
                             Visítanos
                         </span>
                         <h2 className="text-5xl font-headline font-bold leading-[1.1]">

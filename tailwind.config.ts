@@ -25,6 +25,7 @@ export default {
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        gold: 'hsl(var(--gold))',
         price: {
           DEFAULT: 'hsl(var(--price))',
           sale: 'hsl(var(--price-sale))',

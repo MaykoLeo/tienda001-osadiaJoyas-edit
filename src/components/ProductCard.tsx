@@ -71,7 +71,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
         <div className="flex-1">
           <Link href={`/products/${product.id}`} className="group">
             {/* DS: Playfair Display for product titles */}
-            <CardTitle className="font-headline text-lg leading-tight tracking-[-0.02em] hover:text-primary transition-colors duration-300">
+            <CardTitle className="font-headline text-lg leading-tight tracking-[-0.02em] hover:text-accent transition-colors duration-300">
               {product.name}
             </CardTitle>
           </Link>

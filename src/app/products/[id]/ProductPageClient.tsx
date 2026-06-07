@@ -146,15 +146,15 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
                     </div>
 
                     <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg max-w-fit">
-                        <CreditCard className="h-4 w-4 text-primary" />
-                        <p className="text-primary font-medium text-xs">20% de descuento pagando en Efectivo en el local</p>
+                        <CreditCard className="h-4 w-4 text-accent" />
+                        <p className="text-accent font-medium text-xs">20% de descuento pagando en Efectivo en el local</p>
                     </div>
 
                     <div className="flex items-center gap-2">
                         {hasStock ? (
                             <>
-                                <CheckCircle2 className="h-4 w-4 text-primary/80" />
-                                <span className="font-medium text-primary/80 text-xs text-green-600 dark:text-primary/80">En Stock</span>
+                                <CheckCircle2 className="h-4 w-4 text-accent/80" />
+                                <span className="font-medium text-accent/80 text-xs text-green-600 dark:text-accent/80">En Stock</span>
                                 {product.stock <= 5 && <Badge variant="destructive" className="ml-2 scale-90 text-[10px] h-5 animate-pulse">¡Últimas {product.stock}!</Badge>}
                             </>
                         ) : (

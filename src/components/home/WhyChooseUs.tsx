@@ -80,7 +80,7 @@ export function WhyChooseUs() {
     return (
         <section id="why-choose-us" className="space-y-12 py-5">
             <div className="text-center space-y-3">
-                <span className="text-primary uppercase tracking-[0.4em] text-[13px] font-headline font-bold">
+                <span className="text-accent uppercase tracking-[0.4em] text-[13px] font-headline font-bold">
                     Experiencia Osadía
                 </span>
                 <h2 className="text-5xl font-headline font-bold">¿Por Qué Elegirnos?</h2>
@@ -96,7 +96,7 @@ export function WhyChooseUs() {
                         className="
               group flex flex-col items-center text-center p-6 gap-4 rounded-[8px]
               bg-card border border-primary/30 dark:border-white/10
-              hover:border-primary/70 dark:hover:border-primary/40
+              hover:border-accent/60 dark:hover:border-accent/50
               transition-all duration-300
             "
                     >
@@ -107,7 +107,7 @@ export function WhyChooseUs() {
                   ${iconSize}
                   text-primary/75
                   dark:text-primary
-                  group-hover:text-primary dark:group-hover:text-primary
+                  group-hover:text-accent dark:group-hover:text-accent
                   transition-colors duration-300
                 `}
                             />

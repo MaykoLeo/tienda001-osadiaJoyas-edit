@@ -408,7 +408,7 @@ function CheckoutForm() {
                 </div>
                 {hasProductDiscount && (<div className="flex justify-between"><p className="text-muted-foreground">Subtotal c/ Dtos.</p><p>{formatCurrency(subtotal)}</p></div>)}
                 {couponDiscount > 0 && (
-                  <div className="flex justify-between text-primary">
+                  <div className="flex justify-between text-accent">
                     <div className="flex items-center gap-2">
                       <span>Descuento Cupón</span>
                       {appliedCoupon && <span className='text-xs font-medium'>({appliedCoupon.code})</span>}
@@ -417,7 +417,7 @@ function CheckoutForm() {
                   </div>
                 )}
                 {isPayInStore && (
-                  <div className="flex justify-between text-primary font-medium">
+                  <div className="flex justify-between text-accent font-medium">
                     <span>Dto. pago en local (20%)</span>
                     <span>-{formatCurrency(localPaymentDiscount)}</span>
                   </div>
@@ -432,10 +432,10 @@ function CheckoutForm() {
                   <>
                     <Separator className="my-2" />
                     <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 space-y-2">
-                      <p className="text-sm font-semibold text-primary">Desglose de pago:</p>
+                      <p className="text-sm font-semibold text-accent">Desglose de pago:</p>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Seña ahora (30% online):</span>
-                        <span className="font-bold text-primary">{formatCurrency(depositAmount)}</span>
+                        <span className="font-bold text-accent">{formatCurrency(depositAmount)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Saldo al retirar (70%):</span>

@@ -22,7 +22,7 @@ export function AboutUs() {
 
             <div className='md:col-span-3 space-y-8'>
                 <div className="space-y-3">
-                    <span className="text-primary uppercase tracking-[0.4em] text-[13px] font-headline font-bold block">
+                    <span className="text-accent uppercase tracking-[0.4em] text-[13px] font-headline font-bold block">
                         Sobre Nosotros
                     </span>
                     <h2 className="text-5xl font-headline font-bold leading-[1.1]">
@@ -44,7 +44,7 @@ export function AboutUs() {
                             <InstagramIcon className="w-4 h-4 mr-3" /> Síguenos en Instagram
                         </Link>
                     </Button>
-                    <Button asChild variant="outline" className="rounded-full px-8 py-6 text-xs uppercase tracking-widest font-bold hover:bg-primary/5 transition-all border-primary/20" size="lg">
+                    <Button asChild variant="outline" className="rounded-full px-8 py-6 text-xs uppercase tracking-widest font-bold hover:bg-accent/10 hover:text-accent hover:border-accent transition-all border-primary/20" size="lg">
                         <Link href="/tienda">
                             <Gem className="w-4 h-4 mr-3" /> Nuestros Productos
                         </Link>

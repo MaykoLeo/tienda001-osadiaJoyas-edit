@@ -167,7 +167,7 @@ const OrderRow = React.memo(({ order, onStatusChange }: { order: Order; onStatus
                                                 <p className="font-semibold truncate">{item.name}</p>
                                                 <div className="text-sm text-muted-foreground flex items-baseline gap-2">
                                                     <span>Cant: {item.quantity} | P. Unit.:</span>
-                                                    <span className="font-semibold text-primary">${item.priceAtPurchase.toLocaleString('es-AR')}</span>
+                                                    <span className="font-semibold text-accent">${item.priceAtPurchase.toLocaleString('es-AR')}</span>
                                                     {item.originalPrice && item.originalPrice > item.priceAtPurchase && (
                                                         <span className="line-through text-xs">${item.originalPrice.toLocaleString('es-AR')}</span>
                                                     )}
@@ -215,14 +215,14 @@ const OrderRow = React.memo(({ order, onStatusChange }: { order: Order; onStatus
                                     <h4 className="font-semibold text-lg">Información del Cliente</h4>
                                     <div className="space-y-2 text-sm">
                                         <div className="flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground" /> <span>{order.customerFirstName} {order.customerLastName}</span></div>
-                                        <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> <a href={`mailto:${order.customerEmail}`} className="text-primary hover:underline">{order.customerEmail}</a></div>
+                                        <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> <a href={`mailto:${order.customerEmail}`} className="text-accent hover:underline">{order.customerEmail}</a></div>
                                         <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> <span>{order.customerPhone || 'No disponible'}</span></div>
                                     </div>
 
                                     <h4 className="font-semibold text-lg flex items-center gap-2">
                                         {DeliveryMethodDisplay && <DeliveryMethodDisplay.icon className="h-5 w-5" />} Detalle de Entrega
                                     </h4>
-                                    <p className='text-sm font-bold text-primary'>{DeliveryMethodDisplay.label}</p>
+                                    <p className='text-sm font-bold text-accent'>{DeliveryMethodDisplay.label}</p>
 
                                     {(order.deliveryMethod === 'pickup' || order.deliveryMethod === 'pay_in_store') && (
                                         <div className="space-y-2 text-sm border-l-2 pl-3">

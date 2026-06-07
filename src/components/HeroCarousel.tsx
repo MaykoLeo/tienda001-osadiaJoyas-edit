@@ -110,8 +110,7 @@ export function HeroCarousel() {
                             <p className="text-lg font-body text-white/90 drop-shadow-md max-w-xl mx-auto mb-10">
                                 {slide.description}
                             </p>
-                            {/* DS: CTA uppercase + tracking-widest + 4px radius (heredado de button.tsx) */}
-                            <Button asChild size="lg" className="shadow-lg uppercase tracking-widest text-sm font-medium px-10 h-14">
+                            <Button asChild variant="outline" size="lg" className="shadow-lg uppercase tracking-widest text-sm font-medium px-10 h-14 text-accent border-accent hover:bg-accent/10 hover:text-accent bg-black/20 backdrop-blur-sm">
                                 <Link href={slide.buttonLink}>{slide.buttonText}</Link>
                             </Button>
                           </div>

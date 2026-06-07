@@ -107,7 +107,7 @@ export function TiendaPageClient({
   
   let titleText: React.ReactNode = 'Todos los Productos';
   if (query) {
-    titleText = <>Resultados de Búsqueda para: <span className='text-primary'>'{query}'</span></>;
+    titleText = <>Resultados de Búsqueda para: <span className='text-accent'>'{query}'</span></>;
   } else if (categoryIdStr) {
     titleText = getCategoryPath(Number(categoryIdStr));
   }
@@ -134,7 +134,7 @@ export function TiendaPageClient({
 
         <main id="productos-grid" className="lg:col-span-3 scroll-mt-24">
           <div className="flex items-center gap-4 mb-8">
-            <TitleIcon className="h-8 w-8 text-primary" />
+            <TitleIcon className="h-8 w-8 text-accent" />
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
               {titleText}
             </h2>

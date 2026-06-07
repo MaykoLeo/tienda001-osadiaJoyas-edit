@@ -16,7 +16,7 @@ export async function FeaturedProducts() {
     return (
         <section id="featured" className="space-y-8">
             <div className="text-center space-y-3">
-                <span className="text-primary uppercase tracking-[0.4em] text-[13px] font-headline font-bold">
+                <span className="text-accent uppercase tracking-[0.4em] text-[13px] font-headline font-bold">
                     Colección Seleccionada
                 </span>
                 <h2 className="text-5xl font-headline font-bold">Productos Destacados</h2>
@@ -36,7 +36,7 @@ export async function FeaturedProducts() {
                 </div>
             )}
             <div className="text-center mt-12">
-                <Button asChild size="lg" className="gap-2 px-10 py-6 text-lg font-semibold tracking-wider shadow-lg transform transition-transform duration-200 hover:scale-105">
+                <Button asChild variant="outline" size="lg" className="gap-2 px-10 py-6 text-lg font-semibold tracking-wider shadow-lg transform transition-transform duration-200 hover:scale-105 text-accent border-accent hover:bg-accent/10 hover:text-accent">
                     <Link href="/tienda">
                         Ver Todos los Productos
                         <ArrowRight className='w-6 h-6' />

@@ -33,15 +33,18 @@ body {
     /* Neutral tones */
     --muted: 0 0% 90%;             /* Soft grey tint */
     --muted-foreground: 0 0% 34%;  /* #575757 — Dark grey */
-    --accent: 75 7% 52%;
+    --accent: 38 60% 38%;         /* #9B7A28 — Oro Antiguo (light) */
     --accent-foreground: 0 0% 100%;
+
+    /* Gold accent token */
+    --gold: 38 60% 38%;            /* #9B7A28 — Oro Antiguo */
 
     /* Utility */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 88%;            /* #E0E0E0 */
     --input: 0 0% 88%;
-    --ring: 75 7% 52%;
+    --ring: 38 60% 38%;            /* #9B7A28 — Oro Antiguo */
     --radius: 0.5rem;
 
     /* Skeleton color (Soft Grey tint) */
@@ -72,15 +75,18 @@ body {
     /* Neutral Carbon tones */
     --muted: 0 0% 24%;             /* #3D3D3D */
     --muted-foreground: 0 0% 63%;  /* #A0A0A0 */
-    --accent: 29 9% 42%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 40 66% 55%;         /* #D4A843 — Oro Luminoso (dark) */
+    --accent-foreground: 0 0% 10%;
+
+    /* Gold accent token */
+    --gold: 40 66% 55%;            /* #D4A843 — Oro Luminoso */
 
     /* Utility */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 26%;            /* #424242 */
     --input: 0 0% 26%;
-    --ring: 29 9% 42%;
+    --ring: 40 66% 55%;            /* #D4A843 — Oro Luminoso */
 
     /* Skeleton color (Dark Charcoal shimmer) */
     --skeleton-base: 0 0% 22%;
@@ -120,18 +126,13 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--primary)); /* Gris en claro, Cian en oscuro */
+  background-color: hsl(var(--gold) / 0.5); /* Oro Antiguo semitransparente */
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
-/* Hover para modo oscuro */
-.dark ::-webkit-scrollbar-thumb:hover {
-  background-color: hsl(var(--primary));
-}
-
-/* Hover para modo claro */
-:not(.dark) ::-webkit-scrollbar-thumb:hover {
-  background-color: hsl(var(--secondary));
+/* Hover para modo oscuro y claro — full gold */
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--gold));
 }

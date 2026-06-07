@@ -91,13 +91,13 @@ export default function Header() {
                 key={link.href} 
                 href={link.href} 
                 className={cn(
-                  "text-[13px] uppercase tracking-[0.2em] font-headline transition-all hover:text-primary relative group",
-                   pathname === link.href ? "text-primary" : "text-foreground/80"
+                  "text-[13px] uppercase tracking-[0.2em] font-headline transition-all hover:text-accent relative group",
+                   pathname === link.href ? "text-accent" : "text-foreground/80"
                 )}
               >
                 {link.label}
                 <span className={cn(
-                    "absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full",
+                    "absolute -bottom-1 left-0 w-0 h-px bg-accent transition-all duration-300 group-hover:w-full",
                     pathname === link.href && "w-full"
                 )} />
               </Link>
@@ -106,19 +106,19 @@ export default function Header() {
             {/* Dropdown de Información */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="text-[13px] uppercase tracking-[0.2em] font-headline transition-all hover:text-primary relative group flex items-center gap-1 text-foreground/80 outline-none">
+                <button className="text-[13px] uppercase tracking-[0.2em] font-headline transition-all hover:text-accent relative group flex items-center gap-1 text-foreground/80 outline-none">
                   Información
                   <ChevronDown className="h-3 w-3" />
-                  <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
+                  <span className="absolute -bottom-1 left-0 w-0 h-px bg-accent transition-all duration-300 group-hover:w-full" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[220px] bg-background/80 backdrop-blur-md border-primary/10 border-t-0 p-0 overflow-hidden shadow-xl">
+              <DropdownMenuContent align="start" className="w-[220px] bg-background/80 backdrop-blur-md border-accent/10 border-t-0 p-0 overflow-hidden shadow-xl">
                 {/* Soft top gradient instead of border */}
-                <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
                 
                 <div className="py-2">
                     {infoLinks.map((link) => (
-                    <DropdownMenuItem key={link.href} asChild className="focus:bg-primary/5 focus:text-primary cursor-pointer px-4">
+                    <DropdownMenuItem key={link.href} asChild className="focus:bg-accent/10 focus:text-accent cursor-pointer px-4">
                         <Link 
                         href={link.href} 
                         className="text-[11px] uppercase tracking-[0.15em] font-headline w-full py-2.5 transition-colors"
@@ -169,8 +169,8 @@ export default function Header() {
                       href={link.href} 
                       onClick={() => setIsMobileMenuOpen(false)} 
                       className={cn(
-                          "transition-colors hover:text-primary py-1",
-                           pathname === link.href ? "text-primary font-bold" : "text-foreground"
+                          "transition-colors hover:text-accent py-1",
+                           pathname === link.href ? "text-accent font-bold" : "text-foreground"
                       )}
                     >
                       {link.label}
@@ -184,8 +184,8 @@ export default function Header() {
                       href={link.href} 
                       onClick={() => setIsMobileMenuOpen(false)} 
                       className={cn(
-                          "transition-colors hover:text-primary py-1",
-                           pathname === link.href ? "text-primary font-bold" : "text-foreground"
+                          "transition-colors hover:text-accent py-1",
+                           pathname === link.href ? "text-accent font-bold" : "text-foreground"
                       )}
                     >
                       {link.label}
