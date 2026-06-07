@@ -213,8 +213,8 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
 
     return (
         <div className="flex flex-col md:flex-row gap-6 h-full overflow-y-auto md:overflow-hidden">
-            {/* Left Column: Product Selection + Customer Data */}
-            <div className="flex-1 flex flex-col gap-4 md:overflow-y-auto md:pr-2 order-1">
+            {/* Left Column: Product Search + Customer Data (shown below summary on mobile) */}
+            <div className="flex-1 flex flex-col gap-4 md:overflow-y-auto md:pr-2 order-2 md:order-1">
                 <Card className='flex flex-col min-h-fit max-h-[450px]'>
                     <CardHeader className="pb-3 border-b">
                         <CardTitle className="text-lg flex items-center justify-between">
@@ -224,7 +224,6 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                             )}
                         </CardTitle>
                     </CardHeader>
-                    {/* Contenedor con altura flexible: crece hasta max-h (definido en Card o padre) y luego scrollea */}
                     <CardContent className="pt-4 flex-1 overflow-y-auto min-h-[150px]">
                         {browsingMode === 'search' ? (
                             <div className="space-y-4">
@@ -233,7 +232,6 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                         placeholder="Buscar por nombre, SKU o ID..."
                                         value={query}
                                         onChange={(e) => setQuery(e.target.value)}
-                                        autoFocus
                                         autoComplete="new-password"
                                         name="search-products-pos"
                                         data-form-type="other"
@@ -255,7 +253,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                                                 <span className={product.stock > 0 ? "text-green-600" : "text-destructive"}>Stock: {product.stock}</span>
                                                             </div>
                                                         </div>
-                                                        <div className="text-right">
+                                                        <div className="text-right shrink-0">
                                                             {product.salePrice && product.salePrice < product.price ? (
                                                                 <>
                                                                     <div className="text-xs text-muted-foreground line-through">${product.price.toLocaleString('es-AR')}</div>
@@ -265,7 +263,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                                                 <div className="font-bold text-sm">${product.price.toLocaleString('es-AR')}</div>
                                                             )}
                                                         </div>
-                                                        <Button size="icon" variant="ghost" className="h-8 w-8"><Plus className="h-4 w-4" /></Button>
+                                                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0"><Plus className="h-4 w-4" /></Button>
                                                     </div>
                                                 ))
                                             )}
@@ -313,39 +311,42 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                         <div className="flex items-center justify-between mb-2">
                                             <button onClick={() => { setBrowsingMode('categories'); setSelectedCategoryId(null); }} className="text-sm text-primary hover:underline flex items-center"><ChevronLeft className="h-3 w-3 mr-1" /> Volver a categorías</button>
                                         </div>
-                                        <div className="border rounded-md flex-1 overflow-hidden relative">
-                                            <ScrollArea className="h-[300px] lg:h-full">
-                                                <div className='p-2 space-y-1'>
-                                                    {filteredProducts.length === 0 ? (
-                                                        <div className="p-4 text-center text-muted-foreground">No hay productos en esta categoría.</div>
-                                                    ) : (
-                                                        filteredProducts.map(product => (
-                                                            <div key={product.id} className="flex items-center gap-3 p-2 hover:bg-muted border rounded-sm cursor-pointer" onClick={() => addToCart(product)}>
-                                                                <div className="h-10 w-10 relative bg-muted rounded overflow-hidden flex-shrink-0">
-                                                                    {product.images[0] && <Image src={product.images[0]} alt={product.name} fill className="object-cover" />}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="font-medium truncate text-sm">{product.name}</p>
-                                                                    <div className="flex items-center gap-2 text-xs">
-                                                                        <span className={product.stock > 0 ? "text-green-600" : "text-destructive"}>Stock: {product.stock}</span>
+                                        {/* Overflow-x-auto to allow scrolling on small screens */}
+                                        <div className="border rounded-md flex-1 overflow-auto relative">
+                                            <div className="min-w-[320px]">
+                                                <ScrollArea className="h-[300px] lg:h-full">
+                                                    <div className='p-2 space-y-1'>
+                                                        {filteredProducts.length === 0 ? (
+                                                            <div className="p-4 text-center text-muted-foreground">No hay productos en esta categoría.</div>
+                                                        ) : (
+                                                            filteredProducts.map(product => (
+                                                                <div key={product.id} className="flex items-center gap-3 p-2 hover:bg-muted border rounded-sm cursor-pointer" onClick={() => addToCart(product)}>
+                                                                    <div className="h-10 w-10 relative bg-muted rounded overflow-hidden flex-shrink-0">
+                                                                        {product.images[0] && <Image src={product.images[0]} alt={product.name} fill className="object-cover" />}
                                                                     </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="font-medium truncate text-sm">{product.name}</p>
+                                                                        <div className="flex items-center gap-2 text-xs">
+                                                                            <span className={product.stock > 0 ? "text-green-600" : "text-destructive"}>Stock: {product.stock}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-right shrink-0">
+                                                                        {product.salePrice && product.salePrice < product.price ? (
+                                                                            <>
+                                                                                <div className="text-xs text-muted-foreground line-through">${product.price.toLocaleString('es-AR')}</div>
+                                                                                <div className="font-bold text-sm text-green-600">${product.salePrice.toLocaleString('es-AR')}</div>
+                                                                            </>
+                                                                        ) : (
+                                                                            <div className="font-bold text-sm">${product.price.toLocaleString('es-AR')}</div>
+                                                                        )}
+                                                                    </div>
+                                                                    <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0"><Plus className="h-4 w-4" /></Button>
                                                                 </div>
-                                                                <div className="text-right">
-                                                                    {product.salePrice && product.salePrice < product.price ? (
-                                                                        <>
-                                                                            <div className="text-xs text-muted-foreground line-through">${product.price.toLocaleString('es-AR')}</div>
-                                                                            <div className="font-bold text-sm text-green-600">${product.salePrice.toLocaleString('es-AR')}</div>
-                                                                        </>
-                                                                    ) : (
-                                                                        <div className="font-bold text-sm">${product.price.toLocaleString('es-AR')}</div>
-                                                                    )}
-                                                                </div>
-                                                                <Button size="icon" variant="ghost" className="h-7 w-7"><Plus className="h-4 w-4" /></Button>
-                                                            </div>
-                                                        ))
-                                                    )}
-                                                </div>
-                                            </ScrollArea>
+                                                            ))
+                                                        )}
+                                                    </div>
+                                                </ScrollArea>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -409,8 +410,8 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                 </Card>
             </div>
 
-            {/* Right Column: Cart Summary */}
-            <Card className="flex-1 flex flex-col shadow-xl border-primary/20 bg-card overflow-hidden md:h-full md:max-h-full order-2 max-h-[55vh]">
+            {/* Right Column / Top on mobile: Cart Summary */}
+            <Card className="flex-1 flex flex-col shadow-xl border-primary/20 bg-card overflow-hidden md:h-full md:max-h-full order-1 md:order-2">
                 <CardHeader className="bg-primary text-primary-foreground py-3 shrink-0">
                     <CardTitle className="flex justify-between items-center text-lg">
                         <span className="flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Resumen de Orden</span>
@@ -422,7 +423,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                 <div className="flex-1 overflow-y-auto">
                     <div className="p-4 space-y-4">
                         {cart.length === 0 ? (
-                            <div className="min-h-[300px] flex flex-col items-center justify-center text-muted-foreground p-8 text-center bg-muted/5 rounded-md">
+                            <div className="min-h-[120px] flex flex-col items-center justify-center text-muted-foreground p-8 text-center bg-muted/5 rounded-md">
                                 <ShoppingCart className="h-12 w-12 mb-3 opacity-20" />
                                 <p>No hay productos seleccionados.</p>
                                 <p className="text-sm">Busca y agrega productos para comenzar.</p>
@@ -431,8 +432,18 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                             <div className="space-y-3">
                                 {cart.map((item) => (
                                     <div key={item.productId} className="flex items-start gap-3 p-3 bg-muted/30 rounded-md border">
+                                        {/* Product thumbnail */}
+                                        <div className="h-14 w-14 relative bg-muted rounded overflow-hidden flex-shrink-0 border">
+                                            {item.image ? (
+                                                <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <ShoppingCart className="h-5 w-5 opacity-30" />
+                                                </div>
+                                            )}
+                                        </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="font-medium line-clamp-2 mb-1">{item.name}</div>
+                                            <div className="font-medium line-clamp-2 mb-1 text-sm">{item.name}</div>
                                             <div className="text-xs text-muted-foreground mb-2">
                                                 {item.originalPrice && item.originalPrice > item.priceAtPurchase ? (
                                                     <>
@@ -463,7 +474,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                             </div>
                         )}
 
-                        {/* Order Details & Totals Section (Now in same scroll flow) */}
+                        {/* Order Details & Totals Section */}
                         <div className="space-y-4 pt-4 border-t">
                             <div className="space-y-3">
                                 {cart.length > 0 && (
@@ -536,15 +547,16 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-3 pt-2">
-                                <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancelar</Button>
-                                <Button onClick={handleSubmit} disabled={isSubmitting || cart.length === 0}>
-                                    {isSubmitting ? 'Procesando...' : 'Confirmar Orden'}
-                                </Button>
-                            </div>
                         </div>
                     </div>
+                </div>
+                
+                {/* Fixed bottom controls for mobile convenience */}
+                <div className="grid grid-cols-2 gap-3 p-4 border-t bg-background shrink-0">
+                    <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancelar</Button>
+                    <Button onClick={handleSubmit} disabled={isSubmitting || cart.length === 0}>
+                        {isSubmitting ? 'Procesando...' : 'Confirmar Orden'}
+                    </Button>
                 </div>
             </Card>
         </div>
