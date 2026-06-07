@@ -57,13 +57,13 @@ const ProductRow = React.memo(({
 
     return (
         <TableRow style={{ cursor: isLoading ? 'wait' : 'default' }} className={cn(isLoading && "opacity-60 pointer-events-none")}>
-            <TableCell className="hidden sm:table-cell">
+            <TableCell>
                 <img
                     alt={product.name}
                     className="aspect-square rounded-md object-cover"
-                    height="64"
+                    height="48"
                     src={product.images[0] || '/placeholder.svg'}
-                    width="64"
+                    width="48"
                     loading="lazy"
                 />
             </TableCell>
@@ -524,10 +524,10 @@ export function ProductsTab({
                             ⭐ {featuredCount}/8
                         </Badge>
                     </div>
-                    <div className="flex gap-2 self-start md:self-auto">
-                        <Button variant="outline" onClick={onImport}><FileUp className="mr-2 h-4 w-4" />Importar</Button>
-                        <Button variant="outline" onClick={onExport}><FileDown className="mr-2 h-4 w-4" />Exportar</Button>
-                        <Button onClick={onAdd}><PlusCircle className="mr-2 h-4 w-4" />Añadir Producto</Button>
+                    <div className="flex flex-wrap gap-2 self-start md:self-auto">
+                        <Button variant="outline" onClick={onImport} size="sm"><FileUp className="mr-1 h-4 w-4" /><span className="hidden sm:inline">Importar</span></Button>
+                        <Button variant="outline" onClick={onExport} size="sm"><FileDown className="mr-1 h-4 w-4" /><span className="hidden sm:inline">Exportar</span></Button>
+                        <Button onClick={onAdd} size="sm"><PlusCircle className="mr-1 h-4 w-4" /><span className="hidden sm:inline">Añadir Producto</span><span className="sm:hidden">Añadir</span></Button>
                     </div>
                 </div>
 
@@ -729,7 +729,7 @@ export function ProductsTab({
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="hidden w-[80px] sm:table-cell">Imagen</TableHead>
+                                <TableHead className="w-[56px]">Img</TableHead>
                                 <TableHead className="w-[110px] text-center">{renderHeaderButton('id', 'ID')}</TableHead>
                                 <TableHead>{renderHeaderButton('name', 'Nombre')}</TableHead>
                                 <TableHead className="hidden lg:table-cell text-center">{renderHeaderButton('price', 'Precio')}</TableHead>

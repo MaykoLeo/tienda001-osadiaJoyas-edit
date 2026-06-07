@@ -467,7 +467,7 @@ export function MetricsTab({
 
                     <div className="grid gap-6 md:grid-cols-2">
                         {/* Revenue / Orders Over Time Chart */}
-                        <Card className="shadow-md">
+                        <Card className="shadow-md min-w-0 overflow-hidden">
                             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 space-y-2 sm:space-y-0">
                                 <div>
                                     <CardTitle className="flex items-center gap-2">
@@ -508,7 +508,7 @@ export function MetricsTab({
                                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                                     </div>
                                 ) : salesMetrics.revenueByDate.length > 0 ? (
-                                    <div className="h-64 overflow-x-auto overflow-y-hidden pb-4">
+                                    <div className="h-64 overflow-x-auto overflow-y-hidden pb-4 max-w-full">
                                         <ChartContainer
                                             config={{
                                                 revenue: { label: 'Ingresos', color: 'hsl(var(--primary))' },
@@ -627,7 +627,7 @@ export function MetricsTab({
                         </Card>
 
                         {/* Productos Más Vendidos */}
-                        <Card className="shadow-md">
+                        <Card className="shadow-md min-w-0 overflow-hidden">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <TrendingUp className="text-blue-500" />

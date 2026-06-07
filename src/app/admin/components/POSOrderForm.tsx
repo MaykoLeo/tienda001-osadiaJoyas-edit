@@ -213,8 +213,8 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
 
     return (
         <div className="flex flex-col md:flex-row gap-6 h-full overflow-y-auto md:overflow-hidden">
-            {/* Left Column: Product Selection */}
-            <div className="flex-1 flex flex-col gap-4 md:overflow-y-auto md:pr-2">
+            {/* Left Column: Product Selection + Customer Data */}
+            <div className="flex-1 flex flex-col gap-4 md:overflow-y-auto md:pr-2 order-1">
                 <Card className='flex flex-col min-h-fit max-h-[450px]'>
                     <CardHeader className="pb-3 border-b">
                         <CardTitle className="text-lg flex items-center justify-between">
@@ -410,7 +410,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
             </div>
 
             {/* Right Column: Cart Summary */}
-            <Card className="flex-1 flex flex-col shadow-xl border-primary/20 bg-card overflow-hidden h-full max-h-[85vh] md:max-h-full">
+            <Card className="flex-1 flex flex-col shadow-xl border-primary/20 bg-card overflow-hidden md:h-full md:max-h-full order-2 max-h-[55vh]">
                 <CardHeader className="bg-primary text-primary-foreground py-3 shrink-0">
                     <CardTitle className="flex justify-between items-center text-lg">
                         <span className="flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Resumen de Orden</span>
