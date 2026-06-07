@@ -243,15 +243,15 @@ const OrderRow = React.memo(({ order, onStatusChange }: { order: Order; onStatus
                                         <div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-muted-foreground" /><span>ID de Pago: <span className="font-mono">{order.paymentId || 'N/A'}</span></span></div>
                                         {order.couponCode && <div className="flex items-center gap-2"><Ticket className="h-4 w-4 text-muted-foreground" /><span>Cupón: <span className="font-semibold">{order.couponCode}</span> (-${order.discountAmount?.toLocaleString('es-AR')})</span></div>}
                                         {(order.status === 'deposit_paid' || order.depositAmount) && (
-                                            <div className="mt-2 p-3 bg-teal-50 border border-teal-200 rounded-md space-y-1">
-                                                <p className="font-semibold text-teal-800 text-xs uppercase tracking-wide">Desglose de Seña</p>
+                                            <div className="mt-2 p-3 bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-700 rounded-md space-y-1">
+                                                <p className="font-semibold text-teal-800 dark:text-teal-200 text-xs uppercase tracking-wide">Desglose de Seña</p>
                                                 <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Seña pagada (30%):</span>
-                                                    <span className="font-bold text-teal-700">${(order.depositAmount ?? order.total * 0.30).toLocaleString('es-AR')}</span>
+                                                    <span className="text-teal-700 dark:text-teal-300">Seña pagada (30%):</span>
+                                                    <span className="font-bold text-teal-700 dark:text-teal-300">${(order.depositAmount ?? order.total * 0.30).toLocaleString('es-AR')}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-muted-foreground">Saldo a cobrar en local (70%):</span>
-                                                    <span className="font-bold">${(order.remainingAmount ?? order.total * 0.70).toLocaleString('es-AR')}</span>
+                                                    <span className="text-teal-700 dark:text-teal-300">Saldo a cobrar en local (70%):</span>
+                                                    <span className="font-bold text-teal-900 dark:text-teal-100">${(order.remainingAmount ?? order.total * 0.70).toLocaleString('es-AR')}</span>
                                                 </div>
                                             </div>
                                         )}
