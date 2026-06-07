@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Plus, Trash, Minus, ShoppingCart, User, ChevronLeft } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -209,7 +208,8 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                         data-form-type="other"
                                     />
                                     {query && (
-                                        <div className="border rounded-md shadow-sm mt-1 max-h-60 overflow-y-auto bg-background">
+                                        <div className="border rounded-md shadow-sm mt-1 max-h-60 overflow-auto bg-background">
+                                            <div className="min-w-[360px]">
                                             {filteredProducts.length === 0 ? (
                                                 <div className="p-3 text-sm text-muted-foreground text-center">No se encontraron productos.</div>
                                             ) : (
@@ -239,6 +239,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                                     </div>
                                                 ))
                                             )}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -281,8 +282,8 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                             <button onClick={() => { setBrowsingMode('categories'); setSelectedCategoryId(null); }} className="text-sm text-primary hover:underline flex items-center"><ChevronLeft className="h-3 w-3 mr-1" /> Volver a categorías</button>
                                         </div>
                                         <div className="border rounded-md flex-1 overflow-auto relative">
-                                            <div className="min-w-[320px]">
-                                                <ScrollArea className="h-[300px] lg:h-full">
+                                            <div className="min-w-[360px]">
+                                                <div className="overflow-y-auto max-h-[300px]">
                                                     <div className='p-2 space-y-1'>
                                                         {filteredProducts.length === 0 ? (
                                                             <div className="p-4 text-center text-muted-foreground">No hay productos en esta categoría.</div>
@@ -313,7 +314,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                                             ))
                                                         )}
                                                     </div>
-                                                </ScrollArea>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
