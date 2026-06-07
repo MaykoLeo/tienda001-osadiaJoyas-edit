@@ -360,7 +360,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
                     </DialogHeader>
 
                     {dialogType === 'manual_sale' ? (
-                        <div className="flex-1 overflow-hidden">
+                        <div className="flex-1 overflow-y-auto h-full">
                             <POSOrderForm
                                 products={products}
                                 categories={categories}

@@ -212,7 +212,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
     }
 
     return (
-        <div className="flex flex-col md:flex-row gap-6 h-full overflow-y-auto md:overflow-hidden">
+        <div className="flex flex-col md:flex-row gap-6 md:h-full md:overflow-hidden">
             {/* Left Column: Product Search + Customer Data (shown below summary on mobile) */}
             <div className="flex-1 flex flex-col gap-4 md:overflow-y-auto md:pr-2 order-2 md:order-1">
                 <Card className='flex flex-col min-h-fit max-h-[450px]'>
@@ -411,7 +411,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
             </div>
 
             {/* Right Column / Top on mobile: Cart Summary */}
-            <Card className="flex-1 flex flex-col shadow-xl border-primary/20 bg-card overflow-hidden md:h-full md:max-h-full order-1 md:order-2">
+            <Card className="flex-1 flex flex-col shadow-xl border-primary/20 bg-card md:overflow-hidden md:h-full md:max-h-full order-1 md:order-2">
                 <CardHeader className="bg-primary text-primary-foreground py-3 shrink-0">
                     <CardTitle className="flex justify-between items-center text-lg">
                         <span className="flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Resumen de Orden</span>
