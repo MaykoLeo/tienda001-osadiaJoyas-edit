@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, Trash, Minus, ShoppingCart, User, ChevronLeft } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,26 +31,20 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [emailError, setEmailError] = useState('');
 
-    // New states for POS features
     const [browsingMode, setBrowsingMode] = useState<'search' | 'categories' | 'products'>('search');
     const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-    const [discountPercentage, setDiscountPercentage] = useState<string>('0'); // String to handle empty input easier
-
+    const [discountPercentage, setDiscountPercentage] = useState<string>('0');
     const [paymentMethod, setPaymentMethod] = useState<PaymentType>('Efectivo');
     const [notes, setNotes] = useState('');
 
     const { toast } = useToast();
 
-    // Group categories
     const parentCategories = useMemo(() => categories.filter(c => !c.parentId), [categories]);
     const childCategories = useMemo(() =>
-        selectedParentId
-            ? categories.filter(c => c.parentId === selectedParentId)
-            : []
-        , [categories, selectedParentId]);
+        selectedParentId ? categories.filter(c => c.parentId === selectedParentId) : [],
+        [categories, selectedParentId]);
 
-    // Product Filtering Logic
     const filteredProducts = useMemo(() => {
         if (browsingMode === 'search') {
             if (!query) return [];
@@ -68,12 +61,10 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
     }, [products, query, browsingMode, selectedCategoryId]);
 
     const addToCart = (product: Product) => {
-        // Validation: Check for stock
         if (product.stock <= 0) {
             toast({ title: 'Sin Stock', description: `No hay stock disponible para ${product.name}.`, variant: 'destructive' });
             return;
         }
-
         setCart(prev => {
             const existing = prev.find(item => item.productId === product.id);
             if (existing) {
@@ -82,9 +73,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                     return prev;
                 }
                 return prev.map(item =>
-                    item.productId === product.id
-                        ? { ...item, quantity: item.quantity + 1 }
-                        : item
+                    item.productId === product.id ? { ...item, quantity: item.quantity + 1 } : item
                 );
             }
             return [...prev, {
@@ -102,7 +91,6 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
     const updateQuantity = (productId: number, delta: number) => {
         setCart(prev => prev.map(item => {
             if (item.productId === productId) {
-                // Check stock for increment
                 if (delta > 0) {
                     const product = products.find(p => p.id === productId);
                     if (product && item.quantity >= product.stock) {
@@ -110,8 +98,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                         return item;
                     }
                 }
-                const newQty = Math.max(1, item.quantity + delta);
-                return { ...item, quantity: newQty };
+                return { ...item, quantity: Math.max(1, item.quantity + delta) };
             }
             return item;
         }));
@@ -121,18 +108,13 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
         setCart(prev => prev.filter(item => item.productId !== productId));
     };
 
-    // Calculate Totals
     const subtotal = useMemo(() => cart.reduce((sum, item) => sum + (item.priceAtPurchase * item.quantity), 0), [cart]);
     const discountValue = parseFloat(discountPercentage) || 0;
     const discountAmount = useMemo(() => subtotal * (discountValue / 100), [subtotal, discountValue]);
     const total = subtotal - discountAmount;
 
     const handleDiscountChange = (val: string) => {
-        // Allow numbers only, max 100
-        if (val === '') {
-            setDiscountPercentage('');
-            return;
-        }
+        if (val === '') { setDiscountPercentage(''); return; }
         const num = parseFloat(val);
         if (!isNaN(num) && num >= 0 && num <= 100 && !val.includes('e')) {
             setDiscountPercentage(val);
@@ -140,10 +122,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
     };
 
     const validateEmail = (email: string) => {
-        if (!email) {
-            setEmailError('');
-            return true;
-        }
+        if (!email) { setEmailError(''); return true; }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             setEmailError('Email inválido (debe contener @ y dominio)');
@@ -159,24 +138,18 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
     };
 
     const handlePhoneChange = (value: string) => {
-        // Solo permitir números, espacios, +, -, ( y )
-        const cleanValue = value.replace(/[^0-9+\-\s()]/g, '');
-        setCustomerPhone(cleanValue);
+        setCustomerPhone(value.replace(/[^0-9+\-\s()]/g, ''));
     };
-
 
     const handleSubmit = async () => {
         if (cart.length === 0) {
             toast({ title: 'Error', description: 'El carrito está vacío.', variant: 'destructive' });
             return;
         }
-
-        // Validar email si está presente
         if (customerEmail && !validateEmail(customerEmail)) {
             toast({ title: 'Error', description: 'Por favor ingresa un email válido o déjalo vacío.', variant: 'destructive' });
             return;
         }
-
         setIsSubmitting(true);
         const formData = new FormData();
         formData.append('items', JSON.stringify(cart));
@@ -184,17 +157,11 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
         formData.append('customerLastName', customerLastName);
         formData.append('customerEmail', customerEmail);
         formData.append('customerPhone', customerPhone);
-
-        // Pass discount amount (calculated)
-        if (discountAmount > 0) {
-            formData.append('discountAmount', discountAmount.toFixed(2));
-        }
-
+        if (discountAmount > 0) formData.append('discountAmount', discountAmount.toFixed(2));
         formData.append('paymentMethod', paymentMethod);
         formData.append('notes', notes);
 
         const result = await createManualOrderAction(formData);
-
         if (result?.error) {
             toast({ title: 'Error', description: result.error, variant: 'destructive' });
         } else {
@@ -204,18 +171,23 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
         setIsSubmitting(false);
     };
 
-    // Browsing Controls
     const resetBrowsing = () => {
         setBrowsingMode('search');
         setSelectedParentId(null);
         setSelectedCategoryId(null);
-    }
+    };
 
     return (
         <div className="flex flex-col md:flex-row gap-6 md:h-full md:overflow-hidden">
-            {/* Left Column: Product Search + Customer Data (shown below summary on mobile) */}
-            <div className="flex-1 flex flex-col gap-4 md:overflow-y-auto md:pr-2 order-2 md:order-1">
-                <Card className='flex flex-col min-h-fit max-h-[450px]'>
+
+            {/* Left wrapper:
+                - Mobile: `display:contents` → each child Card becomes a direct flex item
+                  and can have its own `order-N` for custom vertical ordering
+                - Desktop (md+): restored to a normal flex-col left column */}
+            <div className="contents md:flex md:flex-1 md:flex-col md:gap-4 md:overflow-y-auto md:pr-2">
+
+                {/* ── MOBILE ORDER 1 ── Product Search */}
+                <Card className="flex flex-col min-h-fit max-h-[450px] order-1 md:order-none">
                     <CardHeader className="pb-3 border-b">
                         <CardTitle className="text-lg flex items-center justify-between">
                             <span className="flex items-center gap-2"><Search className="h-5 w-5" /> Buscar Productos</span>
@@ -270,7 +242,6 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                         </div>
                                     )}
                                 </div>
-
                                 <div className="text-center">
                                     <span className="text-xs text-muted-foreground uppercase tracking-widest bg-background px-2 relative z-10">O también</span>
                                     <div className="border-t -mt-2.5 mb-4"></div>
@@ -291,7 +262,6 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                         </div>
                                     </div>
                                 )}
-
                                 {browsingMode === 'categories' && selectedParentId && (
                                     <div className="space-y-2">
                                         <button onClick={() => setSelectedParentId(null)} className="text-sm text-primary hover:underline mb-2 flex items-center"><ChevronLeft className="h-3 w-3 mr-1" /> Volver</button>
@@ -305,13 +275,11 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                         </div>
                                     </div>
                                 )}
-
                                 {browsingMode === 'products' && (
                                     <div className="space-y-2 flex-1 flex flex-col">
                                         <div className="flex items-center justify-between mb-2">
                                             <button onClick={() => { setBrowsingMode('categories'); setSelectedCategoryId(null); }} className="text-sm text-primary hover:underline flex items-center"><ChevronLeft className="h-3 w-3 mr-1" /> Volver a categorías</button>
                                         </div>
-                                        {/* Overflow-x-auto to allow scrolling on small screens */}
                                         <div className="border rounded-md flex-1 overflow-auto relative">
                                             <div className="min-w-[320px]">
                                                 <ScrollArea className="h-[300px] lg:h-full">
@@ -355,7 +323,8 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                     </CardContent>
                 </Card>
 
-                <Card className="overflow-hidden flex flex-col shrink-0">
+                {/* ── MOBILE ORDER 3 (last) ── Customer Data + action buttons */}
+                <Card className="flex flex-col shrink-0 order-3 md:order-none">
                     <CardHeader className="py-3 border-b bg-muted/20">
                         <CardTitle className="text-lg flex items-center gap-2"><User className="h-5 w-5" /> Datos del Cliente (Opcional)</CardTitle>
                     </CardHeader>
@@ -363,55 +332,35 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="space-y-1">
                                 <Label htmlFor="cFirstName">Nombre(s)</Label>
-                                <Input
-                                    id="cFirstName"
-                                    placeholder="Ejemplo: Juan"
-                                    value={customerFirstName}
-                                    onChange={e => setCustomerFirstName(e.target.value.slice(0, 60))}
-                                    maxLength={60}
-                                />
+                                <Input id="cFirstName" placeholder="Ejemplo: Juan" value={customerFirstName} onChange={e => setCustomerFirstName(e.target.value.slice(0, 60))} maxLength={60} />
                             </div>
                             <div className="space-y-1">
                                 <Label htmlFor="cLastName">Apellido</Label>
-                                <Input
-                                    id="cLastName"
-                                    placeholder="Ejemplo: Pérez"
-                                    value={customerLastName}
-                                    onChange={e => setCustomerLastName(e.target.value.slice(0, 60))}
-                                    maxLength={60}
-                                />
+                                <Input id="cLastName" placeholder="Ejemplo: Pérez" value={customerLastName} onChange={e => setCustomerLastName(e.target.value.slice(0, 60))} maxLength={60} />
                             </div>
                             <div className="space-y-1">
                                 <Label htmlFor="cPhone">Teléfono</Label>
-                                <Input
-                                    id="cPhone"
-                                    placeholder="Ejemplo: +54 11 1234 5678"
-                                    value={customerPhone}
-                                    onChange={e => handlePhoneChange(e.target.value)}
-                                    maxLength={20}
-                                />
+                                <Input id="cPhone" placeholder="Ejemplo: +54 11 1234 5678" value={customerPhone} onChange={e => handlePhoneChange(e.target.value)} maxLength={20} />
                             </div>
                             <div className="space-y-1 md:col-span-2">
                                 <Label htmlFor="cEmail">Email</Label>
-                                <Input
-                                    id="cEmail"
-                                    type="email"
-                                    placeholder="Ejemplo: juan@ejemplo.com"
-                                    value={customerEmail}
-                                    onChange={e => handleEmailChange(e.target.value)}
-                                    className={emailError ? 'border-destructive' : ''}
-                                />
-                                {emailError && (
-                                    <p className="text-xs text-destructive">{emailError}</p>
-                                )}
+                                <Input id="cEmail" type="email" placeholder="Ejemplo: juan@ejemplo.com" value={customerEmail} onChange={e => handleEmailChange(e.target.value)} className={emailError ? 'border-destructive' : ''} />
+                                {emailError && <p className="text-xs text-destructive">{emailError}</p>}
                             </div>
                         </div>
                     </CardContent>
+                    {/* Action buttons at the bottom of Customer Data — visible on ALL screen sizes */}
+                    <div className="grid grid-cols-2 gap-3 p-4 border-t mt-auto">
+                        <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancelar</Button>
+                        <Button onClick={handleSubmit} disabled={isSubmitting || cart.length === 0}>
+                            {isSubmitting ? 'Procesando...' : 'Confirmar Orden'}
+                        </Button>
+                    </div>
                 </Card>
             </div>
 
-            {/* Right Column / Top on mobile: Cart Summary */}
-            <Card className="flex-1 flex flex-col shadow-xl border-primary/20 bg-card md:overflow-hidden md:h-full md:max-h-full order-1 md:order-2">
+            {/* ── MOBILE ORDER 2 / Desktop right column ── Cart Summary */}
+            <Card className="flex-1 flex flex-col shadow-xl border-primary/20 bg-card md:overflow-hidden md:h-full md:max-h-full order-2 md:order-none">
                 <CardHeader className="bg-primary text-primary-foreground py-3 shrink-0">
                     <CardTitle className="flex justify-between items-center text-lg">
                         <span className="flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Resumen de Orden</span>
@@ -419,7 +368,6 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                     </CardTitle>
                 </CardHeader>
 
-                {/* Single Scrollable Area for ALL content */}
                 <div className="flex-1 overflow-y-auto">
                     <div className="p-4 space-y-4">
                         {cart.length === 0 ? (
@@ -432,7 +380,6 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                             <div className="space-y-3">
                                 {cart.map((item) => (
                                     <div key={item.productId} className="flex items-start gap-3 p-3 bg-muted/30 rounded-md border">
-                                        {/* Product thumbnail */}
                                         <div className="h-14 w-14 relative bg-muted rounded overflow-hidden flex-shrink-0 border">
                                             {item.image ? (
                                                 <Image src={item.image} alt={item.name} fill className="object-cover" />
@@ -461,9 +408,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                                     <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
                                                     <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateQuantity(item.productId, 1)}><Plus className="h-3 w-3" /></Button>
                                                 </div>
-                                                <div className="font-bold text-sm">
-                                                    ${(item.priceAtPurchase * item.quantity).toLocaleString('es-AR')}
-                                                </div>
+                                                <div className="font-bold text-sm">${(item.priceAtPurchase * item.quantity).toLocaleString('es-AR')}</div>
                                             </div>
                                         </div>
                                         <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0" onClick={() => removeFromCart(item.productId)}>
@@ -474,7 +419,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                             </div>
                         )}
 
-                        {/* Order Details & Totals Section */}
+                        {/* Discount, Payment, Notes, Totals */}
                         <div className="space-y-4 pt-4 border-t">
                             <div className="space-y-3">
                                 {cart.length > 0 && (
@@ -487,7 +432,7 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                                 min="0"
                                                 max="100"
                                                 className="text-right pr-6"
-                                                placeholder="Ejemplo: 0"
+                                                placeholder="0"
                                                 value={discountPercentage}
                                                 onChange={(e) => handleDiscountChange(e.target.value)}
                                                 onKeyDown={(e) => { if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault(); }}
@@ -496,14 +441,11 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                         </div>
                                     </div>
                                 )}
-
                                 <div className="space-y-3 pt-2 border-t">
                                     <div className="space-y-1">
                                         <Label htmlFor="paymentMethod">Método de Pago</Label>
                                         <Select value={paymentMethod} onValueChange={(val: PaymentType) => setPaymentMethod(val)}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Seleccionar método" />
-                                            </SelectTrigger>
+                                            <SelectTrigger><SelectValue placeholder="Seleccionar método" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="Efectivo">Efectivo</SelectItem>
                                                 <SelectItem value="Transferencia">Transferencia</SelectItem>
@@ -511,28 +453,16 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                                             </SelectContent>
                                         </Select>
                                     </div>
-
                                     <div className="space-y-1">
                                         <Label htmlFor="notes">Notas de la Orden</Label>
-                                        <Textarea
-                                            id="notes"
-                                            placeholder="Instrucciones especiales, observaciones..."
-                                            className="resize-none h-20"
-                                            maxLength={100}
-                                            value={notes}
-                                            onChange={(e) => setNotes(e.target.value)}
-                                        />
-                                        <div className="text-xs text-right text-muted-foreground">
-                                            {notes.length}/100
-                                        </div>
+                                        <Textarea id="notes" placeholder="Instrucciones especiales, observaciones..." className="resize-none h-20" maxLength={100} value={notes} onChange={(e) => setNotes(e.target.value)} />
+                                        <div className="text-xs text-right text-muted-foreground">{notes.length}/100</div>
                                     </div>
                                 </div>
-
                                 <div className="space-y-1 pt-2 border-t">
                                     {parseFloat(discountPercentage) > 0 && (
                                         <div className="flex justify-between text-sm text-muted-foreground">
-                                            <span>Subtotal:</span>
-                                            <span>${subtotal.toLocaleString('es-AR')}</span>
+                                            <span>Subtotal:</span><span>${subtotal.toLocaleString('es-AR')}</span>
                                         </div>
                                     )}
                                     {parseFloat(discountPercentage) > 0 && (
@@ -550,9 +480,9 @@ export function POSOrderForm({ products, categories, onCancel, onSuccess }: POSO
                         </div>
                     </div>
                 </div>
-                
-                {/* Fixed bottom controls for mobile convenience */}
-                <div className="grid grid-cols-2 gap-3 p-4 border-t bg-background shrink-0">
+
+                {/* Desktop-only duplicate action buttons pinned to bottom of Summary */}
+                <div className="hidden md:grid grid-cols-2 gap-3 p-4 border-t bg-background shrink-0">
                     <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancelar</Button>
                     <Button onClick={handleSubmit} disabled={isSubmitting || cart.length === 0}>
                         {isSubmitting ? 'Procesando...' : 'Confirmar Orden'}
