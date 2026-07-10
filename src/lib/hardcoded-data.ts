@@ -49,7 +49,7 @@ export async function getProducts(params: any = {}): Promise<Product[]> {
         const lowerQuery = query.toLowerCase();
         filtered = filtered.filter(p =>
             p.name.toLowerCase().includes(lowerQuery) ||
-            p.description.toLowerCase().includes(lowerQuery) ||
+            p.description?.toLowerCase().includes(lowerQuery) ||
             p.shortDescription?.toLowerCase().includes(lowerQuery)
         );
     }

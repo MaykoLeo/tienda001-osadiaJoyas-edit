@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useMemo, useRef } from 'react';
-import type { Category } from '@/lib/types';
+import type { Category, CategoryDiscount } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Separator } from '@/components/ui/separator';
 import {
     Dialog,
     DialogContent,
@@ -27,9 +29,13 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { PlusCircle, Trash2, Loader2, Edit, CornerDownRight, ChevronRight } from 'lucide-react';
+import { PlusCircle, Trash2, Loader2, Edit, CornerDownRight, ChevronRight, Tag, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { addCategoryAction, updateCategoryAction, deleteCategoryAction } from '@/app/actions/category-actions';
+import { addCategoryDiscountAction, updateCategoryDiscountAction, deleteCategoryDiscountAction, toggleCategoryDiscountActiveAction } from '@/app/actions/category-discount-actions';
+import { CategoryDiscountForm } from './Forms';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 type CategoryTreeNode = Category & { children: CategoryTreeNode[] };
 
@@ -246,7 +252,17 @@ function buildCategoryTree(categories: Category[], parentId: number | null = nul
 }
 
 
-export function CategoriesTab({ categories, isLoading, onActionComplete }: { categories: Category[], isLoading: boolean, onActionComplete: () => void; }) {
+export function CategoriesTab({
+    categories,
+    categoryDiscounts,
+    isLoading,
+    onActionComplete
+}: {
+    categories: Category[];
+    categoryDiscounts: CategoryDiscount[];
+    isLoading: boolean;
+    onActionComplete: () => void;
+}) {
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -280,6 +296,7 @@ export function CategoriesTab({ categories, isLoading, onActionComplete }: { cat
     };
 
     return (
+        <>
         <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle>Gestionar Categorías</CardTitle>
@@ -308,6 +325,206 @@ export function CategoriesTab({ categories, isLoading, onActionComplete }: { cat
                     </Accordion>
                 )}
             </CardContent>
+        </Card>
+
+        <CategoryDiscountsSection
+            categoryDiscounts={categoryDiscounts}
+            categories={categories}
+            isLoading={isLoading}
+            onActionComplete={onActionComplete}
+        />
+    </>
+    );
+}
+
+// --- Sección de Descuentos por Categoría ---
+
+function getDiscountStatus(d: CategoryDiscount): { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } {
+    if (!d.isActive) return { label: 'Inactivo', variant: 'outline' };
+    const now = new Date();
+    if (new Date(d.endDate) < now) return { label: 'Expirado', variant: 'destructive' };
+    if (new Date(d.startDate) > now) return { label: 'Programado', variant: 'secondary' };
+    return { label: 'Activo', variant: 'default' };
+}
+
+function CategoryDiscountsSection({
+    categoryDiscounts,
+    categories,
+    isLoading,
+    onActionComplete,
+}: {
+    categoryDiscounts: CategoryDiscount[];
+    categories: Category[];
+    isLoading: boolean;
+    onActionComplete: () => void;
+}) {
+    const { toast } = useToast();
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingDiscount, setEditingDiscount] = useState<CategoryDiscount | undefined>(undefined);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formErrors, setFormErrors] = useState<Record<string, string[] | undefined>>({});
+    const formId = 'category-discount-form';
+
+    const handleOpenNew = () => {
+        setEditingDiscount(undefined);
+        setFormErrors({});
+        setIsDialogOpen(true);
+    };
+
+    const handleOpenEdit = (d: CategoryDiscount) => {
+        setEditingDiscount(d);
+        setFormErrors({});
+        setIsDialogOpen(true);
+    };
+
+    const handleSubmit = async () => {
+        setIsSubmitting(true);
+        const form = document.getElementById(formId) as HTMLFormElement | null;
+        if (!form) { setIsSubmitting(false); return; }
+        const formData = new FormData(form);
+
+        const result = editingDiscount
+            ? await updateCategoryDiscountAction(editingDiscount.id, formData)
+            : await addCategoryDiscountAction(formData);
+
+        setIsSubmitting(false);
+        if (result?.error) {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+            if ('fieldErrors' in result) setFormErrors(result.fieldErrors as any);
+        } else {
+            toast({ title: 'Éxito', description: editingDiscount ? 'Descuento actualizado.' : 'Descuento creado.' });
+            setIsDialogOpen(false);
+            onActionComplete();
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        const result = await deleteCategoryDiscountAction(id);
+        if (result?.error) {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        } else {
+            toast({ title: 'Éxito', description: 'Descuento eliminado.' });
+            onActionComplete();
+        }
+    };
+
+    const handleToggle = async (d: CategoryDiscount) => {
+        const result = await toggleCategoryDiscountActiveAction(d.id, !d.isActive);
+        if (result?.error) {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        } else {
+            toast({ title: 'Éxito', description: `Descuento ${!d.isActive ? 'activado' : 'desactivado'}.` });
+            onActionComplete();
+        }
+    };
+
+    return (
+        <Card className="shadow-lg mt-6">
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle className="flex items-center gap-2"><Tag className="h-5 w-5 text-primary" /> Descuentos por Categoría</CardTitle>
+                    <CardDescription className="mt-1">Aplica descuentos con fecha de vigencia a categorías completas. Se muestran hasta 3 banners en el home.</CardDescription>
+                </div>
+                <Button onClick={handleOpenNew} className="flex-shrink-0">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Nueva Oferta
+                </Button>
+            </CardHeader>
+            <CardContent>
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-24"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                ) : categoryDiscounts.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-6">No hay descuentos de categoría configurados.</p>
+                ) : (
+                    <div className="divide-y rounded-md border">
+                        {categoryDiscounts.map(d => {
+                            const status = getDiscountStatus(d);
+                            return (
+                                <div key={d.id} className="flex items-center justify-between p-3 gap-2 hover:bg-accent/30 transition-colors">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="font-semibold text-sm">{d.categoryName}</span>
+                                            <Badge variant="secondary" className="text-xs font-bold text-primary">{d.discountPercentage}% OFF</Badge>
+                                            <Badge variant={status.variant} className="text-xs">{status.label}</Badge>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            {format(new Date(d.startDate), 'dd/MM/yyyy', { locale: es })} &rarr; {format(new Date(d.endDate), 'dd/MM/yyyy', { locale: es })}
+                                        </p>
+                                        {d.bannerTitle && (
+                                            <p className="text-xs text-muted-foreground italic truncate">"{d.bannerTitle}"</p>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            title={d.isActive ? 'Desactivar' : 'Activar'}
+                                            className="h-8 w-8"
+                                            onClick={() => handleToggle(d)}
+                                        >
+                                            {d.isActive
+                                                ? <ToggleRight className="h-4 w-4 text-primary" />
+                                                : <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                                            }
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(d)}>
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>¿Eliminar descuento?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Se eliminará el descuento de {d.discountPercentage}% para "{d.categoryName}". Los precios de los productos volverán a la normalidad.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDelete(d.id)}>Eliminar</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </CardContent>
+
+            {/* Dialog para crear / editar */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="sm:max-w-[480px]">
+                    <DialogHeader>
+                        <DialogTitle>{editingDiscount ? 'Editar Descuento de Categoría' : 'Nueva Oferta de Categoría'}</DialogTitle>
+                        <DialogDescription>
+                            {editingDiscount
+                                ? 'Modifica los datos del descuento.'
+                                : 'Define el descuento, las fechas y el texto del banner para el home.'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <CategoryDiscountForm
+                        discount={editingDiscount}
+                        formId={formId}
+                        errors={formErrors}
+                        categories={categories}
+                    />
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline">Cancelar</Button>
+                        </DialogClose>
+                        <Button onClick={handleSubmit} disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {editingDiscount ? 'Guardar Cambios' : 'Crear Oferta'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </Card>
     );
 }

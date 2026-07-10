@@ -25,6 +25,19 @@ export interface Category {
   parentId: number | null;
 }
 
+export interface CategoryDiscount {
+  id: number;
+  categoryId: number;
+  categoryName?: string;       // Populated by JOIN query
+  discountPercentage: number;
+  startDate: Date;
+  endDate: Date;
+  bannerTitle: string | null;
+  bannerSubtitle: string | null;
+  isActive: boolean;
+  createdAt?: Date;
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;

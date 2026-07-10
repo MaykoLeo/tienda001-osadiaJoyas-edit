@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronRight } from 'lucide-react';
-import type { Product, Coupon, Category } from '@/lib/types';
+import type { Product, Coupon, Category, CategoryDiscount } from '@/lib/types';
 import { ImageUploader } from './ImageUploader';
 
 type FieldErrors = Record<string, string[] | undefined>;
@@ -237,7 +237,7 @@ export function ProductForm({
             <HiddenInputs />
             <div><Label htmlFor="name">Nombre *</Label><Input id="name" name="name" defaultValue={product?.name} className={cn("border-2", errors.name && "border-destructive")} /><FormError message={errors.name?.[0]} /></div>
             <div><Label htmlFor="shortDescription">Descripción Corta</Label><Input id="shortDescription" name="shortDescription" defaultValue={product?.shortDescription} placeholder="Un resumen breve para la tarjeta de producto." className={cn("border-2", errors.shortDescription && "border-destructive")} /><FormError message={errors.shortDescription?.[0]} /></div>
-            <div><Label htmlFor="description">Descripción Completa *</Label><Textarea id="description" name="description" defaultValue={product?.description} className={cn("border-2", errors.description && "border-destructive")} /><FormError message={errors.description?.[0]} /></div>
+            <div><Label htmlFor="description">Descripción Completa *</Label><Textarea id="description" name="description" defaultValue={product?.description ?? undefined} className={cn("border-2", errors.description && "border-destructive")} /><FormError message={errors.description?.[0]} /></div>
             <div className="grid grid-cols-2 gap-4">
                 <div><Label htmlFor="price">Precio *</Label><Input id="price" name="price" type="number" step="0.01" min="0" defaultValue={product?.price} onKeyDown={handleDecimalKeyDown} className={cn("border-2", errors.price && "border-destructive")} /><FormError message={errors.price?.[0]} /></div>
                 ...
@@ -442,6 +442,183 @@ export function CouponForm({ coupon, formId, errors }: { coupon?: Coupon, formId
                 <Switch id="isActive" name="isActive" defaultChecked={coupon?.isActive ?? true} />
                 <Label htmlFor="isActive">Cupón Activo</Label>
             </div>
+            <p className="text-sm text-muted-foreground pt-2">Los campos con * son obligatorios.</p>
+        </form>
+    );
+}
+
+export function CategoryDiscountForm({
+    discount,
+    formId,
+    errors,
+    categories,
+}: {
+    discount?: CategoryDiscount;
+    formId: string;
+    errors: FieldErrors;
+    categories: Category[];
+}) {
+    const [startDate, setStartDate] = useState<Date | undefined>(
+        discount?.startDate ? new Date(discount.startDate) : undefined
+    );
+    const [endDate, setEndDate] = useState<Date | undefined>(
+        discount?.endDate ? new Date(discount.endDate) : undefined
+    );
+    const [isStartOpen, setIsStartOpen] = useState(false);
+    const [isEndOpen, setIsEndOpen] = useState(false);
+    const [isActive, setIsActive] = useState(discount?.isActive ?? true);
+
+    // Categorías planas con sangría para mostrar jerarquía en el select
+    const flatCategories = useMemo(() => {
+        const result: { id: number; label: string }[] = [];
+        function addLevel(parentId: number | null, prefix: string) {
+            categories
+                .filter(c => c.parentId === parentId)
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .forEach(c => {
+                    result.push({ id: c.id, label: `${prefix}${c.name}` });
+                    addLevel(c.id, `${prefix}\u00a0\u00a0\u00a0`);
+                });
+        }
+        addLevel(null, '');
+        return result;
+    }, [categories]);
+
+    return (
+        <form id={formId} className="space-y-4">
+            {/* Hidden inputs para fechas y estado */}
+            <input type="hidden" name="startDate" value={startDate?.toISOString() ?? ''} />
+            <input type="hidden" name="endDate" value={endDate?.toISOString() ?? ''} />
+            <input type="hidden" name="isActive" value={String(isActive)} />
+
+            <div>
+                <Label htmlFor="categoryId">Categoría *</Label>
+                <Select name="categoryId" defaultValue={discount?.categoryId ? String(discount.categoryId) : undefined}>
+                    <SelectTrigger className={cn('border-2 mt-1', errors.categoryId && 'border-destructive')}>
+                        <SelectValue placeholder="Seleccionar categoría..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {flatCategories.map(cat => (
+                            <SelectItem key={cat.id} value={String(cat.id)}>
+                                {cat.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <FormError message={errors.categoryId?.[0]} />
+            </div>
+
+            <div>
+                <Label htmlFor="discountPercentage">Descuento (%) *</Label>
+                <Input
+                    id="discountPercentage"
+                    name="discountPercentage"
+                    type="number"
+                    step="1"
+                    min="1"
+                    max="100"
+                    defaultValue={discount?.discountPercentage ?? ''}
+                    onKeyDown={handleIntegerKeyDown}
+                    placeholder="Ejemplo: 20"
+                    className={cn('border-2 mt-1', errors.discountPercentage && 'border-destructive')}
+                />
+                <FormError message={errors.discountPercentage?.[0]} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <Label>Fecha de Inicio *</Label>
+                    <Popover modal={true} open={isStartOpen} onOpenChange={setIsStartOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className={cn(
+                                    'border-2 w-full justify-start text-left font-normal mt-1',
+                                    !startDate && 'text-muted-foreground',
+                                    errors.startDate && 'border-destructive'
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {startDate ? format(startDate, 'PPP', { locale: es }) : <span>Elegir fecha</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverPrimitive.Portal>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={startDate}
+                                    onSelect={(date) => { setStartDate(date); setIsStartOpen(false); }}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </PopoverPrimitive.Portal>
+                    </Popover>
+                    <FormError message={errors.startDate?.[0]} />
+                </div>
+                <div>
+                    <Label>Fecha de Fin *</Label>
+                    <Popover modal={true} open={isEndOpen} onOpenChange={setIsEndOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className={cn(
+                                    'border-2 w-full justify-start text-left font-normal mt-1',
+                                    !endDate && 'text-muted-foreground',
+                                    errors.endDate && 'border-destructive'
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {endDate ? format(endDate, 'PPP', { locale: es }) : <span>Elegir fecha</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverPrimitive.Portal>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={endDate}
+                                    onSelect={(date) => { setEndDate(date); setIsEndOpen(false); }}
+                                    initialFocus
+                                    fromDate={startDate || new Date()}
+                                />
+                            </PopoverContent>
+                        </PopoverPrimitive.Portal>
+                    </Popover>
+                    <FormError message={errors.endDate?.[0]} />
+                </div>
+            </div>
+
+            <div>
+                <Label htmlFor="bannerTitle">Título del Banner</Label>
+                <Input
+                    id="bannerTitle"
+                    name="bannerTitle"
+                    defaultValue={discount?.bannerTitle ?? ''}
+                    placeholder="Ej: ¡Joyas en Oferta!"
+                    className="border-2 mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Aparece en el banner del home. Opcional.</p>
+            </div>
+
+            <div>
+                <Label htmlFor="bannerSubtitle">Subtítulo del Banner</Label>
+                <Input
+                    id="bannerSubtitle"
+                    name="bannerSubtitle"
+                    defaultValue={discount?.bannerSubtitle ?? ''}
+                    placeholder="Ej: Hasta 20% OFF en toda la categoría"
+                    className="border-2 mt-1"
+                />
+            </div>
+
+            <div className="flex items-center space-x-2 pt-1">
+                <Switch
+                    id="isActiveSwitch"
+                    checked={isActive}
+                    onCheckedChange={setIsActive}
+                />
+                <Label htmlFor="isActiveSwitch">Oferta activa</Label>
+            </div>
+
             <p className="text-sm text-muted-foreground pt-2">Los campos con * son obligatorios.</p>
         </form>
     );

@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Separator } from '@/components/ui/separator';
 import { HeroCarousel } from '@/components/HeroCarousel';
+import { CategoryDiscountBanner } from '@/components/home/CategoryDiscountBanner';
 import { InstagramIcon } from '@/components/icons/InstagramIcon';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -50,6 +51,12 @@ export default async function Home() {
 
             {/* Contenedor para el contenido que se cargará de forma diferida */}
             <div className="container">
+
+                {/* Banners de descuento por categoría (máx 3) */}
+                <Suspense fallback={null}>
+                    <CategoryDiscountBanner />
+                </Suspense>
+
                 <Suspense fallback={<FeaturedProductsSkeleton />}>
                     <FeaturedProducts />
                 </Suspense>

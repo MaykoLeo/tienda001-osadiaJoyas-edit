@@ -31,10 +31,10 @@ export async function generateMetadata(
 
   return {
     title: `${product.name} | Joya - Elegancia Atemporal`,
-    description: product.shortDescription || product.description,
+    description: product.shortDescription || product.description || undefined,
     openGraph: {
       title: product.name,
-      description: product.shortDescription || product.description,
+      description: product.shortDescription || product.description || undefined,
       images: [product.images[0], ...previousImages],
     },
   }

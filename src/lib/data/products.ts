@@ -9,31 +9,12 @@ import {
     updateProduct as updateProductFromHardcodedData,
     deleteProduct as deleteProductFromHardcodedData,
 } from '../hardcoded-data';
-import type { Product } from '../types';
+import { getActiveCategoryDiscounts } from '../data';
+import type { Product, CategoryDiscount } from '../types';
 import { unstable_noStore as noStore } from 'next/cache';
 
-function _calculateSalePrice(product: Omit<Product, 'salePrice' | 'id'>): number | null {
-    const now = new Date();
-    const hasDiscount = product.discountPercentage && product.discountPercentage > 0;
 
-    if (!hasDiscount) {
-        return null;
-    }
-
-    const hasDateRange = product.offerStartDate && product.offerEndDate;
-    const isWithinDateRange = hasDateRange &&
-        now >= new Date(product.offerStartDate!) &&
-        now <= new Date(product.offerEndDate!);
-
-    if (!hasDateRange || isWithinDateRange) {
-        const discount = product.price * (product.discountPercentage! / 100);
-        return parseFloat((product.price - discount).toFixed(2));
-    }
-
-    return null;
-}
-
-function _mapDbRowToProduct(row: any): Product {
+function _mapDbRowToProduct(row: any, activeCategoryDiscounts: CategoryDiscount[] = []): Product {
     let parsedImages: string[] = [];
     if (row.images) {
         if (typeof row.images === 'string') {
@@ -47,26 +28,48 @@ function _mapDbRowToProduct(row: any): Product {
         }
     }
 
-    const product: Product = {
+    const categoryIds: number[] = row.category_ids || [];
+    const price = parseFloat(row.price);
+    const discountPercentage = row.discount_percentage ? parseFloat(row.discount_percentage) : null;
+    const offerStartDate = row.offer_start_date ? new Date(row.offer_start_date) : null;
+    const offerEndDate = row.offer_end_date ? new Date(row.offer_end_date) : null;
+    const now = new Date();
+
+    // Descuento propio del producto (respeta sus fechas de vigencia)
+    let productDiscountPct = 0;
+    if (discountPercentage && discountPercentage > 0) {
+        const isDateRangeValid = (!offerStartDate || now >= offerStartDate) && (!offerEndDate || now <= offerEndDate);
+        if (isDateRangeValid) productDiscountPct = discountPercentage;
+    }
+
+    // Mayor descuento de categoría activo que aplique a alguna categoría del producto
+    const categoryDiscountPct = activeCategoryDiscounts
+        .filter(d => categoryIds.includes(d.categoryId))
+        .reduce((max, d) => Math.max(max, d.discountPercentage), 0);
+
+    const effectiveDiscount = Math.max(productDiscountPct, categoryDiscountPct);
+    const salePrice = effectiveDiscount > 0
+        ? parseFloat((price - price * (effectiveDiscount / 100)).toFixed(2))
+        : null;
+
+    return {
         id: row.id,
         name: row.name,
         description: row.description,
         shortDescription: row.short_description,
-        price: parseFloat(row.price),
+        price,
         images: parsedImages,
-        categoryIds: row.category_ids || [],
+        categoryIds,
         crossSellIds: row.cross_sell_ids || [],
         stock: row.stock,
         sku: row.sku,
         aiHint: row.ai_hint,
         featured: row.featured,
-        discountPercentage: row.discount_percentage ? parseFloat(row.discount_percentage) : null,
-        offerStartDate: row.offer_start_date,
-        offerEndDate: row.offer_end_date,
-        salePrice: null,
+        discountPercentage,
+        offerStartDate,
+        offerEndDate,
+        salePrice,
     };
-    product.salePrice = _calculateSalePrice(product);
-    return product;
 }
 
 interface GetProductsParams {
@@ -199,7 +202,8 @@ async function getProductsInternal(
 
         const rows = await db(productsQuery, params);
 
-        const finalProducts = rows.map(_mapDbRowToProduct);
+        const activeCategoryDiscounts = await getActiveCategoryDiscounts();
+        const finalProducts = rows.map((r: any) => _mapDbRowToProduct(r, activeCategoryDiscounts));
 
         return finalProducts.filter((p: Product) => {
             const price = p.salePrice ?? p.price;
@@ -241,7 +245,8 @@ export async function getProductById(id: number): Promise<Product | undefined> {
             [id]
         );
         if (rows.length === 0) return undefined;
-        return _mapDbRowToProduct(rows[0]);
+        const activeCategoryDiscounts = await getActiveCategoryDiscounts();
+        return _mapDbRowToProduct(rows[0], activeCategoryDiscounts);
     } catch (error) {
         console.error('Database Error:', error);
         throw new Error('Failed to fetch product.');

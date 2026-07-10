@@ -2,9 +2,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import type { Product, Coupon, SalesMetrics, Category, Order, OrderStatus } from '@/lib/types';
+import type { Product, Coupon, SalesMetrics, Category, CategoryDiscount, Order, OrderStatus } from '@/lib/types';
 import { getFilteredProducts } from '@/lib/data/products';
-import { getCoupons, getSalesMetrics, getCategories, getOrders, getEarliestOrderDate } from '@/lib/data';
+import { getCoupons, getSalesMetrics, getCategories, getCategoryDiscounts, getOrders, getEarliestOrderDate } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -46,6 +46,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
     const [products, setProducts] = useState<Product[]>([]);
     const [coupons, setCoupons] = useState<Coupon[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [categoryDiscounts, setCategoryDiscounts] = useState<CategoryDiscount[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [salesMetrics, setSalesMetrics] = useState<SalesMetrics | null>(null);
     const [earliestOrderDate, setEarliestOrderDate] = useState<Date | null>(null);
@@ -80,11 +81,12 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
         try {
             // Agregar timestamp para forzar bypass de caché
             const timestamp = Date.now();
-            const [fetchedProducts, fetchedCoupons, fetchedMetrics, fetchedCategories, fetchedOrders, fetchedEarliestDate] = await Promise.all([
+            const [fetchedProducts, fetchedCoupons, fetchedMetrics, fetchedCategories, fetchedCategoryDiscounts, fetchedOrders, fetchedEarliestDate] = await Promise.all([
                 getFilteredProducts({ limit: -1, _ts: timestamp }),
                 getCoupons(),
                 getSalesMetrics(metricsDateRange.start, metricsDateRange.end),
                 getCategories(),
+                getCategoryDiscounts(),
                 getOrders(),
                 getEarliestOrderDate(),
             ]);
@@ -93,6 +95,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
             setCoupons(fetchedCoupons);
             setSalesMetrics(fetchedMetrics);
             setCategories(fetchedCategories);
+            setCategoryDiscounts(fetchedCategoryDiscounts);
             setOrders(fetchedOrders);
             setEarliestOrderDate(fetchedEarliestDate);
         } catch (error) {
@@ -336,7 +339,7 @@ export function AdminDashboard({ onLogout, dbConnected }: { onLogout: () => void
                 </div>
                 <TabsContent value="overview" className="mt-6"><MetricsTab products={products} salesMetrics={salesMetrics} earliestOrderDate={earliestOrderDate} isLoading={isLoading} isMetricsLoading={isMetricsLoading} categories={categories} onPeriodChange={fetchMetrics} /></TabsContent>
                 <TabsContent value="products" className="mt-6"><ProductsTab products={products} isLoading={isLoading} onAdd={() => handleOpenProductDialog()} onEdit={handleOpenProductDialog} onDelete={handleDeleteProduct} onToggleFeatured={handleToggleFeatured} onExport={exportProductsToCSV} onImport={handleOpenImportDialog} categories={categories} /></TabsContent>
-                <TabsContent value="categories" className="mt-6"><CategoriesTab categories={categories} isLoading={isLoading} onActionComplete={fetchData} /></TabsContent>
+                <TabsContent value="categories" className="mt-6"><CategoriesTab categories={categories} categoryDiscounts={categoryDiscounts} isLoading={isLoading} onActionComplete={fetchData} /></TabsContent>
                 <TabsContent value="coupons" className="mt-6"><CouponsTab coupons={coupons} isLoading={isLoading} onAdd={() => handleOpenCouponDialog()} onEdit={handleOpenCouponDialog} onDelete={handleDeleteCoupon} onExport={exportCouponsToCSV} /></TabsContent>
                 <TabsContent value="orders" className="mt-6"><OrdersTab orders={orders} isLoading={isLoading} onExport={exportOrdersToCSV} onStatusChange={handleOrderStatusChange} /></TabsContent>
             </Tabs>

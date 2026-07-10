@@ -1,13 +1,13 @@
 'use server';
 
 import { getDb } from './db';
-import type { Product, Coupon, SalesMetrics, OrderData, OrderStatus, Order, Category, OrderItem, PaymentType } from './types';
+import type { Product, Coupon, SalesMetrics, OrderData, OrderStatus, Order, Category, CategoryDiscount, OrderItem, PaymentType } from './types';
 import { unstable_noStore as noStore } from 'next/cache';
 
 // --- FUNCIONES DE PRODUCTO ---
 
-// --- CORRECCIÓN FINAL: Lógica de cálculo de precio de oferta implementada ---
-function _mapDbRowToProduct(row: any, categoryIds: number[]): Product {
+// --- Lógica de cálculo de precio: aplica el mayor entre descuento de producto y de categoría ---
+function _mapDbRowToProduct(row: any, categoryIds: number[], activeCategoryDiscounts: CategoryDiscount[] = []): Product {
     const price = parseFloat(row.price);
     let salePrice: number | null = null;
 
@@ -16,12 +16,24 @@ function _mapDbRowToProduct(row: any, categoryIds: number[]): Product {
     const offerEndDate = row.offer_end_date ? new Date(row.offer_end_date) : null;
     const now = new Date();
 
-    // Calcular el precio de oferta solo si el descuento es válido y la fecha actual está dentro del rango
+    // Descuento propio del producto (respeta sus fechas de vigencia)
+    let productDiscountPct = 0;
     if (discountPercentage && discountPercentage > 0) {
         const isDateRangeValid = (!offerStartDate || now >= offerStartDate) && (!offerEndDate || now <= offerEndDate);
         if (isDateRangeValid) {
-            salePrice = price - (price * (discountPercentage / 100));
+            productDiscountPct = discountPercentage;
         }
+    }
+
+    // Mayor descuento de categoría activo que aplique a alguna de las categorías del producto
+    const categoryDiscountPct = activeCategoryDiscounts
+        .filter(d => categoryIds.includes(d.categoryId))
+        .reduce((max, d) => Math.max(max, d.discountPercentage), 0);
+
+    // Aplica el mayor entre ambos
+    const effectiveDiscount = Math.max(productDiscountPct, categoryDiscountPct);
+    if (effectiveDiscount > 0) {
+        salePrice = parseFloat((price - (price * (effectiveDiscount / 100))).toFixed(2));
     }
 
     return {
@@ -35,14 +47,13 @@ function _mapDbRowToProduct(row: any, categoryIds: number[]): Product {
         featured: row.is_featured,
         categoryIds: categoryIds,
         createdAt: row.created_at ? new Date(row.created_at) : new Date(),
-        // Mapear los nuevos campos para referencia
         discountPercentage: discountPercentage,
         offerStartDate: offerStartDate,
         offerEndDate: offerEndDate,
     };
 }
 
-// getProductById ahora también busca las categorías del producto.
+// getProductById también busca las categorías del producto y aplica descuentos de categoría.
 export async function getProductById(id: number): Promise<Product | undefined> {
     noStore();
     try {
@@ -52,15 +63,16 @@ export async function getProductById(id: number): Promise<Product | undefined> {
 
         const categoryRows = await db`SELECT category_id FROM product_categories WHERE product_id = ${id}`;
         const categoryIds = categoryRows.map((r: any) => r.category_id);
+        const activeCategoryDiscounts = await getActiveCategoryDiscounts();
 
-        return _mapDbRowToProduct(productRows[0], categoryIds);
+        return _mapDbRowToProduct(productRows[0], categoryIds, activeCategoryDiscounts);
     } catch (error) {
         console.error('Database Error:', error);
         throw new Error('Failed to fetch product.');
     }
 }
 
-// Obtiene múltiples productos por sus IDs en una sola consulta.
+// Obtiene múltiples productos por sus IDs aplicando descuentos de categoría.
 export async function getProductsByIds(ids: number[]): Promise<Product[]> {
     noStore();
     if (ids.length === 0) {
@@ -73,12 +85,13 @@ export async function getProductsByIds(ids: number[]): Promise<Product[]> {
         if (productsRows.length === 0) return [];
 
         const productCategoryRows = await db`SELECT product_id, category_id FROM product_categories WHERE product_id = ANY(${ids})`;
+        const activeCategoryDiscounts = await getActiveCategoryDiscounts();
 
         const productsWithCategories = productsRows.map((productRow: any) => {
             const categoryIds = productCategoryRows
                 .filter((pc: any) => pc.product_id === productRow.id)
                 .map((pc: any) => pc.category_id);
-            return _mapDbRowToProduct(productRow, categoryIds);
+            return _mapDbRowToProduct(productRow, categoryIds, activeCategoryDiscounts);
         });
 
         return productsWithCategories;
@@ -153,6 +166,117 @@ export async function updateCategory(id: number, name: string): Promise<Category
         }
         console.error('Database Error:', error);
         throw new Error('Failed to update category.');
+    }
+}
+
+// --- FUNCIONES CRUD PARA DESCUENTOS DE CATEGORÍA ---
+
+function _mapDbRowToCategoryDiscount(row: any): CategoryDiscount {
+    return {
+        id: row.id,
+        categoryId: row.category_id,
+        categoryName: row.category_name ?? undefined,
+        discountPercentage: parseFloat(row.discount_percentage),
+        startDate: new Date(row.start_date),
+        endDate: new Date(row.end_date),
+        bannerTitle: row.banner_title ?? null,
+        bannerSubtitle: row.banner_subtitle ?? null,
+        isActive: row.is_active,
+        createdAt: row.created_at ? new Date(row.created_at) : undefined,
+    };
+}
+
+/** Todos los descuentos de categoría (para panel admin). */
+export async function getCategoryDiscounts(): Promise<CategoryDiscount[]> {
+    noStore();
+    try {
+        const db = getDb();
+        const rows = await db`
+            SELECT cd.*, c.name AS category_name
+            FROM category_discounts cd
+            JOIN categories c ON c.id = cd.category_id
+            ORDER BY cd.created_at DESC
+        `;
+        return rows.map(_mapDbRowToCategoryDiscount);
+    } catch (error) {
+        console.error('Database Error getCategoryDiscounts:', error);
+        throw new Error('Failed to fetch category discounts.');
+    }
+}
+
+/** Solo los descuentos activos vigentes (para cálculo de precios y banners del home). */
+export async function getActiveCategoryDiscounts(): Promise<CategoryDiscount[]> {
+    noStore();
+    try {
+        const db = getDb();
+        const now = new Date().toISOString();
+        const rows = await db`
+            SELECT cd.*, c.name AS category_name
+            FROM category_discounts cd
+            JOIN categories c ON c.id = cd.category_id
+            WHERE cd.is_active = TRUE
+              AND cd.start_date <= ${now}
+              AND cd.end_date   >= ${now}
+            ORDER BY cd.discount_percentage DESC
+        `;
+        return rows.map(_mapDbRowToCategoryDiscount);
+    } catch (error) {
+        console.error('Database Error getActiveCategoryDiscounts:', error);
+        // Silencioso: si falla esta query, los precios se mantienen sin descuento de categoría
+        return [];
+    }
+}
+
+export async function createCategoryDiscount(data: Omit<CategoryDiscount, 'id' | 'categoryName' | 'createdAt'>): Promise<CategoryDiscount> {
+    try {
+        const db = getDb();
+        const result = await db`
+            INSERT INTO category_discounts
+              (category_id, discount_percentage, start_date, end_date, banner_title, banner_subtitle, is_active)
+            VALUES
+              (${data.categoryId}, ${data.discountPercentage}, ${data.startDate.toISOString()}, ${data.endDate.toISOString()}, ${data.bannerTitle}, ${data.bannerSubtitle}, ${data.isActive})
+            RETURNING *
+        `;
+        // Incluir nombre de categoría para la respuesta
+        const catRows = await db`SELECT name FROM categories WHERE id = ${data.categoryId}`;
+        return _mapDbRowToCategoryDiscount({ ...result[0], category_name: catRows[0]?.name });
+    } catch (error) {
+        console.error('Database Error createCategoryDiscount:', error);
+        throw new Error('Failed to create category discount.');
+    }
+}
+
+export async function updateCategoryDiscount(id: number, data: Partial<Omit<CategoryDiscount, 'id' | 'categoryName' | 'createdAt'>>): Promise<CategoryDiscount> {
+    try {
+        const db = getDb();
+        const result = await db`
+            UPDATE category_discounts SET
+              category_id         = COALESCE(${data.categoryId ?? null}, category_id),
+              discount_percentage = COALESCE(${data.discountPercentage ?? null}, discount_percentage),
+              start_date          = COALESCE(${data.startDate?.toISOString() ?? null}, start_date),
+              end_date            = COALESCE(${data.endDate?.toISOString() ?? null}, end_date),
+              banner_title        = COALESCE(${data.bannerTitle ?? null}, banner_title),
+              banner_subtitle     = COALESCE(${data.bannerSubtitle ?? null}, banner_subtitle),
+              is_active           = COALESCE(${data.isActive ?? null}, is_active)
+            WHERE id = ${id}
+            RETURNING *
+        `;
+        if (result.length === 0) throw new Error('Category discount not found.');
+        const catRows = await db`SELECT name FROM categories WHERE id = ${result[0].category_id}`;
+        return _mapDbRowToCategoryDiscount({ ...result[0], category_name: catRows[0]?.name });
+    } catch (error) {
+        console.error('Database Error updateCategoryDiscount:', error);
+        throw new Error('Failed to update category discount.');
+    }
+}
+
+export async function deleteCategoryDiscount(id: number): Promise<void> {
+    try {
+        const db = getDb();
+        await db`DELETE FROM category_discounts WHERE id = ${id}`;
+    } catch (error) {
+        console.error('Database Error deleteCategoryDiscount:', error);
+        throw new Error('Failed to delete category discount.');
     }
 }
 
