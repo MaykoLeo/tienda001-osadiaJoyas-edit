@@ -447,6 +447,87 @@ export function CouponForm({ coupon, formId, errors }: { coupon?: Coupon, formId
     );
 }
 
+// Componente recursivo para seleccionar una sola categoría en un árbol dropdown (sin checkboxes)
+function CategorySelectItem({
+    category,
+    selectedId,
+    onSelect,
+    level = 0,
+    parentName = ''
+}: {
+    category: CategoryTreeNode;
+    selectedId?: number;
+    onSelect: (id: number) => void;
+    level?: number;
+    parentName?: string;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const hasChildren = category.children.length > 0;
+    const isSelected = selectedId === category.id;
+
+    // Auto-expandir si el seleccionado es descendiente
+    useEffect(() => {
+        if (selectedId) {
+            const isDescendant = (cat: CategoryTreeNode): boolean => {
+                if (cat.id === selectedId) return true;
+                return cat.children.some(isDescendant);
+            };
+            if (category.children.some(isDescendant)) {
+                setIsOpen(true);
+            }
+        }
+    }, [selectedId, category]);
+
+    return (
+        <div>
+            <div
+                className={cn(
+                    "flex items-center gap-2 py-1.5 px-2 hover:bg-accent/50 rounded-sm transition-colors cursor-pointer",
+                    isSelected && "bg-accent font-semibold text-primary"
+                )}
+                style={{ paddingLeft: `${8 + level * 16}px` }}
+                onClick={() => onSelect(category.id)}
+            >
+                {hasChildren ? (
+                    <ChevronRight
+                        className={cn(
+                            "h-4 w-4 cursor-pointer transition-transform flex-shrink-0 text-muted-foreground hover:text-foreground",
+                            isOpen && "rotate-90"
+                        )}
+                        onClick={(e) => {
+                            e.stopPropagation(); // Evita seleccionar la categoría al expandir/contraer
+                            setIsOpen(!isOpen);
+                        }}
+                    />
+                ) : (
+                    <div className="w-4" />
+                )}
+                <span className="text-sm flex-1 truncate">
+                    {category.name}
+                    {hasChildren && (
+                        <span className="text-xs text-muted-foreground ml-1">({category.children.length})</span>
+                    )}
+                </span>
+            </div>
+
+            {hasChildren && isOpen && (
+                <div className="mt-0.5">
+                    {category.children.map(child => (
+                        <CategorySelectItem
+                            key={child.id}
+                            category={child}
+                            selectedId={selectedId}
+                            onSelect={onSelect}
+                            level={level + 1}
+                            parentName={category.name}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function CategoryDiscountForm({
     discount,
     formId,
@@ -468,43 +549,71 @@ export function CategoryDiscountForm({
     const [isEndOpen, setIsEndOpen] = useState(false);
     const [isActive, setIsActive] = useState(discount?.isActive ?? true);
 
-    // Categorías planas con sangría para mostrar jerarquía en el select
-    const flatCategories = useMemo(() => {
-        const result: { id: number; label: string }[] = [];
-        function addLevel(parentId: number | null, prefix: string) {
-            categories
-                .filter(c => c.parentId === parentId)
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .forEach(c => {
-                    result.push({ id: c.id, label: `${prefix}${c.name}` });
-                    addLevel(c.id, `${prefix}\u00a0\u00a0\u00a0`);
-                });
-        }
-        addLevel(null, '');
-        return result;
-    }, [categories]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(
+        discount?.categoryId
+    );
+    const [isCatPopoverOpen, setIsCatPopoverOpen] = useState(false);
+
+    // Encontrar nombre de la categoría seleccionada
+    const selectedCategoryName = useMemo(() => {
+        if (!selectedCategoryId) return '';
+        return categories.find(c => c.id === selectedCategoryId)?.name ?? '';
+    }, [selectedCategoryId, categories]);
+
+    // Construir árbol de categorías recursivo
+    const categoryTree = useMemo(() => buildCategoryTree(categories), [categories]);
 
     return (
         <form id={formId} className="space-y-4">
-            {/* Hidden inputs para fechas y estado */}
+            {/* Hidden inputs para fechas, estado y categoría seleccionada */}
             <input type="hidden" name="startDate" value={startDate?.toISOString() ?? ''} />
             <input type="hidden" name="endDate" value={endDate?.toISOString() ?? ''} />
             <input type="hidden" name="isActive" value={String(isActive)} />
+            <input type="hidden" name="categoryId" value={selectedCategoryId ?? ''} />
 
             <div>
                 <Label htmlFor="categoryId">Categoría *</Label>
-                <Select name="categoryId" defaultValue={discount?.categoryId ? String(discount.categoryId) : undefined}>
-                    <SelectTrigger className={cn('border-2 mt-1', errors.categoryId && 'border-destructive')}>
-                        <SelectValue placeholder="Seleccionar categoría..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {flatCategories.map(cat => (
-                            <SelectItem key={cat.id} value={String(cat.id)}>
-                                {cat.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                <Popover open={isCatPopoverOpen} onOpenChange={setIsCatPopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="outline"
+                            className={cn(
+                                'w-full justify-between border-2 mt-1 font-normal text-left px-3',
+                                !selectedCategoryId && 'text-muted-foreground',
+                                errors.categoryId && 'border-destructive'
+                            )}
+                        >
+                            <span className="truncate">
+                                {selectedCategoryName || "Seleccionar categoría..."}
+                            </span>
+                            <ChevronRight className="h-4 w-4 opacity-50 rotate-90 flex-shrink-0" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent 
+                        className="w-[var(--radix-popover-trigger-width)] p-1 max-h-[300px] overflow-hidden flex flex-col"
+                        align="start"
+                    >
+                        <ScrollArea className="flex-1 overflow-y-auto max-h-[290px] pr-1">
+                            {categoryTree.length === 0 ? (
+                                <p className="text-sm text-muted-foreground p-3 text-center">No hay categorías disponibles.</p>
+                            ) : (
+                                <div className="space-y-0.5">
+                                    {categoryTree.map(cat => (
+                                        <CategorySelectItem
+                                            key={cat.id}
+                                            category={cat}
+                                            selectedId={selectedCategoryId}
+                                            onSelect={(id) => {
+                                                setSelectedCategoryId(id);
+                                                setIsCatPopoverOpen(false); // Cierra el menú al seleccionar
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </ScrollArea>
+                    </PopoverContent>
+                </Popover>
                 <FormError message={errors.categoryId?.[0]} />
             </div>
 

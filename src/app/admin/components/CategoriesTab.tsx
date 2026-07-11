@@ -444,7 +444,7 @@ function CategoryDiscountsSection({
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className="font-semibold text-sm">{d.categoryName}</span>
-                                            <Badge variant="secondary" className="text-xs font-bold text-primary">{d.discountPercentage}% OFF</Badge>
+                                            <Badge variant="secondary" className="text-xs font-bold text-destructive">{d.discountPercentage}% OFF</Badge>
                                             <Badge variant={status.variant} className="text-xs">{status.label}</Badge>
                                         </div>
                                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -463,8 +463,8 @@ function CategoryDiscountsSection({
                                             onClick={() => handleToggle(d)}
                                         >
                                             {d.isActive
-                                                ? <ToggleRight className="h-4 w-4 text-primary" />
-                                                : <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                                                ? <ToggleRight className="h-5 w-5 text-green-500 dark:text-green-400" />
+                                                : <ToggleLeft className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                                             }
                                         </Button>
                                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(d)}>
@@ -499,7 +499,7 @@ function CategoryDiscountsSection({
 
             {/* Dialog para crear / editar */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[480px]">
+                <DialogContent className="sm:max-w-[480px] grid-rows-[auto_1fr_auto] max-h-[95vh] flex flex-col transition-all duration-300">
                     <DialogHeader>
                         <DialogTitle>{editingDiscount ? 'Editar Descuento de Categoría' : 'Nueva Oferta de Categoría'}</DialogTitle>
                         <DialogDescription>
@@ -508,12 +508,14 @@ function CategoryDiscountsSection({
                                 : 'Define el descuento, las fechas y el texto del banner para el home.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <CategoryDiscountForm
-                        discount={editingDiscount}
-                        formId={formId}
-                        errors={formErrors}
-                        categories={categories}
-                    />
+                    <div className="overflow-y-auto pr-4 -mr-4">
+                        <CategoryDiscountForm
+                            discount={editingDiscount}
+                            formId={formId}
+                            errors={formErrors}
+                            categories={categories}
+                        />
+                    </div>
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button type="button" variant="outline">Cancelar</Button>
