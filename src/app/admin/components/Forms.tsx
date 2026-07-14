@@ -19,6 +19,7 @@ import { es } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronRight } from 'lucide-react';
 import type { Product, Coupon, Category, CategoryDiscount } from '@/lib/types';
 import { ImageUploader } from './ImageUploader';
+import { BannerImageUploader } from './BannerImageUploader';
 
 type FieldErrors = Record<string, string[] | undefined>;
 
@@ -553,6 +554,9 @@ export function CategoryDiscountForm({
         discount?.categoryId
     );
     const [isCatPopoverOpen, setIsCatPopoverOpen] = useState(false);
+    const [bannerImageUrl, setBannerImageUrl] = useState<string | null>(
+        discount?.bannerImageUrl ?? null
+    );
 
     // Encontrar nombre de la categoría seleccionada
     const selectedCategoryName = useMemo(() => {
@@ -570,6 +574,7 @@ export function CategoryDiscountForm({
             <input type="hidden" name="endDate" value={endDate?.toISOString() ?? ''} />
             <input type="hidden" name="isActive" value={String(isActive)} />
             <input type="hidden" name="categoryId" value={selectedCategoryId ?? ''} />
+            <input type="hidden" name="bannerImageUrl" value={bannerImageUrl ?? ''} />
 
             <div>
                 <Label htmlFor="categoryId">Categoría *</Label>
@@ -708,6 +713,15 @@ export function CategoryDiscountForm({
                     className="border-2 mt-1"
                 />
                 <p className="text-xs text-muted-foreground mt-1">Aparece en el banner del home. Opcional.</p>
+            </div>
+
+            <div>
+                <Label>Imagen del Banner</Label>
+                <p className="text-xs text-muted-foreground mb-2">Opcional. Si no subís imagen, se mostrará el diseño con degradado de color.</p>
+                <BannerImageUploader
+                    imageUrl={bannerImageUrl}
+                    onChange={setBannerImageUrl}
+                />
             </div>
 
             <div>

@@ -18,6 +18,7 @@ const categoryDiscountSchema = z.object({
     endDate: z.string().min(1, "La fecha de fin es obligatoria."),
     bannerTitle: z.string().max(255).optional().nullable(),
     bannerSubtitle: z.string().max(500).optional().nullable(),
+    bannerImageUrl: z.string().url().optional().nullable().or(z.literal('')).transform(v => v === '' ? null : v),
     isActive: z.boolean().default(true),
 }).refine(
     (data) => new Date(data.endDate) > new Date(data.startDate),
@@ -39,6 +40,7 @@ export async function addCategoryDiscountAction(formData: FormData) {
         endDate: formData.get("endDate"),
         bannerTitle: formData.get("bannerTitle") || null,
         bannerSubtitle: formData.get("bannerSubtitle") || null,
+        bannerImageUrl: formData.get("bannerImageUrl") || '',
         isActive: formData.get("isActive") === "true",
     };
 
@@ -59,6 +61,7 @@ export async function addCategoryDiscountAction(formData: FormData) {
             endDate: new Date(validated.data.endDate),
             bannerTitle: validated.data.bannerTitle ?? null,
             bannerSubtitle: validated.data.bannerSubtitle ?? null,
+            bannerImageUrl: validated.data.bannerImageUrl ?? null,
             isActive: validated.data.isActive,
         });
         revalidateAll();
@@ -76,6 +79,7 @@ export async function updateCategoryDiscountAction(id: number, formData: FormDat
         endDate: formData.get("endDate"),
         bannerTitle: formData.get("bannerTitle") || null,
         bannerSubtitle: formData.get("bannerSubtitle") || null,
+        bannerImageUrl: formData.get("bannerImageUrl") || '',
         isActive: formData.get("isActive") === "true",
     };
 
@@ -96,6 +100,7 @@ export async function updateCategoryDiscountAction(id: number, formData: FormDat
             endDate: new Date(validated.data.endDate),
             bannerTitle: validated.data.bannerTitle ?? null,
             bannerSubtitle: validated.data.bannerSubtitle ?? null,
+            bannerImageUrl: validated.data.bannerImageUrl ?? null,
             isActive: validated.data.isActive,
         });
         revalidateAll();

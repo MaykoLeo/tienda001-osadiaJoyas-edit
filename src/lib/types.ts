@@ -34,6 +34,7 @@ export interface CategoryDiscount {
   endDate: Date;
   bannerTitle: string | null;
   bannerSubtitle: string | null;
+  bannerImageUrl: string | null;
   isActive: boolean;
   createdAt?: Date;
 }

@@ -181,6 +181,7 @@ function _mapDbRowToCategoryDiscount(row: any): CategoryDiscount {
         endDate: new Date(row.end_date),
         bannerTitle: row.banner_title ?? null,
         bannerSubtitle: row.banner_subtitle ?? null,
+        bannerImageUrl: row.banner_image_url ?? null,
         isActive: row.is_active,
         createdAt: row.created_at ? new Date(row.created_at) : undefined,
     };
@@ -232,9 +233,9 @@ export async function createCategoryDiscount(data: Omit<CategoryDiscount, 'id' |
         const db = getDb();
         const result = await db`
             INSERT INTO category_discounts
-              (category_id, discount_percentage, start_date, end_date, banner_title, banner_subtitle, is_active)
+              (category_id, discount_percentage, start_date, end_date, banner_title, banner_subtitle, banner_image_url, is_active)
             VALUES
-              (${data.categoryId}, ${data.discountPercentage}, ${data.startDate.toISOString()}, ${data.endDate.toISOString()}, ${data.bannerTitle}, ${data.bannerSubtitle}, ${data.isActive})
+              (${data.categoryId}, ${data.discountPercentage}, ${data.startDate.toISOString()}, ${data.endDate.toISOString()}, ${data.bannerTitle}, ${data.bannerSubtitle}, ${data.bannerImageUrl ?? null}, ${data.isActive})
             RETURNING *
         `;
         // Incluir nombre de categoría para la respuesta
@@ -257,6 +258,7 @@ export async function updateCategoryDiscount(id: number, data: Partial<Omit<Cate
               end_date            = COALESCE(${data.endDate?.toISOString() ?? null}, end_date),
               banner_title        = COALESCE(${data.bannerTitle ?? null}, banner_title),
               banner_subtitle     = COALESCE(${data.bannerSubtitle ?? null}, banner_subtitle),
+              banner_image_url    = ${data.bannerImageUrl !== undefined ? (data.bannerImageUrl ?? null) : db`banner_image_url`},
               is_active           = COALESCE(${data.isActive ?? null}, is_active)
             WHERE id = ${id}
             RETURNING *

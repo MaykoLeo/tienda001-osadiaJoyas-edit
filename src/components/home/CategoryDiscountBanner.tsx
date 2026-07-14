@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getActiveCategoryDiscounts } from '@/lib/data';
 import { Tag, ArrowRight, Sparkles } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -10,7 +11,7 @@ export async function CategoryDiscountBanner() {
 
     if (discounts.length === 0) return null;
 
-    // Paleta de degradados para los banners (rota entre los 3)
+    // Paleta de degradados para los banners (rota entre los 3, se usa cuando no hay imagen)
     const gradients = [
         'from-[hsl(var(--primary)/0.15)] to-[hsl(var(--primary)/0.05)] border-[hsl(var(--primary)/0.3)]',
         'from-[hsl(280,60%,60%,0.15)] to-[hsl(280,60%,60%,0.05)] border-[hsl(280,60%,60%,0.3)]',
@@ -38,58 +39,86 @@ export async function CategoryDiscountBanner() {
                             : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
                     }`}
                 >
-                    {discounts.map((d, i) => (
-                        <Link
-                            key={d.id}
-                            href={`/tienda?category=${d.categoryId}`}
-                            className={`
-                                group relative overflow-hidden rounded-xl border bg-gradient-to-br ${gradients[i]}
-                                p-5 transition-all duration-300
-                                hover:shadow-lg hover:scale-[1.02] hover:border-opacity-60
-                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
-                            `}
-                            aria-label={`Ver ofertas de ${d.categoryName}: ${d.discountPercentage}% de descuento`}
-                        >
-                            {/* Badge de porcentaje */}
-                            <span
+                    {discounts.map((d, i) => {
+                        const hasImage = !!d.bannerImageUrl;
+                        return (
+                            <Link
+                                key={d.id}
+                                href={`/tienda?category=${d.categoryId}`}
                                 className={`
-                                    inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-bold
-                                    ${badgeColors[i]}
-                                    mb-3 shadow-sm
+                                    group relative overflow-hidden rounded-xl border
+                                    ${hasImage
+                                        ? 'border-transparent min-h-[160px]'
+                                        : `bg-gradient-to-br ${gradients[i]} min-h-[120px]`
+                                    }
+                                    p-5 transition-all duration-300
+                                    hover:shadow-lg hover:scale-[1.02]
+                                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
+                                    flex flex-col
                                 `}
+                                aria-label={`Ver ofertas de ${d.categoryName}: ${d.discountPercentage}% de descuento`}
                             >
-                                <Sparkles className="h-3.5 w-3.5" />
-                                {d.discountPercentage}% OFF
-                            </span>
+                                {/* Imagen de fondo (si existe) */}
+                                {hasImage && (
+                                    <>
+                                        <Image
+                                            src={d.bannerImageUrl!}
+                                            alt={`Banner ${d.categoryName}`}
+                                            fill
+                                            className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                        />
+                                        {/* Overlay oscuro para legibilidad */}
+                                        <div className="absolute inset-0 bg-black/55 group-hover:bg-black/45 transition-colors duration-300" />
+                                    </>
+                                )}
 
-                            {/* Título */}
-                            <h3 className="text-lg font-bold font-headline leading-tight text-foreground mb-1">
-                                {d.bannerTitle || `Descuento en ${d.categoryName}`}
-                            </h3>
+                                {/* Contenido (siempre sobre el fondo) */}
+                                <div className="relative z-10 flex flex-col flex-1">
+                                    {/* Badge de porcentaje */}
+                                    <span
+                                        className={`
+                                            inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-bold self-start
+                                            ${badgeColors[i]}
+                                            mb-3 shadow-sm
+                                        `}
+                                    >
+                                        <Sparkles className="h-3.5 w-3.5" />
+                                        {d.discountPercentage}% OFF
+                                    </span>
 
-                            {/* Subtítulo */}
-                            {d.bannerSubtitle && (
-                                <p className="text-sm text-muted-foreground leading-snug mb-3">
-                                    {d.bannerSubtitle}
-                                </p>
-                            )}
+                                    {/* Título */}
+                                    <h3 className={`text-lg font-bold font-headline leading-tight mb-1 ${hasImage ? 'text-white' : 'text-foreground'}`}>
+                                        {d.bannerTitle || `Descuento en ${d.categoryName}`}
+                                    </h3>
 
-                            {/* CTA */}
-                            <div className="flex items-center gap-1.5 text-sm font-semibold text-primary mt-auto">
-                                <Tag className="h-3.5 w-3.5" />
-                                <span>Ver {d.categoryName}</span>
-                                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
-                            </div>
+                                    {/* Subtítulo */}
+                                    {d.bannerSubtitle && (
+                                        <p className={`text-sm leading-snug mb-3 ${hasImage ? 'text-white/80' : 'text-muted-foreground'}`}>
+                                            {d.bannerSubtitle}
+                                        </p>
+                                    )}
 
-                            {/* Decorativo: número grande en el fondo */}
-                            <span
-                                aria-hidden="true"
-                                className="pointer-events-none absolute -right-3 -bottom-4 text-[7rem] font-black leading-none opacity-[0.06] select-none"
-                            >
-                                {Math.round(d.discountPercentage)}%
-                            </span>
-                        </Link>
-                    ))}
+                                    {/* CTA */}
+                                    <div className={`flex items-center gap-1.5 text-sm font-semibold mt-auto ${hasImage ? 'text-white' : 'text-primary'}`}>
+                                        <Tag className="h-3.5 w-3.5" />
+                                        <span>Ver {d.categoryName}</span>
+                                        <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                                    </div>
+                                </div>
+
+                                {/* Decorativo: número grande en el fondo (solo sin imagen) */}
+                                {!hasImage && (
+                                    <span
+                                        aria-hidden="true"
+                                        className="pointer-events-none absolute -right-3 -bottom-4 text-[7rem] font-black leading-none opacity-[0.06] select-none"
+                                    >
+                                        {Math.round(d.discountPercentage)}%
+                                    </span>
+                                )}
+                            </Link>
+                        );
+                    })}
                 </div>
             </section>
             <Separator className="w-1/2 mx-auto my-12" />
