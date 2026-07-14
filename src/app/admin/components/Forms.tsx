@@ -573,7 +573,7 @@ export function CategoryDiscountForm({
 
             <div>
                 <Label htmlFor="categoryId">Categoría *</Label>
-                <Popover open={isCatPopoverOpen} onOpenChange={setIsCatPopoverOpen}>
+                <Popover modal={true} open={isCatPopoverOpen} onOpenChange={setIsCatPopoverOpen}>
                     <PopoverTrigger asChild>
                         <Button
                             variant="outline"
@@ -589,30 +589,32 @@ export function CategoryDiscountForm({
                             <ChevronRight className="h-4 w-4 opacity-50 rotate-90 flex-shrink-0" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent 
-                        className="w-[var(--radix-popover-trigger-width)] p-1 max-h-[300px] overflow-hidden flex flex-col"
-                        align="start"
-                    >
-                        <ScrollArea className="flex-1 overflow-y-auto max-h-[290px] pr-1">
-                            {categoryTree.length === 0 ? (
-                                <p className="text-sm text-muted-foreground p-3 text-center">No hay categorías disponibles.</p>
-                            ) : (
-                                <div className="space-y-0.5">
-                                    {categoryTree.map(cat => (
-                                        <CategorySelectItem
-                                            key={cat.id}
-                                            category={cat}
-                                            selectedId={selectedCategoryId}
-                                            onSelect={(id) => {
-                                                setSelectedCategoryId(id);
-                                                setIsCatPopoverOpen(false); // Cierra el menú al seleccionar
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </ScrollArea>
-                    </PopoverContent>
+                    <PopoverPrimitive.Portal>
+                        <PopoverContent 
+                            className="w-[var(--radix-popover-trigger-width)] p-1 max-h-[300px] overflow-hidden flex flex-col z-[100]"
+                            align="start"
+                        >
+                            <ScrollArea className="flex-1 overflow-y-auto max-h-[290px] pr-1">
+                                {categoryTree.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground p-3 text-center">No hay categorías disponibles.</p>
+                                ) : (
+                                    <div className="space-y-0.5">
+                                        {categoryTree.map(cat => (
+                                            <CategorySelectItem
+                                                key={cat.id}
+                                                category={cat}
+                                                selectedId={selectedCategoryId}
+                                                onSelect={(id) => {
+                                                    setSelectedCategoryId(id);
+                                                    setIsCatPopoverOpen(false); // Cierra el menú al seleccionar
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </ScrollArea>
+                        </PopoverContent>
+                    </PopoverPrimitive.Portal>
                 </Popover>
                 <FormError message={errors.categoryId?.[0]} />
             </div>

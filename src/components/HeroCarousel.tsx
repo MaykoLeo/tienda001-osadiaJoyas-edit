@@ -85,7 +85,7 @@ export function HeroCarousel() {
             <CarouselContent>
                 {carouselSlides.map((slide, index) => (
                     <CarouselItem key={index}>
-                    <div className="relative text-center h-[60vh] md:h-[70vh] rounded-[8px] overflow-hidden shadow-2xl flex items-center justify-center p-4">
+                    <div className="relative text-center h-[60vh] min-h-[480px] md:h-[70vh] rounded-[8px] overflow-hidden shadow-2xl flex items-center justify-center p-4">
                         <div className="absolute inset-0 z-0">
                         <Image
                             src={slide.image}
@@ -103,11 +103,11 @@ export function HeroCarousel() {
                         <div className="relative z-10 text-white w-full max-w-screen-xl mx-auto px-8 grid grid-cols-12 gap-8">
                           <div className="col-span-12 lg:col-span-8 lg:col-start-3">
                             {/* DS: Playfair Display para el título hero con letter-spacing -0.02em */}
-                            <h1 className="font-headline font-semibold text-5xl sm:text-6xl lg:text-7xl drop-shadow-lg tracking-[-0.02em] leading-tight mb-6">
+                            <h1 className="font-headline font-semibold text-4xl sm:text-6xl lg:text-7xl drop-shadow-lg tracking-[-0.02em] leading-tight mb-4 md:mb-6">
                                 {slide.title}
                             </h1>
                             {/* DS: Inter para la descripción */}
-                            <p className="text-lg font-body text-white/90 drop-shadow-md max-w-xl mx-auto mb-10">
+                            <p className="text-base sm:text-lg font-body text-white/90 drop-shadow-md max-w-xl mx-auto mb-6 md:mb-10">
                                 {slide.description}
                             </p>
                             <Button asChild variant="outline" size="lg" className="shadow-lg uppercase tracking-widest text-sm font-medium px-10 h-14 text-accent border-accent hover:bg-accent/10 hover:text-accent bg-black/20 backdrop-blur-sm">

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getActiveCategoryDiscounts } from '@/lib/data';
 import { Tag, ArrowRight, Sparkles } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 export async function CategoryDiscountBanner() {
     const allActive = await getActiveCategoryDiscounts();
@@ -22,73 +23,76 @@ export async function CategoryDiscountBanner() {
     ];
 
     return (
-        <section
-            id="category-discount-banners"
-            aria-label="Ofertas por categoría"
-            className="w-full"
-        >
-            <div
-                className={`grid gap-4 ${
-                    discounts.length === 1
-                        ? 'grid-cols-1'
-                        : discounts.length === 2
-                        ? 'grid-cols-1 sm:grid-cols-2'
-                        : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                }`}
+        <>
+            <section
+                id="category-discount-banners"
+                aria-label="Ofertas por categoría"
+                className="w-full mb-6"
             >
-                {discounts.map((d, i) => (
-                    <Link
-                        key={d.id}
-                        href={`/tienda?category=${d.categoryId}`}
-                        className={`
-                            group relative overflow-hidden rounded-xl border bg-gradient-to-br ${gradients[i]}
-                            p-5 transition-all duration-300
-                            hover:shadow-lg hover:scale-[1.02] hover:border-opacity-60
-                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
-                        `}
-                        aria-label={`Ver ofertas de ${d.categoryName}: ${d.discountPercentage}% de descuento`}
-                    >
-                        {/* Badge de porcentaje */}
-                        <span
+                <div
+                    className={`grid gap-4 ${
+                        discounts.length === 1
+                            ? 'grid-cols-1'
+                            : discounts.length === 2
+                            ? 'grid-cols-1 sm:grid-cols-2'
+                            : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                    }`}
+                >
+                    {discounts.map((d, i) => (
+                        <Link
+                            key={d.id}
+                            href={`/tienda?category=${d.categoryId}`}
                             className={`
-                                inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-bold
-                                ${badgeColors[i]}
-                                mb-3 shadow-sm
+                                group relative overflow-hidden rounded-xl border bg-gradient-to-br ${gradients[i]}
+                                p-5 transition-all duration-300
+                                hover:shadow-lg hover:scale-[1.02] hover:border-opacity-60
+                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
                             `}
+                            aria-label={`Ver ofertas de ${d.categoryName}: ${d.discountPercentage}% de descuento`}
                         >
-                            <Sparkles className="h-3.5 w-3.5" />
-                            {d.discountPercentage}% OFF
-                        </span>
+                            {/* Badge de porcentaje */}
+                            <span
+                                className={`
+                                    inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-bold
+                                    ${badgeColors[i]}
+                                    mb-3 shadow-sm
+                                `}
+                            >
+                                <Sparkles className="h-3.5 w-3.5" />
+                                {d.discountPercentage}% OFF
+                            </span>
 
-                        {/* Título */}
-                        <h3 className="text-lg font-bold font-headline leading-tight text-foreground mb-1">
-                            {d.bannerTitle || `Descuento en ${d.categoryName}`}
-                        </h3>
+                            {/* Título */}
+                            <h3 className="text-lg font-bold font-headline leading-tight text-foreground mb-1">
+                                {d.bannerTitle || `Descuento en ${d.categoryName}`}
+                            </h3>
 
-                        {/* Subtítulo */}
-                        {d.bannerSubtitle && (
-                            <p className="text-sm text-muted-foreground leading-snug mb-3">
-                                {d.bannerSubtitle}
-                            </p>
-                        )}
+                            {/* Subtítulo */}
+                            {d.bannerSubtitle && (
+                                <p className="text-sm text-muted-foreground leading-snug mb-3">
+                                    {d.bannerSubtitle}
+                                </p>
+                            )}
 
-                        {/* CTA */}
-                        <div className="flex items-center gap-1.5 text-sm font-semibold text-primary mt-auto">
-                            <Tag className="h-3.5 w-3.5" />
-                            <span>Ver {d.categoryName}</span>
-                            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
-                        </div>
+                            {/* CTA */}
+                            <div className="flex items-center gap-1.5 text-sm font-semibold text-primary mt-auto">
+                                <Tag className="h-3.5 w-3.5" />
+                                <span>Ver {d.categoryName}</span>
+                                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                            </div>
 
-                        {/* Decorativo: número grande en el fondo */}
-                        <span
-                            aria-hidden="true"
-                            className="pointer-events-none absolute -right-3 -bottom-4 text-[7rem] font-black leading-none opacity-[0.06] select-none"
-                        >
-                            {Math.round(d.discountPercentage)}%
-                        </span>
-                    </Link>
-                ))}
-            </div>
-        </section>
+                            {/* Decorativo: número grande en el fondo */}
+                            <span
+                                aria-hidden="true"
+                                className="pointer-events-none absolute -right-3 -bottom-4 text-[7rem] font-black leading-none opacity-[0.06] select-none"
+                            >
+                                {Math.round(d.discountPercentage)}%
+                            </span>
+                        </Link>
+                    ))}
+                </div>
+            </section>
+            <Separator className="w-1/2 mx-auto my-12" />
+        </>
     );
 }

@@ -132,6 +132,13 @@ export function ProductPageClient({ product, relatedProducts }: { product: Produ
                         <h1 className="text-3xl lg:text-[34px] font-bold font-headline leading-tight text-foreground tracking-tight">
                             {product.name}
                         </h1>
+                        {product.salePrice && (
+                            <div className="pt-1 pb-0.5">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-destructive/10 text-destructive border border-destructive/20 dark:bg-destructive/20 dark:text-red-400 dark:border-destructive/30">
+                                    {Math.round(((product.price - product.salePrice) / product.price) * 100)}% OFF
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-baseline gap-3">

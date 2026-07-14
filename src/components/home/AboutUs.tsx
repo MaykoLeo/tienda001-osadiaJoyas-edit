@@ -8,7 +8,7 @@ import Image from 'next/image';
 export function AboutUs() {
     return (
         <section id="about" className="grid md:grid-cols-5 gap-10 items-center py-10">
-            <div className="md:col-span-2 relative p-[2px] border border-primary/30 dark:border-white/10 rounded-[18px] group">
+            <div className="md:col-span-2 order-2 md:order-1 md:row-span-2 relative p-[2px] border border-primary/30 dark:border-white/10 rounded-[18px] group h-full">
                 <div className="relative aspect-[2/3] max-h-[440px] w-full rounded-2xl overflow-hidden shadow-2xl">
                     <Image
                         src="/Captura5.JPG"
@@ -20,7 +20,7 @@ export function AboutUs() {
                 </div>
             </div>
 
-            <div className='md:col-span-3 space-y-8'>
+            <div className='md:col-span-3 space-y-8 order-1 md:order-2'>
                 <div className="space-y-3">
                     <span className="text-accent uppercase tracking-[0.4em] text-[13px] font-headline font-bold block">
                         Sobre Nosotros
@@ -38,18 +38,19 @@ export function AboutUs() {
                         Trabajamos con materiales de alta calidad para lograr joyas versátiles y modernas. Cada pieza está pensada para acompañar distintos momentos y proyectar una identidad clara y elegante. En Osadía, cada diseño inspira y perdura.
                     </p>
                 </div>
-                <div className='flex flex-wrap gap-4 pt-4'>
-                    <Button asChild className="rounded-full px-8 py-6 text-xs uppercase tracking-widest font-bold shadow-gold/20 shadow-lg hover:shadow-xl transition-all" size="lg">
-                        <Link href="https://www.instagram.com/osadia.cta" target="_blank" rel="noopener noreferrer">
-                            <InstagramIcon className="w-4 h-4 mr-3" /> Síguenos en Instagram
-                        </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="rounded-full px-8 py-6 text-xs uppercase tracking-widest font-bold hover:bg-accent/10 hover:text-accent hover:border-accent transition-all border-primary/20" size="lg">
-                        <Link href="/tienda">
-                            <Gem className="w-4 h-4 mr-3" /> Nuestros Productos
-                        </Link>
-                    </Button>
-                </div>
+            </div>
+
+            <div className='md:col-span-3 order-3 flex flex-col md:flex-row gap-4 pt-2 md:pt-0 items-center md:items-start w-full'>
+                <Button asChild className="rounded-full px-8 py-6 text-xs uppercase tracking-widest font-bold shadow-gold/20 shadow-lg hover:shadow-xl transition-all w-full sm:w-auto" size="lg">
+                    <Link href="https://www.instagram.com/osadia.cta" target="_blank" rel="noopener noreferrer">
+                        <InstagramIcon className="w-4 h-4 mr-3" /> Síguenos en Instagram
+                    </Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-full px-8 py-6 text-xs uppercase tracking-widest font-bold hover:bg-accent/10 hover:text-accent hover:border-accent transition-all border-primary/20 w-full sm:w-auto" size="lg">
+                    <Link href="/tienda">
+                        <Gem className="w-4 h-4 mr-3" /> Nuestros Productos
+                    </Link>
+                </Button>
             </div>
         </section>
     );

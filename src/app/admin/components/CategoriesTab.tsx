@@ -444,7 +444,7 @@ function CategoryDiscountsSection({
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className="font-semibold text-sm">{d.categoryName}</span>
-                                            <Badge variant="secondary" className="text-xs font-bold text-destructive">{d.discountPercentage}% OFF</Badge>
+                                            <Badge variant="outline" className="text-xs font-bold text-destructive border-destructive/20 bg-destructive/10">{d.discountPercentage}% OFF</Badge>
                                             <Badge variant={status.variant} className="text-xs">{status.label}</Badge>
                                         </div>
                                         <p className="text-xs text-muted-foreground mt-0.5">
