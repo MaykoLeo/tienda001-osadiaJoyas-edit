@@ -11,10 +11,17 @@ function _mapDbRowToProduct(row: any, categoryIds: number[], activeCategoryDisco
     const price = parseFloat(row.price);
     let salePrice: number | null = null;
 
-    const discountPercentage = row.discount_percentage ? parseFloat(row.discount_percentage) : null;
+    // Preservar el 0 explícito: row.discount_percentage puede ser 0 (exención), null o un valor positivo
+    const discountPercentage = (row.discount_percentage != null && row.discount_percentage !== '')
+        ? parseFloat(row.discount_percentage)
+        : null;
     const offerStartDate = row.offer_start_date ? new Date(row.offer_start_date) : null;
     const offerEndDate = row.offer_end_date ? new Date(row.offer_end_date) : null;
     const now = new Date();
+
+    // Opción B: si discountPercentage es exactamente 0 (no null/undefined), el producto
+    // está marcado como exento de descuento de categoría.
+    const isExplicitlyExempt = discountPercentage === 0;
 
     // Descuento propio del producto (respeta sus fechas de vigencia)
     let productDiscountPct = 0;
@@ -25,13 +32,27 @@ function _mapDbRowToProduct(row: any, categoryIds: number[], activeCategoryDisco
         }
     }
 
-    // Mayor descuento de categoría activo que aplique a alguna de las categorías del producto
-    const categoryDiscountPct = activeCategoryDiscounts
-        .filter(d => categoryIds.includes(d.categoryId))
-        .reduce((max, d) => Math.max(max, d.discountPercentage), 0);
+    // Mayor descuento de categoría activo que aplique a alguna de las categorías del producto.
+    // Si el producto está marcado como exento, se ignoran los de categoría.
+    const categoryDiscountPct = isExplicitlyExempt
+        ? 0
+        : activeCategoryDiscounts
+            .filter(d => categoryIds.includes(d.categoryId))
+            .reduce((max, d) => Math.max(max, d.discountPercentage), 0);
 
-    // Aplica el mayor entre ambos
-    const effectiveDiscount = Math.max(productDiscountPct, categoryDiscountPct);
+    // Jerarquía de descuentos:
+    // 1. discountPercentage === 0  → exento (sin descuento, ignora categoría)
+    // 2. discountPercentage > 0 activo → individual tiene prioridad (ignora categoría)
+    // 3. discountPercentage === null   → hereda el descuento de categoría
+    let effectiveDiscount: number;
+    if (isExplicitlyExempt) {
+        effectiveDiscount = 0;
+    } else if (productDiscountPct > 0) {
+        effectiveDiscount = productDiscountPct; // individual activo → prioridad total
+    } else {
+        effectiveDiscount = categoryDiscountPct; // sin individual → hereda categoría
+    }
+
     if (effectiveDiscount > 0) {
         salePrice = parseFloat((price - (price * (effectiveDiscount / 100))).toFixed(2));
     }
@@ -48,6 +69,7 @@ function _mapDbRowToProduct(row: any, categoryIds: number[], activeCategoryDisco
         categoryIds: categoryIds,
         createdAt: row.created_at ? new Date(row.created_at) : new Date(),
         discountPercentage: discountPercentage,
+        effectiveDiscountPercentage: effectiveDiscount > 0 ? effectiveDiscount : null,
         offerStartDate: offerStartDate,
         offerEndDate: offerEndDate,
     };

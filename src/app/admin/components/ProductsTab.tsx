@@ -80,12 +80,18 @@ const ProductRow = React.memo(({
                     formatCurrency(product.price)
                 )}
             </TableCell>
-            <TableCell className="hidden md:table-cell text-center">
-                {hasActiveDiscount && product.discountPercentage ? (
-                    <Badge variant="destructive">{`-${product.discountPercentage}%`}</Badge>
-                ) : (
-                    '-'
-                )}
+        <TableCell className="hidden md:table-cell text-center">
+                {(() => {
+                    const effectivePct = product.effectiveDiscountPercentage;
+                    if (!hasActiveDiscount || !effectivePct) return <span className="text-muted-foreground">-</span>;
+                    const isOnlyFromCategory = !product.discountPercentage || product.discountPercentage <= 0;
+                    return (
+                        <Badge variant="destructive" title={isOnlyFromCategory ? 'Descuento heredado de categor\u00eda' : 'Descuento individual'}>
+                            {`-${effectivePct}%`}
+                            {isOnlyFromCategory && <span className="ml-1 opacity-80" aria-label="de categor\u00eda">🏷️</span>}
+                        </Badge>
+                    );
+                })()}
             </TableCell>
             <TableCell className="hidden md:table-cell text-center">{product.stock}</TableCell>
             <TableCell className="hidden lg:table-cell">{getCategoryNames(product.categoryIds)}</TableCell>
@@ -116,6 +122,7 @@ const ProductRow = React.memo(({
         prevProps.product.salePrice === nextProps.product.salePrice &&
         prevProps.product.featured === nextProps.product.featured &&
         prevProps.product.discountPercentage === nextProps.product.discountPercentage &&
+        prevProps.product.effectiveDiscountPercentage === nextProps.product.effectiveDiscountPercentage &&
         prevProps.featuredCount === nextProps.featuredCount &&
         prevProps.isLoading === nextProps.isLoading &&
         // Comparar categoryIds para detectar cambios de categorías
@@ -313,10 +320,8 @@ export function ProductsTab({
                 let bValue: any;
 
                 if (key === 'discountPercentage') {
-                    const aHasActiveDiscount = a.salePrice != null && a.salePrice < a.price;
-                    const bHasActiveDiscount = b.salePrice != null && b.salePrice < b.price;
-                    aValue = aHasActiveDiscount ? a.discountPercentage : null;
-                    bValue = bHasActiveDiscount ? b.discountPercentage : null;
+                    aValue = a.effectiveDiscountPercentage ?? (a.salePrice != null && a.salePrice < a.price ? a.discountPercentage : null);
+                    bValue = b.effectiveDiscountPercentage ?? (b.salePrice != null && b.salePrice < b.price ? b.discountPercentage : null);
                 } else if (key === 'category') {
                     aValue = a.categoryIds.map(id => categories.find(c => c.id === id)?.name || '').join(', ');
                     bValue = b.categoryIds.map(id => categories.find(c => c.id === id)?.name || '').join(', ');

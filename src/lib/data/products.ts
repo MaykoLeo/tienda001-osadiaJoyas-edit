@@ -30,24 +30,46 @@ function _mapDbRowToProduct(row: any, activeCategoryDiscounts: CategoryDiscount[
 
     const categoryIds: number[] = row.category_ids || [];
     const price = parseFloat(row.price);
-    const discountPercentage = row.discount_percentage ? parseFloat(row.discount_percentage) : null;
+    // Preservar el 0 explícito: puede ser 0 (exención), null o un valor positivo
+    const discountPercentage = (row.discount_percentage != null && row.discount_percentage !== '')
+        ? parseFloat(row.discount_percentage)
+        : null;
     const offerStartDate = row.offer_start_date ? new Date(row.offer_start_date) : null;
     const offerEndDate = row.offer_end_date ? new Date(row.offer_end_date) : null;
     const now = new Date();
 
     // Descuento propio del producto (respeta sus fechas de vigencia)
+    // Opción B: si discountPercentage es exactamente 0 (no null/undefined), el producto
+    // está marcado como "exento de descuento de categoría" y no hereda ningún descuento grupal.
+    const isExplicitlyExempt = discountPercentage === 0;
+
     let productDiscountPct = 0;
     if (discountPercentage && discountPercentage > 0) {
         const isDateRangeValid = (!offerStartDate || now >= offerStartDate) && (!offerEndDate || now <= offerEndDate);
         if (isDateRangeValid) productDiscountPct = discountPercentage;
     }
 
-    // Mayor descuento de categoría activo que aplique a alguna categoría del producto
-    const categoryDiscountPct = activeCategoryDiscounts
-        .filter(d => categoryIds.includes(d.categoryId))
-        .reduce((max, d) => Math.max(max, d.discountPercentage), 0);
+    // Mayor descuento de categoría activo que aplique a alguna categoría del producto.
+    // Si el producto está marcado como exento (discountPercentage === 0), se ignoran los de categoría.
+    const categoryDiscountPct = isExplicitlyExempt
+        ? 0
+        : activeCategoryDiscounts
+            .filter(d => categoryIds.includes(d.categoryId))
+            .reduce((max, d) => Math.max(max, d.discountPercentage), 0);
 
-    const effectiveDiscount = Math.max(productDiscountPct, categoryDiscountPct);
+    // Jerarquía de descuentos:
+    // 1. discountPercentage === 0  → exento (sin descuento, ignora categoría)
+    // 2. discountPercentage > 0 activo → individual tiene prioridad (ignora categoría)
+    // 3. discountPercentage === null   → hereda el descuento de categoría
+    let effectiveDiscount: number;
+    if (isExplicitlyExempt) {
+        effectiveDiscount = 0;
+    } else if (productDiscountPct > 0) {
+        effectiveDiscount = productDiscountPct; // individual activo → prioridad total
+    } else {
+        effectiveDiscount = categoryDiscountPct; // sin individual → hereda categoría
+    }
+
     const salePrice = effectiveDiscount > 0
         ? parseFloat((price - price * (effectiveDiscount / 100)).toFixed(2))
         : null;
@@ -66,6 +88,7 @@ function _mapDbRowToProduct(row: any, activeCategoryDiscounts: CategoryDiscount[
         aiHint: row.ai_hint,
         featured: row.featured,
         discountPercentage,
+        effectiveDiscountPercentage: effectiveDiscount > 0 ? effectiveDiscount : null,
         offerStartDate,
         offerEndDate,
         salePrice,

@@ -13,6 +13,7 @@ export interface Product {
   featured?: boolean;
   createdAt?: Date;
   discountPercentage?: number | null;
+  effectiveDiscountPercentage?: number | null; // El mayor entre el descuento propio y el de categoría (calculado)
   offerStartDate?: Date | null;
   offerEndDate?: Date | null;
   aiHint?: string;

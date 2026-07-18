@@ -242,7 +242,14 @@ export function ProductForm({
             <div className="grid grid-cols-2 gap-4">
                 <div><Label htmlFor="price">Precio *</Label><Input id="price" name="price" type="number" step="0.01" min="0" defaultValue={product?.price} onKeyDown={handleDecimalKeyDown} className={cn("border-2", errors.price && "border-destructive")} /><FormError message={errors.price?.[0]} /></div>
                 ...
-                <div><Label htmlFor="discountPercentage">Descuento (%)</Label><Input id="discountPercentage" name="discountPercentage" type="number" step="1" min="0" max="100" defaultValue={product?.discountPercentage ?? ''} onKeyDown={handleIntegerKeyDown} placeholder="Ejemplo: 15" className={cn("border-2", errors.discountPercentage && "border-destructive")} /><FormError message={errors.discountPercentage?.[0]} /></div>
+                <div>
+                    <Label htmlFor="discountPercentage">Descuento (%)</Label>
+                    <Input id="discountPercentage" name="discountPercentage" type="number" step="1" min="0" max="100" defaultValue={product?.discountPercentage ?? ''} onKeyDown={handleIntegerKeyDown} placeholder="Ejemplo: 15" className={cn("border-2", errors.discountPercentage && "border-destructive")} />
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Dejá vacío para no aplicar descuento individual. Ingresá <strong>0</strong> para <em>excluir</em> este producto de los descuentos por categoría.
+                    </p>
+                    <FormError message={errors.discountPercentage?.[0]} />
+                </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
