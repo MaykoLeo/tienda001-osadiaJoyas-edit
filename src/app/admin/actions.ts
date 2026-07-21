@@ -37,21 +37,6 @@ export async function authenticateAdmin(prevState: any, formData: FormData) {
     const adminEmail = process.env.ADMIN_EMAIL;
     const hashedPassword = process.env.ADMIN_PASSWORD_HASH;
 
-    // ============================================================
-    // 🔍 DEBUG TEMPORAL - eliminar después de resolver el problema
-    // ============================================================
-    console.log('[DEBUG] ADMIN_EMAIL env definido:', !!adminEmail);
-    console.log('[DEBUG] ADMIN_PASSWORD_HASH env definido:', !!hashedPassword);
-    if (hashedPassword) {
-        // Mostrar longitud y primeros/últimos chars para detectar espacios o saltos de línea
-        console.log('[DEBUG] Hash longitud:', hashedPassword.length);
-        console.log('[DEBUG] Hash inicio (10 chars):', JSON.stringify(hashedPassword.slice(0, 10)));
-        console.log('[DEBUG] Hash fin (10 chars):', JSON.stringify(hashedPassword.slice(-10)));
-    }
-    console.log('[DEBUG] Email ingresado:', email);
-    console.log('[DEBUG] Email env:', adminEmail);
-    console.log('[DEBUG] Password ingresada longitud:', password?.length);
-    // ============================================================
 
     if (!adminEmail || !hashedPassword) {
         console.error("Las credenciales de administrador (ADMIN_EMAIL, ADMIN_PASSWORD_HASH) no están configuradas en el servidor.");
@@ -64,12 +49,6 @@ export async function authenticateAdmin(prevState: any, formData: FormData) {
     const cleanHash = hashedPassword.trim();
     const isPasswordCorrect = password ? await bcrypt.compare(password, cleanHash) : false;
 
-    // ============================================================
-    // 🔍 DEBUG TEMPORAL - eliminar después de resolver el problema
-    // ============================================================
-    console.log('[DEBUG] ¿Email correcto?', isEmailCorrect);
-    console.log('[DEBUG] ¿Password correcto?', isPasswordCorrect);
-    // ============================================================
 
     // 4. Procesar el resultado del login
     if (isEmailCorrect && isPasswordCorrect) {

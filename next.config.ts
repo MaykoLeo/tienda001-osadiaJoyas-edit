@@ -109,8 +109,9 @@ const nextConfig: NextConfig = {
   },
   env: {
     NEXT_PUBLIC_MAILCHIMP_CONFIGURED: String(!!(process.env.MAILCHIMP_API_KEY && process.env.MAILCHIMP_SERVER_PREFIX && process.env.MAILCHIMP_AUDIENCE_ID)),
-    NEXT_PUBLIC_ADMIN_EMAIL: process.env.ADMIN_EMAIL,
-    NEXT_PUBLIC_ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+    // NOTA DE SEGURIDAD: ADMIN_EMAIL y ADMIN_PASSWORD no van aquí.
+    // Las credenciales de admin NUNCA deben exponerse al cliente (NEXT_PUBLIC_*).
+    // La autenticación ocurre enteramente en el servidor (Server Actions).
   },
   allowedDevOrigins: ["https://9002-firebase-osadiajoyas-edit-1764687845459.cluster-hkcruqmgzbd2aqcdnktmz6k7ba.cloudworkstations.dev"],
   async headers() {
@@ -120,8 +121,10 @@ const nextConfig: NextConfig = {
         source: '/api/:path*',
         headers: [
           {
+            // CORS: Solo permite requests desde el dominio oficial de la tienda.
+            // Esto previene que sitios externos consuman las APIs de pago y upload.
             key: 'Access-Control-Allow-Origin',
-            value: '*'
+            value: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9002'
           },
           {
             key: 'Access-Control-Allow-Methods',

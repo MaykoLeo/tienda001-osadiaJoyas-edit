@@ -87,6 +87,9 @@ export function ImageUploader({
       try {
         const response = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
           method: 'POST',
+          headers: {
+            'x-admin-token': process.env.NEXT_PUBLIC_BLOB_READ_WRITE_TOKEN || '',
+          },
           body: file,
         });
 

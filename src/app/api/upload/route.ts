@@ -3,6 +3,14 @@ import { NextResponse } from 'next/server';
 import sharp from 'sharp';
 
 export async function POST(request: Request): Promise<NextResponse> {
+  // --- AUTENTICACIÓN: solo el panel admin puede subir imágenes ---
+  const adminToken = request.headers.get('x-admin-token');
+  const expectedToken = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!adminToken || !expectedToken || adminToken !== expectedToken) {
+    return new NextResponse('Unauthorized', { status: 401 });
+  }
+  // --- FIN AUTENTICACIÓN ---
+
   const { searchParams } = new URL(request.url);
   const filename = searchParams.get('filename');
   const type = searchParams.get('type'); // 'banner' o 'product' (default)

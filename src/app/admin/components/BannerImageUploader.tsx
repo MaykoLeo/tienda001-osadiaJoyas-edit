@@ -26,7 +26,13 @@ export function BannerImageUploader({ imageUrl, onChange }: BannerImageUploaderP
         try {
             const response = await fetch(
                 `/api/upload?filename=${encodeURIComponent(file.name)}&type=banner`,
-                { method: 'POST', body: file }
+                {
+                    method: 'POST',
+                    headers: {
+                        'x-admin-token': process.env.NEXT_PUBLIC_BLOB_READ_WRITE_TOKEN || '',
+                    },
+                    body: file,
+                }
             );
 
             if (!response.ok) throw new Error('Error al subir la imagen');
