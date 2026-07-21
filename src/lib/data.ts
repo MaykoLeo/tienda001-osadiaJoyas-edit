@@ -351,14 +351,42 @@ export async function deductStockForOrder(orderId: number): Promise<void> {
     }
 }
 
-export async function updateOrderStatus(orderId: number, status: OrderStatus, paymentId?: string | null): Promise<void> {
+/**
+ * Actualiza el estado de una orden de forma idémpotente.
+ * Para estados de pago (paid, deposit_paid), solo actualiza si la orden NO
+ * estaba ya en ese estado. Esto previene race conditions cuando el webhook
+ * de MercadoPago llega duplicado (comportamiento normal de MP como retry).
+ *
+ * @returns true si la orden fue actualizada, false si ya estaba en ese estado (no-op).
+ */
+export async function updateOrderStatus(orderId: number, status: OrderStatus, paymentId?: string | null): Promise<boolean> {
     try {
         const db = getDb();
+        // Estados 'finales de pago': si ya están en este estado, no volver a procesar.
+        const terminalPaymentStates: OrderStatus[] = ['paid', 'deposit_paid'];
+        const isTerminalState = terminalPaymentStates.includes(status);
+
+        let result;
         if (paymentId !== undefined) {
-            await db`UPDATE orders SET status = ${status}, payment_id = COALESCE(${paymentId}, payment_id) WHERE id = ${orderId}`;
+            if (isTerminalState) {
+                // Solo actualiza si la orden NO estaba ya pagada/con seña.
+                // Esto evita doble descuento de stock ante webhooks duplicados de MP.
+                result = await db`
+                    UPDATE orders
+                    SET status = ${status}, payment_id = COALESCE(${paymentId}, payment_id)
+                    WHERE id = ${orderId}
+                      AND status NOT IN ('paid', 'deposit_paid')
+                    RETURNING id
+                `;
+            } else {
+                result = await db`UPDATE orders SET status = ${status}, payment_id = COALESCE(${paymentId}, payment_id) WHERE id = ${orderId} RETURNING id`;
+            }
         } else {
-            await db`UPDATE orders SET status = ${status} WHERE id = ${orderId}`;
+            result = await db`UPDATE orders SET status = ${status} WHERE id = ${orderId} RETURNING id`;
         }
+
+        // Devuelve true si realmente se actualizó una fila, false si fue ignorado (idempotente)
+        return result.length > 0;
     } catch (error) {
         console.error('Database Error:', error);
         throw new Error('Failed to update order status.');

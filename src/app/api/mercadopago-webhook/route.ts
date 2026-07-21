@@ -44,7 +44,15 @@ export async function POST(request: NextRequest) {
                 const isDepositPayment = orderBeforeUpdate?.status === 'pending_deposit';
                 const newStatus: OrderStatus = isDepositPayment ? 'deposit_paid' : 'paid';
 
-                await updateOrderStatus(orderIdNumber, newStatus, paymentId);
+                // updateOrderStatus es idémpotente: devuelve false si la orden ya estaba pagada.
+                // Esto evita doble procesamiento si MP envía el mismo webhook dos veces (retry).
+                const wasUpdated = await updateOrderStatus(orderIdNumber, newStatus, paymentId);
+
+                if (!wasUpdated) {
+                    console.log(`[WEBHOOK] ⚠️ Order ${orderIdNumber} already in a paid state. Skipping stock deduction and emails (duplicate webhook).`);
+                    return NextResponse.json({ success: true, message: 'Already processed (idempotent)' });
+                }
+
                 console.log(`[WEBHOOK] Order status updated to '${newStatus}'.`);
 
                 try {
